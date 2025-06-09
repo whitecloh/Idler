@@ -14,7 +14,7 @@ namespace UI.Panels
 
         private readonly List<UpgradeItemView> _items = new();
 
-        public void Init(IReadOnlyList<UpgradeConfigData> upgrades)
+        public void Init(IReadOnlyList<UpgradeConfigData> upgrades, BusinessId businessId)
         {
             foreach (var item in _items)
                 Destroy(item.gameObject);
@@ -23,26 +23,20 @@ namespace UI.Panels
             for (var i = 0; i < upgrades.Count; i++)
             {
                 var item = Instantiate(upgradeItemPrefab, upgradesContainer);
+                var index = i;
+                item.Init(() => EcsUiEventBridge.Instance.SendUpgradeEvent(businessId, index));
                 _items.Add(item);
             }
         }
 
         public void UpdateItems(
-            BusinessId businessId,
             IReadOnlyList<UpgradeConfigData> upgrades,
             bool[] isBought,
             bool[] canBuyUpgrade)
         {
             for (var i = 0; i < upgrades.Count && i < _items.Count; i++)
             {
-                var index = i;
-                _items[i].UpdateData(
-                    upgrades[i].LocalizationKey,
-                    upgrades[i].Price,
-                    isBought[i],
-                    canBuyUpgrade[i],
-                    () => EcsUiEventBridge.Instance.SendUpgradeEvent(businessId, index)
-                );
+                _items[i].UpdateData(upgrades[i].LocalizationKey, upgrades[i].Price, isBought[i], canBuyUpgrade[i]);
             }
         }
     }

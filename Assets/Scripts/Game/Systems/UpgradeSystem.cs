@@ -36,6 +36,8 @@ namespace Game.Systems
                                 var recalcEventEntity = world.NewEntity();
                                 ref var recalcEvent = ref world.GetPool<RecalculateIncomeEvent>().Add(recalcEventEntity);
                                 recalcEvent.BusinessId = upg.BusinessId;
+                                
+                                break;
                             }
                         }
                     }

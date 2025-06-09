@@ -25,13 +25,10 @@ namespace UI.Panels
         [Header("Upgrades")]
         [SerializeField] private UpgradePanelView upgradePanelView;
 
-        private BusinessId _businessId;
-
         public void Init(BusinessId businessId, string businessKey, IReadOnlyList<UpgradeConfigData> upgrades)
         {
-            _businessId = businessId;
             businessNameText.text = ConfigService.Instance.GetLocalizedText(businessKey);
-            upgradePanelView.Init(upgrades);
+            upgradePanelView.Init(upgrades, businessId);
 
             buyLevelButton.onClick.RemoveAllListeners();
             buyLevelButton.onClick.AddListener(() =>
@@ -42,10 +39,10 @@ namespace UI.Panels
 
         public void UpdateData(
             int level,
-            int income,
+            long income,
             float progress,
             bool isUnlocked,
-            int buyLevelPrice,
+            long buyLevelPrice,
             bool canBuyLevel,
             IReadOnlyList<UpgradeConfigData> upgrades,
             bool[] upgradesBought,
@@ -59,7 +56,7 @@ namespace UI.Panels
             lockedPanel.gameObject.SetActive(!isUnlocked);
             buyLevelButton.interactable = canBuyLevel;
 
-            upgradePanelView.UpdateItems(_businessId, upgrades, upgradesBought, canBuyUpgrade);
+            upgradePanelView.UpdateItems(upgrades, upgradesBought, canBuyUpgrade);
         }
     }
 }

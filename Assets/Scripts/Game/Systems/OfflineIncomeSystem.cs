@@ -3,6 +3,7 @@ using Game.Components;
 using Game.Services;
 using Leopotam.EcsLite;
 using UnityEngine;
+using Utils;
 
 namespace Game.Systems
 {
@@ -16,57 +17,44 @@ namespace Game.Systems
 
             if (appStateFilter.GetEntitiesCount() == 0)
                 return;
-            
+
             var appEntity = appStateFilter.GetRawEntities()[0];
             ref var appState = ref appStatePool.Get(appEntity);
 
-            var lastSave = appState.LastSaveTimestamp;
-            var now = DateTime.UtcNow;
+            var offlineSeconds = (DateTime.UtcNow - appState.LastSaveTimestamp).TotalSeconds;
+            if (offlineSeconds <= 0) return;
 
-            var offlineSeconds = (now - lastSave).TotalSeconds;
-            if (offlineSeconds <= 0)
-                return;
-
-            var businessFilter = world.Filter<BusinessComponent>().Inc<IncomeProgressComponent>().End();
             var businessPool = world.GetPool<BusinessComponent>();
             var progressPool = world.GetPool<IncomeProgressComponent>();
-            var balanceFilter = world.Filter<BalanceComponent>().End();
+            var upgradePool = world.GetPool<UpgradeComponent>();
             var balancePool = world.GetPool<BalanceComponent>();
 
-            foreach (var entity in businessFilter)
+            foreach (var entity in world.Filter<BusinessComponent>().Inc<IncomeProgressComponent>().End())
             {
                 ref var biz = ref businessPool.Get(entity);
-                if (biz.Level <= 0)
-                    continue;
+                if (biz.Level <= 0) continue;
 
                 ref var progress = ref progressPool.Get(entity);
                 var delay = progress.Delay;
-                if (delay <= 0.01f) 
-                    continue;
+                if (delay <= 0.01f) continue;
 
                 var cycles = (int)(offlineSeconds / delay);
-                if (cycles <= 0) 
-                    continue;
+                if (cycles <= 0) continue;
 
-                var partial = (float)(offlineSeconds % delay) / delay;
-                progress.Progress = partial;
-                
-                var totalMultiplier = 0f;
-                foreach (var upgEntity in world.Filter<UpgradeComponent>().End())
-                {
-                    ref var upg = ref world.GetPool<UpgradeComponent>().Get(upgEntity);
-                    if (upg.BusinessId == biz.BusinessId && upg.IsActive)
-                        totalMultiplier += upg.Multiplier;
-                }
+                progress.Progress = (float)(offlineSeconds % delay) / delay;
 
                 var baseIncome = ConfigService.Instance.GetBaseIncome(biz.BusinessId);
-                var income = Mathf.RoundToInt(biz.Level * baseIncome * (1f + totalMultiplier));
+                var multiplier = EcsBusinessUtils.CalculateTotalUpgradeMultiplier(world, upgradePool, biz.BusinessId);
+                var rawIncome = biz.Level * baseIncome * (1f + multiplier);
+                var income = (long)Mathf.Round(rawIncome);
 
-                foreach (var balEntity in balanceFilter)
+                foreach (var balEntity in world.Filter<BalanceComponent>().End())
                 {
                     ref var balance = ref balancePool.Get(balEntity);
                     balance.Value += income * cycles;
                 }
+                
+                Debug.Log($"[OfflineIncome] BizId: {biz.BusinessId}, Level: {biz.Level}, BaseIncome: {baseIncome}, Multiplier: {multiplier}, Cycles: {cycles}, RawIncome: {rawIncome}, FinalIncomePerCycle: {income}, TotalIncome: {income * cycles}");
             }
         }
     }

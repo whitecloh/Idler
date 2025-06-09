@@ -5,34 +5,51 @@ using UI;
 
 namespace Game.Systems
 {
-    public class UISystem : IEcsRunSystem
+    public class UISystem : IEcsRunSystem, IEcsInitSystem
     {
-        public void Run(IEcsSystems systems)
+        private EcsFilter _balanceFilter;
+        private EcsFilter _businessFilter;
+        private EcsFilter _upgradeFilter;
+
+        private EcsPool<BalanceComponent> _balancePool;
+        private EcsPool<BusinessComponent> _businessPool;
+        private EcsPool<IncomeProgressComponent> _progressPool;
+        private EcsPool<IncomeComponent> _incomePool;
+        private EcsPool<UpgradeComponent> _upgradePool;
+
+        public void Init(IEcsSystems systems)
         {
             var world = systems.GetWorld();
-            var configService = ConfigService.Instance;
-            var balanceFilter = world.Filter<BalanceComponent>().End();
-            var balancePool = world.GetPool<BalanceComponent>();
-            var businessFilter = world.Filter<BusinessComponent>().Inc<IncomeProgressComponent>().Inc<IncomeComponent>().End();
-            var businessPool = world.GetPool<BusinessComponent>();
-            var progressPool = world.GetPool<IncomeProgressComponent>();
-            var incomePool = world.GetPool<IncomeComponent>();
-            var upgradePool = world.GetPool<UpgradeComponent>();
 
-            var playerBalance = 0;
-            foreach (var entity in balanceFilter)
+            _balanceFilter = world.Filter<BalanceComponent>().End();
+            _businessFilter = world.Filter<BusinessComponent>().Inc<IncomeProgressComponent>().Inc<IncomeComponent>().End();
+            _upgradeFilter = world.Filter<UpgradeComponent>().End();
+
+            _balancePool = world.GetPool<BalanceComponent>();
+            _businessPool = world.GetPool<BusinessComponent>();
+            _progressPool = world.GetPool<IncomeProgressComponent>();
+            _incomePool = world.GetPool<IncomeComponent>();
+            _upgradePool = world.GetPool<UpgradeComponent>();
+        }
+
+        public void Run(IEcsSystems systems)
+        {
+            var config = ConfigService.Instance;
+            var playerBalance = 0l;
+
+            foreach (var entity in _balanceFilter)
             {
-                ref var balance = ref balancePool.Get(entity);
+                ref var balance = ref _balancePool.Get(entity);
                 playerBalance = balance.Value;
                 HUDController.Instance.SetBalance(balance.Value);
             }
-            
-            foreach (var bizId in configService.GetAllBusinessIds())
+
+            foreach (var bizId in config.GetAllBusinessIds())
             {
                 var bizEntity = -1;
-                foreach (var e in businessFilter)
+                foreach (var e in _businessFilter)
                 {
-                    ref var biz = ref businessPool.Get(e);
+                    ref var biz = ref _businessPool.Get(e);
                     if (biz.BusinessId == bizId)
                     {
                         bizEntity = e;
@@ -42,43 +59,45 @@ namespace Game.Systems
 
                 var level = 0;
                 var progress = 0f;
-                var income = 0;
+                var income = 0l;
                 var isUnlocked = false;
-                var upgrades = configService.GetUpgradeConfigs(bizId);
+                var upgrades = config.GetUpgradeConfigs(bizId);
                 var upgradesBought = new bool[upgrades.Count];
                 var canBuyUpgrade = new bool[upgrades.Count];
 
                 if (bizEntity >= 0)
                 {
-                    ref var biz = ref businessPool.Get(bizEntity);
-                    ref var prog = ref progressPool.Get(bizEntity);
-                    ref var inc = ref incomePool.Get(bizEntity);
+                    ref var biz = ref _businessPool.Get(bizEntity);
+                    ref var prog = ref _progressPool.Get(bizEntity);
+                    ref var inc = ref _incomePool.Get(bizEntity);
 
                     level = biz.Level;
                     progress = prog.Progress;
                     isUnlocked = biz.Level > 0;
                     income = isUnlocked ? inc.Value : 0;
 
-                    foreach (var upgEntity in world.Filter<UpgradeComponent>().End())
+                    foreach (var upgEntity in _upgradeFilter)
                     {
-                        ref var upg = ref upgradePool.Get(upgEntity);
-                        if (upg.BusinessId == biz.BusinessId && upg.Index >= 0 && upg.Index < upgrades.Count)
+                        ref var upg = ref _upgradePool.Get(upgEntity);
+                        if (upg.BusinessId == biz.BusinessId &&
+                            upg.Index >= 0 && upg.Index < upgrades.Count)
                         {
                             upgradesBought[upg.Index] = upg.IsActive;
                             canBuyUpgrade[upg.Index] = isUnlocked &&
-                                (playerBalance >= configService.GetUpgradePrice(biz.BusinessId, upg.Index)) &&
+                                (playerBalance >= config.GetUpgradePrice(biz.BusinessId, upg.Index)) &&
                                 !upg.IsActive;
                         }
                     }
                 }
 
-                var buyLevelPrice = configService.GetLevelPrice(bizId, level + 1);
+                var buyLevelPrice = config.GetLevelPrice(bizId, level + 1);
                 var canBuyLevel = playerBalance >= buyLevelPrice;
-                
+
                 if (!isUnlocked)
                 {
                     for (int i = 0; i < canBuyUpgrade.Length; i++)
                         canBuyUpgrade[i] = false;
+
                     income = 0;
                     progress = 0f;
                 }

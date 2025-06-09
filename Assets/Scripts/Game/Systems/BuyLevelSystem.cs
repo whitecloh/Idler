@@ -19,7 +19,7 @@ namespace Game.Systems
                 foreach (var bizEntity in world.Filter<BusinessComponent>().End())
                 {
                     ref var biz = ref businessPool.Get(bizEntity);
-                    if (biz.BusinessId != buyEvent.BusinessId || biz.Level < 0)
+                    if (biz.BusinessId != buyEvent.BusinessId)
                         continue;
                     
                     var price = ConfigService.Instance.GetLevelPrice(biz.BusinessId, biz.Level + 1);
@@ -35,6 +35,8 @@ namespace Game.Systems
                             var recalcEventEntity = world.NewEntity();
                             ref var recalcEvent = ref world.GetPool<RecalculateIncomeEvent>().Add(recalcEventEntity);
                             recalcEvent.BusinessId = biz.BusinessId;
+                            
+                            break; 
                         }
                     }
                 }

@@ -2,6 +2,6 @@ namespace Game.Components
 {
     public struct IncomeComponent
     {
-        public int Value;
+        public long Value;
     }
 }

@@ -36,10 +36,10 @@ namespace Game
             autosaveSystem.Init(configService.GetBaseAutoSaveInterval);
             
             _systems
+                .Add(new RecalculateBusinessIncomeSystem())
                 .Add(new IncomeSystem())
                 .Add(new BuyLevelSystem())
                 .Add(new UpgradeSystem())
-                .Add(new RecalculateBusinessIncomeSystem())
                 .Add(new SaveSystem())
                 .Add(new UISystem())
                 .Add(new OfflineIncomeSystem())

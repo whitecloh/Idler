@@ -8,11 +8,11 @@ namespace Game.Save
     [Serializable]
     public class SaveData_v_1_0
     {
-        [SerializeField] private int balance;
+        [SerializeField] private long balance;
         [SerializeField] private SerializedDateTime lastSaveTimestamp = new();
         [SerializeField] private BusinessSaveItems businesses = new();
 
-        public int Balance
+        public long Balance
         {
             get => balance;
             set => balance = value;

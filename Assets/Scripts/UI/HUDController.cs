@@ -20,14 +20,14 @@ namespace UI
             businessController.Init();
         }
 
-        public void SetBalance(int value)
+        public void SetBalance(long value)
         {
             balanceView.SetBalance(value);
         }
 
         public void UpdateBusinessPanel(
-            BusinessId id, int level, int income, float progress, bool isUnlocked,
-            int buyLevelPrice, IReadOnlyList<UpgradeConfigData> upgrades, bool[] upgradesBought,  bool canBuyLevel,
+            BusinessId id, int level, long income, float progress, bool isUnlocked,
+            long buyLevelPrice, IReadOnlyList<UpgradeConfigData> upgrades, bool[] upgradesBought,  bool canBuyLevel,
             bool[] canBuyUpgrade)
         {
             businessController.UpdateBusiness(id, level, income, progress, isUnlocked, buyLevelPrice, upgrades, upgradesBought, canBuyLevel, canBuyUpgrade);

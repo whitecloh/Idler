@@ -14,21 +14,23 @@ namespace UI.Elements
         [SerializeField] private RectTransform upgradeCompleteText;
         [SerializeField] private RectTransform upgradeProgressText;
         
-        public void UpdateData(string upgradeKey, int price, bool isBought, bool canBuy, Action onBuy)
+        private Action _onBuy;
+
+        public void Init(Action onBuy)
+        {
+            _onBuy = onBuy;
+            buyUpgradeButton.onClick.RemoveAllListeners();
+            buyUpgradeButton.onClick.AddListener(() => _onBuy?.Invoke());
+        }
+        
+        public void UpdateData(string upgradeKey, int price, bool isBought, bool canBuy)
         {
             upgradeNameText.text = ConfigService.Instance.GetLocalizedText(upgradeKey);
             upgradePriceText.text = price.ToString();
             buyUpgradeButton.interactable = canBuy && !isBought;
-            
+
             upgradeProgressText.gameObject.SetActive(!isBought);
             upgradeCompleteText.gameObject.SetActive(isBought);
-
-            buyUpgradeButton.onClick.RemoveAllListeners();
-            
-            if (!isBought && canBuy)
-            {
-                buyUpgradeButton.onClick.AddListener(onBuy.Invoke);   
-            }
         }
     }
 }

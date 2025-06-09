@@ -34,11 +34,11 @@ namespace Game.Services
         public float GetBaseAutoSaveInterval => generalSettingsData.AutosaveInterval;
         public int GetStartBalance => generalSettingsData.StartBalance;
         
-        public int GetBaseIncome(BusinessId id) => GetBusinessConfig(id)?.BaseIncome ?? 0;
+        public long GetBaseIncome(BusinessId id) => GetBusinessConfig(id)?.BaseIncome ?? 0;
         public float GetIncomeDelay(BusinessId id) => GetBusinessConfig(id)?.IncomeDelay ?? 1f;
-        public int GetLevelPrice(BusinessId id, int level) => (level + 1) * GetBaseCost(id);
+        public long GetLevelPrice(BusinessId id, int level) => (level + 1) * GetBaseCost(id);
         private int GetBaseCost(BusinessId id) => GetBusinessConfig(id)?.BaseCost ?? 0;
-        public int GetUpgradePrice(BusinessId id, int upgradeIndex)
+        public long GetUpgradePrice(BusinessId id, int upgradeIndex)
         {
             var upgrades = GetUpgradeConfigs(id);
             return (upgradeIndex >= 0 && upgradeIndex < upgrades.Count) ? upgrades[upgradeIndex].Price : 0;

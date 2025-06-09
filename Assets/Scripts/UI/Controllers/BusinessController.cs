@@ -35,10 +35,10 @@ namespace UI.Controllers
         public void UpdateBusiness(
             BusinessId id,
             int level,
-            int income,
+            long income,
             float progress,
             bool isUnlocked,
-            int buyLevelPrice,
+            long buyLevelPrice,
             IReadOnlyList<UpgradeConfigData> upgrades,
             bool[] upgradesBought,
             bool canBuyLevel,

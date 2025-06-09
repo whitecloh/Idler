@@ -7,7 +7,7 @@ namespace UI.Elements
     {
         [SerializeField] private TMP_Text balanceText;
 
-        public void SetBalance(int value)
+        public void SetBalance(long value)
         {
             balanceText.text = value.ToString();
         }
