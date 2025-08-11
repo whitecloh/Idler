@@ -48,7 +48,7 @@ namespace UI.Panels
             for (var i = 0; i < upgrades.Count && i < _items.Count; i++)
             {
                 var displayName = _config.GetName(upgrades[i].NameKey);
-                _items[i].UpdateData(displayName, upgrades[i].Price, isBought[i], canBuyUpgrade[i]);
+                _items[i].UpdateData(displayName, upgrades[i].IncomeMultiplier, upgrades[i].Price, isBought[i], canBuyUpgrade[i]);
             }
         }
     }
