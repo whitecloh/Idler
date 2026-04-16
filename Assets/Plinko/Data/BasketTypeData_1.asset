@@ -9,15 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57e66e99addb4d18a1f486fba07b31b2, type: 3}
-  m_Name: PinTypeData
+  m_Script: {fileID: 11500000, guid: 1b7e448429824da0b49f694525ecb168, type: 3}
+  m_Name: BasketTypeData_1
   m_EditorClassIdentifier: 
-  id: pin_balanced
-  displayName: Balanced Pin
-  rarity: common
-  shopPrice: 2
-  generationWeight: 5
-  attackModifier: 1
-  healthModifier: 2
-  manaModifier: 0
-  unlockCondition: {fileID: 0}
+  id: basket_1
+  displayName: Mana 1
+  manaValue: 1
+  generationWeight: 1

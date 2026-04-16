@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c4a3a3005142998b57e894548d2fca, type: 3}
-  m_Name: LevelData
+  m_Name: LevelData_FieldUpgrade
   m_EditorClassIdentifier: 
-  id: level_purchase_01
-  levelType: 1
-  preBattlePhase: {fileID: 11400000, guid: 2f3b87a0d8a64de1b8c332261c30a101, type: 2}
-  enemyBaseMaxHealth: 24
-  victoryReward: 4
+  id: level_field_upgrade_01
+  levelType: 3
+  preBattlePhase: {fileID: 11400000, guid: 6c8ae2f7790b4a1b8b9d11c1f9b0a301, type: 2}
+  enemyBaseMaxHealth: 36
+  victoryReward: 6
   hpThresholdWaves:
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939101, type: 2}
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939102, type: 2}

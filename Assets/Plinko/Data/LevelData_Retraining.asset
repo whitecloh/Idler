@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62c4a3a3005142998b57e894548d2fca, type: 3}
-  m_Name: LevelData
+  m_Name: LevelData_Retraining
   m_EditorClassIdentifier: 
-  id: level_purchase_01
-  levelType: 1
-  preBattlePhase: {fileID: 11400000, guid: 2f3b87a0d8a64de1b8c332261c30a101, type: 2}
-  enemyBaseMaxHealth: 24
-  victoryReward: 4
+  id: level_retraining_01
+  levelType: 2
+  preBattlePhase: {fileID: 11400000, guid: 4dd2d1c6a4b74e25bbd8c9d118be9201, type: 2}
+  enemyBaseMaxHealth: 30
+  victoryReward: 5
   hpThresholdWaves:
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939101, type: 2}
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939102, type: 2}
