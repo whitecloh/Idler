@@ -7,40 +7,10 @@ namespace Plinko.Scripts.View.Bridges
     public sealed class BattleBridge : MonoBehaviour
     {
         private EcsWorld _world;
-
-        public void Init(EcsWorld world)
-        {
-            _world = world;
-        }
-
-        public void RequestGenerateHand()
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<GenerateHandRequest>().Add(entity);
-        }
-
-        public void RequestDeployUnit(int cardId)
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<DeployUnitRequest>().Add(entity).CardId = cardId;
-        }
-
-        public void RequestStartBattle()
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<StartBattleRequest>().Add(entity);
-        }
-
-        public void RequestAdvanceToNextLevel()
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<AdvanceToNextLevelRequest>().Add(entity);
-        }
-
-        public void RequestReturnToMenu()
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<ReturnToMenuRequest>().Add(entity);
-        }
+        public void Init(EcsWorld world) => _world = world;
+        public void RequestGenerateHand() => _world.GetPool<GenerateHandRequest>().Add(_world.NewEntity());
+        public void RequestDeployCard(int handCardRuntimeId) => _world.GetPool<DeployCardRequest>().Add(_world.NewEntity()).HandCardRuntimeId = handCardRuntimeId;
+        public void RequestStartBattle() => _world.GetPool<StartBattleRequest>().Add(_world.NewEntity());
+        public void RequestReturnToMenu() => _world.GetPool<ReturnToMenuRequest>().Add(_world.NewEntity());
     }
 }

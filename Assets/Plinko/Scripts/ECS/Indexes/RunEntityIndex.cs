@@ -14,5 +14,10 @@ namespace Plinko.Scripts.ECS.Indexes
             entity = _runEntity;
             return entity >= 0;
         }
+
+        public void Clear()
+        {
+            _runEntity = -1;
+        }
     }
 }

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Plinko.Scripts.Data.Common;
+using Plinko.Scripts.Data.Enemies;
 using UnityEngine;
 
 namespace Plinko.Scripts.Data.Levels
@@ -8,12 +10,16 @@ namespace Plinko.Scripts.Data.Levels
     {
         [SerializeField] private string id = string.Empty;
         [SerializeField] private Enums.LevelType levelType;
-        [SerializeField] private int enemyBaseHealth;
+        [SerializeField] private LevelPhaseData preBattlePhase;
+        [SerializeField] private int enemyBaseMaxHealth = 100;
         [SerializeField] private int victoryReward;
+        [SerializeField] private List<EnemyWaveThresholdData> hpThresholdWaves = new();
 
         public string Id => id;
         public Enums.LevelType LevelType => levelType;
-        public int EnemyBaseHealth => enemyBaseHealth;
+        public LevelPhaseData PreBattlePhase => preBattlePhase;
+        public int EnemyBaseMaxHealth => enemyBaseMaxHealth;
         public int VictoryReward => victoryReward;
-    }   
+        public IReadOnlyList<EnemyWaveThresholdData> HpThresholdWaves => hpThresholdWaves;
+    }  
 }

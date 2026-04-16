@@ -8,7 +8,7 @@ namespace Plinko.Scripts.View.Controllers
     {
         public void Refresh(IReadOnlyList<OwnedUnitViewData> ownedUnits)
         {
-            Debug.Log($"OwnedUnitsScreenController.Refresh Count={ownedUnits.Count}");
+            Debug.Log($"Owned units refresh count={ownedUnits.Count}");
         }
     }
 }

@@ -1,3 +1,4 @@
+using Plinko.Scripts.Data.Meta;
 using UnityEngine;
 
 namespace Plinko.Scripts.Data.Pins
@@ -7,16 +8,22 @@ namespace Plinko.Scripts.Data.Pins
     {
         [SerializeField] private string id = string.Empty;
         [SerializeField] private string displayName = string.Empty;
+        [SerializeField] private string rarity = string.Empty;
         [SerializeField] private int shopPrice;
+        [SerializeField] private int generationWeight = 1;
         [SerializeField] private int attackModifier;
         [SerializeField] private int healthModifier;
         [SerializeField] private int manaModifier;
+        [SerializeField] private UnlockConditionData unlockCondition;
 
         public string Id => id;
         public string DisplayName => displayName;
+        public string Rarity => rarity;
         public int ShopPrice => shopPrice;
+        public int GenerationWeight => generationWeight;
         public int AttackModifier => attackModifier;
         public int HealthModifier => healthModifier;
         public int ManaModifier => manaModifier;
+        public UnlockConditionData UnlockCondition => unlockCondition;
     }
 }

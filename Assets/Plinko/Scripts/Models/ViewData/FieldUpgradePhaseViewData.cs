@@ -10,8 +10,8 @@ namespace Plinko.Scripts.Models.ViewData
         public int RerollCount;
         public int RerollPrice;
         public bool CanReroll;
-        public bool HasBoughtPinCandidate;
-        public string BoughtPinTypeId;
+        public bool HasPendingPin;
+        public string PendingPinTypeId;
         public int SelectedSlotIndex;
         public bool CanReplace;
         public List<PinOfferViewData> Offers = new();

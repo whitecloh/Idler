@@ -14,12 +14,7 @@ namespace Plinko.Scripts.Services
         public LevelData GetLevel(string locationId, int levelIndex)
         {
             var location = _locationConfigService.GetLocation(locationId);
-            if (location == null)
-            {
-                return null;
-            }
-
-            if (levelIndex < 0 || levelIndex >= location.Levels.Count)
+            if (location == null || levelIndex < 0 || levelIndex >= location.Levels.Count)
             {
                 return null;
             }

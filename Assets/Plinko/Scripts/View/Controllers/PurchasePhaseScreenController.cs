@@ -6,18 +6,13 @@ namespace Plinko.Scripts.View.Controllers
     public sealed class PurchasePhaseScreenController : MonoBehaviour
     {
         [SerializeField] private GameObject root;
-
         public void Show(bool isVisible)
         {
-            if (root != null)
-            {
-                root.SetActive(isVisible);
-            }
+            if (root != null) root.SetActive(isVisible);
         }
-
         public void Refresh(PurchasePhaseViewData viewData)
         {
-            Debug.Log($"PurchasePhaseScreenController.Refresh Gold={viewData.Gold} Offers={viewData.Offers.Count} HasStaged={viewData.HasStagedUnits}");
+            Debug.Log($"Purchase refresh gold={viewData.Gold} offers={viewData.Offers.Count} activeTrainings={viewData.ActiveTrainingCount} canStart={viewData.CanStartBattle}");
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Plinko.Scripts.Data.Common
         {
             None = 0,
             Purchase = 1,
-            Upgrade = 2,
+            Retraining = 2,
             FieldUpgrade = 3
         }
 
@@ -16,11 +16,13 @@ namespace Plinko.Scripts.Data.Common
             MainMenu = 1,
             Location = 2,
             PurchasePhase = 3,
-            UpgradePhase = 4,
+            RetrainingPhase = 4,
             FieldUpgradePhase = 5,
-            Battle = 6,
-            BattlePlayback = 7,
-            Result = 8
+            PlinkoTrainingPlayback = 6,
+            BattlePreparation = 7,
+            Battle = 8,
+            BattlePlayback = 9,
+            Result = 10
         }
 
         public enum RunStatus

@@ -1,5 +1,6 @@
 using Leopotam.EcsLite;
 using Plinko.Scripts.ECS.Installers;
+using Plinko.Scripts.ECS.Requests;
 using Plinko.Scripts.View;
 using UnityEngine;
 
@@ -26,6 +27,23 @@ namespace Plinko.Scripts.Bootstrap
         private void Update()
         {
             _systems?.Run();
+        }
+        
+        private void OnApplicationPause(bool pause)
+        {
+            if (pause && _world != null)
+            {
+                _world.GetPool<SaveRunRequest>().Add(_world.NewEntity());
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            if (_world != null)
+            {
+                _world.GetPool<SaveRunRequest>().Add(_world.NewEntity());
+                _systems?.Run();
+            }
         }
 
         private void OnDestroy()

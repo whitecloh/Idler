@@ -11,14 +11,14 @@ namespace Plinko.Scripts.ECS.Indexes
             _runtimeIdToEntity[runtimeId] = entity;
         }
 
-        public void Unregister(int runtimeId)
-        {
-            _runtimeIdToEntity.Remove(runtimeId);
-        }
-
         public bool TryGet(int runtimeId, out int entity)
         {
             return _runtimeIdToEntity.TryGetValue(runtimeId, out entity);
+        }
+
+        public void Unregister(int runtimeId)
+        {
+            _runtimeIdToEntity.Remove(runtimeId);
         }
 
         public void Clear()

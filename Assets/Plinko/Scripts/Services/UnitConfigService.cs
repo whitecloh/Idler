@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using Plinko.Scripts.Data.Levels;
 using Plinko.Scripts.Data.Units;
-using UnityEngine;
 
 namespace Plinko.Scripts.Services
 {
@@ -8,9 +8,11 @@ namespace Plinko.Scripts.Services
     {
         private readonly Dictionary<string, UnitTypeData> _unitsById = new();
         private readonly List<UnitTypeData> _allUnits = new();
+        private readonly UnlocksService _unlocksService;
 
-        public UnitConfigService(IReadOnlyList<UnitTypeData> unitTypes)
+        public UnitConfigService(IReadOnlyList<UnitTypeData> unitTypes, UnlocksService unlocksService)
         {
+            _unlocksService = unlocksService;
             if (unitTypes == null)
             {
                 return;
@@ -34,59 +36,36 @@ namespace Plinko.Scripts.Services
                 ? unit
                 : null;
         }
-        
-        public IReadOnlyList<UnitTypeData> GetShopUnits(HashSet<string> excludedUnitTypeIds)
+
+        public IReadOnlyList<UnitTypeData> GetUnlockedShopPool(LevelData levelData)
         {
             var result = new List<UnitTypeData>();
+            var explicitPool = levelData != null && levelData.PreBattlePhase != null
+                ? levelData.PreBattlePhase.ExplicitUnitShopPool
+                : null;
+
+            if (explicitPool != null && explicitPool.Count > 0)
+            {
+                foreach (var unit in explicitPool)
+                {
+                    if (unit != null && _unlocksService.IsUnlocked(unit.UnlockCondition))
+                    {
+                        result.Add(unit);
+                    }
+                }
+
+                return result;
+            }
+
             foreach (var unit in _allUnits)
             {
-                if (unit == null)
+                if (_unlocksService.IsUnlocked(unit.UnlockCondition))
                 {
-                    continue;
+                    result.Add(unit);
                 }
-
-                if (excludedUnitTypeIds != null && excludedUnitTypeIds.Contains(unit.Id))
-                {
-                    continue;
-                }
-
-                result.Add(unit);
             }
 
             return result;
-        }
-        
-        public UnitTypeData GetNextShopUnit(string currentUnitTypeId, HashSet<string> excludedUnitTypeIds)
-        {
-            if (_allUnits.Count == 0)
-            {
-                return null;
-            }
-
-            var currentIndex = _allUnits.FindIndex(unit => unit != null && unit.Id == currentUnitTypeId);
-            for (var step = 1; step <= _allUnits.Count; step++)
-            {
-                var index = (Mathf.Max(currentIndex, -1) + step) % _allUnits.Count;
-                var candidate = _allUnits[index];
-                if (candidate == null)
-                {
-                    continue;
-                }
-
-                if (excludedUnitTypeIds != null && excludedUnitTypeIds.Contains(candidate.Id))
-                {
-                    continue;
-                }
-
-                return candidate;
-            }
-
-            return null;
-        }
-
-        public IReadOnlyList<UnitTypeData> GetAllUnits()
-        {
-            return _allUnits;
         }
     }
 }

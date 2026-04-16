@@ -10,7 +10,8 @@ namespace Plinko.Scripts.Models.ViewData
         public int RerollCount;
         public int RerollPrice;
         public bool CanReroll;
-        public bool HasStagedUnits;
+        public bool CanStartBattle;
+        public int ActiveTrainingCount;
         public List<UnitShopOfferViewData> Offers = new();
     }
 }

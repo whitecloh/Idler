@@ -7,16 +7,8 @@ namespace Plinko.Scripts.View.Bridges
     public sealed class LocationBridge : MonoBehaviour
     {
         private EcsWorld _world;
-
-        public void Init(EcsWorld world)
-        {
-            _world = world;
-        }
-
-        public void RequestStartLevel(int levelIndex)
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<StartLevelRequest>().Add(entity).LevelIndex = levelIndex;
-        }
+        public void Init(EcsWorld world) => _world = world;
+        public void RequestStartLevel(int levelIndex) => _world.GetPool<StartLevelRequest>().Add(_world.NewEntity()).LevelIndex = levelIndex;
+        public void RequestAdvanceToNextLevel() => _world.GetPool<AdvanceToNextLevelRequest>().Add(_world.NewEntity());
     }
 }

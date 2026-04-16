@@ -6,11 +6,13 @@ namespace Plinko.Scripts.Services
     {
         public BattleTimelineModel CurrentTimeline { get; set; }
         public BattleResultModel CurrentResult { get; set; }
+        public EnemyWaveModel CurrentEnemyWave { get; set; }
 
         public void Clear()
         {
             CurrentTimeline = null;
             CurrentResult = null;
+            CurrentEnemyWave = null;
         }
     }
 }

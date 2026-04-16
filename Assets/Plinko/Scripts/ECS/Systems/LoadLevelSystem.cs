@@ -3,7 +3,6 @@ using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
-using Plinko.Scripts.ECS.Utils;
 using Plinko.Scripts.Services;
 
 namespace Plinko.Scripts.ECS.Systems
@@ -18,8 +17,8 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentLocationComponent> _locationPool;
         private EcsPool<CurrentLevelComponent> _levelPool;
         private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
-        private EcsPool<EnemyBaseHealthComponent> _enemyBaseHealthPool;
-        private EcsPool<LevelLoadedEvent> _levelLoadedPool;
+        private EcsPool<EnemyBaseHealthComponent> _enemyBasePool;
+        private EcsPool<LevelLoadedEvent> _levelLoadedEventPool;
 
         public LoadLevelSystem(LevelConfigService levelConfigService, RunEntityIndex runEntityIndex)
         {
@@ -35,10 +34,10 @@ namespace Plinko.Scripts.ECS.Systems
             _locationPool = world.GetPool<CurrentLocationComponent>();
             _levelPool = world.GetPool<CurrentLevelComponent>();
             _levelTypePool = world.GetPool<CurrentLevelTypeComponent>();
-            _enemyBaseHealthPool = world.GetPool<EnemyBaseHealthComponent>();
-            _levelLoadedPool = world.GetPool<LevelLoadedEvent>();
+            _enemyBasePool = world.GetPool<EnemyBaseHealthComponent>();
+            _levelLoadedEventPool = world.GetPool<LevelLoadedEvent>();
         }
-
+        
         public void Run(IEcsSystems systems)
         {
             var world = systems.GetWorld();
@@ -58,14 +57,17 @@ namespace Plinko.Scripts.ECS.Systems
                     continue;
                 }
 
-                _levelPool.GetOrAdd(runEntity).LevelIndex = request.LevelIndex;
-                _levelTypePool.GetOrAdd(runEntity).Value = levelData.LevelType;
-                _enemyBaseHealthPool.GetOrAdd(runEntity).Value = levelData.EnemyBaseHealth;
+                _levelPool.Get(runEntity).LevelIndex = request.LevelIndex;
+                _levelTypePool.Get(runEntity).Value = levelData.LevelType;
+                _enemyBasePool.Get(runEntity) = new EnemyBaseHealthComponent
+                {
+                    Value = levelData.EnemyBaseMaxHealth,
+                    MaxValue = levelData.EnemyBaseMaxHealth
+                };
 
-                ref var levelLoadedEvent = ref _levelLoadedPool.Add(world.NewEntity());
+                ref var levelLoadedEvent = ref _levelLoadedEventPool.Add(world.NewEntity());
                 levelLoadedEvent.LevelIndex = request.LevelIndex;
                 levelLoadedEvent.LevelType = levelData.LevelType;
-
                 world.DelEntity(requestEntity);
             }
         }

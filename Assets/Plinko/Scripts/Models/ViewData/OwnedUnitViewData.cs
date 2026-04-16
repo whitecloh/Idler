@@ -13,6 +13,6 @@ namespace Plinko.Scripts.Models.ViewData
         public int Health;
         public int ManaCost;
         public int UpgradeCount;
-        public bool IsSelectedForUpgrade;
+        public bool IsSelectedForRetraining;
     }
 }

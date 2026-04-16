@@ -31,10 +31,5 @@ namespace Plinko.Scripts.Services
                 ? location
                 : null;
         }
-
-        public IReadOnlyCollection<LocationData> GetAllLocations()
-        {
-            return _locationsById.Values;
-        }
     }
 }

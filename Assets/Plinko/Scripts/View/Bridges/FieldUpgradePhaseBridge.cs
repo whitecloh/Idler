@@ -4,31 +4,13 @@ using UnityEngine;
 
 namespace Plinko.Scripts.View.Bridges
 {
-    public sealed class FieldUpgradePhaseBridge : MonoBehaviour
+    public sealed class FieldUpgradeBridge : MonoBehaviour
     {
         private EcsWorld _world;
-
-        public void Init(EcsWorld world)
-        {
-            _world = world;
-        }
-
-        public void RequestBuyPin(int offerId)
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<BuyPinRequest>().Add(entity).OfferId = offerId;
-        }
-
-        public void RequestSelectBoardSlot(int slotIndex)
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<SelectBoardSlotRequest>().Add(entity).SlotIndex = slotIndex;
-        }
-
-        public void RequestReplaceBoardPin()
-        {
-            var entity = _world.NewEntity();
-            _world.GetPool<ReplaceBoardPinRequest>().Add(entity);
-        }
+        public void Init(EcsWorld world) => _world = world;
+        public void RequestBuyPin(int offerId) => _world.GetPool<BuyPinRequest>().Add(_world.NewEntity()).OfferId = offerId;
+        public void RequestRerollShop() => _world.GetPool<RerollPinShopRequest>().Add(_world.NewEntity());
+        public void RequestSelectBoardSlot(int slotIndex) => _world.GetPool<SelectBoardSlotRequest>().Add(_world.NewEntity()).SlotIndex = slotIndex;
+        public void RequestReplaceBoardPin() => _world.GetPool<ReplaceBoardPinRequest>().Add(_world.NewEntity());
     }
 }

@@ -20,25 +20,31 @@ namespace Plinko.Scripts.Bootstrap
 
         public GameServicesContext Build()
         {
+            var unlocksService = new UnlocksService();
+            var gameSettingsService = new GameSettingsService(gameSettingsData);
             var locationConfigService = new LocationConfigService(locations);
-            var unitConfigService = new UnitConfigService(unitTypes);
-            var pinConfigService = new PinConfigService(pinTypes);
-            var savePath = Path.Combine(Application.persistentDataPath, "session_run_save.json");
 
             return new GameServicesContext
             {
-                GameSettingsService = new GameSettingsService(gameSettingsData),
+                GameSettingsService = gameSettingsService,
                 LocationConfigService = locationConfigService,
                 LevelConfigService = new LevelConfigService(locationConfigService),
-                UnitConfigService = unitConfigService,
-                PinConfigService = pinConfigService,
+                UnlocksService = unlocksService,
+                WeightedRandomService = new WeightedRandomService(),
+                UnitConfigService = new UnitConfigService(unitTypes, unlocksService),
+                PinConfigService = new PinConfigService(pinTypes, unlocksService),
+                PlinkoConfigService = new PlinkoConfigService(gameSettingsService),
+                EnemyWaveSelectionService = new EnemyWaveSelectionService(),
                 UnitNamingService = new UnitNamingService(unitNamesData),
+                PlinkoPathFactory = new PlinkoPathFactory(),
                 BattleRuntimeService = new BattleRuntimeService(),
-                RunSaveService = new RunSaveService(savePath),
+                PlinkoRuntimeService = new PlinkoRuntimeService(),
+                RunSaveService = new RunSaveService(Path.Combine(Application.persistentDataPath, "session_run_save.json")),
                 RunEntityIndex = new RunEntityIndex(),
                 OwnedUnitIndex = new OwnedUnitIndex(),
                 ShopOfferIndex = new ShopOfferIndex(),
-                PinShopOfferIndex = new PinShopOfferIndex()
+                PinShopOfferIndex = new PinShopOfferIndex(),
+                InstalledPinIndex = new InstalledPinIndex()
             };
         }
     }

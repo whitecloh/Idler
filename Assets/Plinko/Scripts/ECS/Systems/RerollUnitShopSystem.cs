@@ -1,43 +1,69 @@
 using Leopotam.EcsLite;
+using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
 using Plinko.Scripts.ECS.Utils;
 using Plinko.Scripts.Services;
-using UnityEngine;
 
 namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class RerollUnitShopSystem : IEcsInitSystem, IEcsRunSystem
     {
-        private readonly RunEntityIndex _runEntityIndex;
         private readonly GameSettingsService _gameSettingsService;
+        private readonly LevelConfigService _levelConfigService;
+        private readonly UnitConfigService _unitConfigService;
+        private readonly WeightedRandomService _weightedRandomService;
+        private readonly RunEntityIndex _runEntityIndex;
+        private readonly ShopOfferIndex _shopOfferIndex;
 
         private EcsFilter _requestFilter;
         private EcsPool<RerollUnitShopRequest> _requestPool;
+        private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<CurrentGoldComponent> _goldPool;
-        private EcsPool<PurchasePhaseStateComponent> _purchasePhaseStatePool;
+        private EcsPool<CurrentLocationComponent> _locationPool;
+        private EcsPool<CurrentLevelComponent> _levelPool;
+        private EcsPool<PurchasePhaseStateComponent> _purchaseStatePool;
+        private EcsPool<UnitShopOfferComponent> _offerPool;
+        private EcsPool<OfferPriceComponent> _pricePool;
+        private EcsPool<ShopOfferUnitTypeIdComponent> _unitTypePool;
         private EcsPool<GoldChangedEvent> _goldChangedEventPool;
-        private EcsPool<GenerateUnitShopOffersRequest> _generateOffersRequestPool;
+        private EcsPool<ShopOffersChangedEvent> _shopOffersChangedEventPool;
 
-        public RerollUnitShopSystem(RunEntityIndex runEntityIndex, GameSettingsService gameSettingsService)
+        public RerollUnitShopSystem(
+            GameSettingsService gameSettingsService,
+            LevelConfigService levelConfigService,
+            UnitConfigService unitConfigService,
+            WeightedRandomService weightedRandomService,
+            RunEntityIndex runEntityIndex,
+            ShopOfferIndex shopOfferIndex)
         {
-            _runEntityIndex = runEntityIndex;
             _gameSettingsService = gameSettingsService;
+            _levelConfigService = levelConfigService;
+            _unitConfigService = unitConfigService;
+            _weightedRandomService = weightedRandomService;
+            _runEntityIndex = runEntityIndex;
+            _shopOfferIndex = shopOfferIndex;
         }
-
+        
         public void Init(IEcsSystems systems)
         {
             var world = systems.GetWorld();
             _requestFilter = world.Filter<RerollUnitShopRequest>().End();
             _requestPool = world.GetPool<RerollUnitShopRequest>();
+            _phasePool = world.GetPool<CurrentPhaseComponent>();
             _goldPool = world.GetPool<CurrentGoldComponent>();
-            _purchasePhaseStatePool = world.GetPool<PurchasePhaseStateComponent>();
+            _locationPool = world.GetPool<CurrentLocationComponent>();
+            _levelPool = world.GetPool<CurrentLevelComponent>();
+            _purchaseStatePool = world.GetPool<PurchasePhaseStateComponent>();
+            _offerPool = world.GetPool<UnitShopOfferComponent>();
+            _pricePool = world.GetPool<OfferPriceComponent>();
+            _unitTypePool = world.GetPool<ShopOfferUnitTypeIdComponent>();
             _goldChangedEventPool = world.GetPool<GoldChangedEvent>();
-            _generateOffersRequestPool = world.GetPool<GenerateUnitShopOffersRequest>();
+            _shopOffersChangedEventPool = world.GetPool<ShopOffersChangedEvent>();
         }
-
+        
         public void Run(IEcsSystems systems)
         {
             var world = systems.GetWorld();
@@ -48,8 +74,14 @@ namespace Plinko.Scripts.ECS.Systems
 
             foreach (var requestEntity in _requestFilter)
             {
+                if (_phasePool.Get(runEntity).Value != Enums.PhaseType.PurchasePhase)
+                {
+                    world.DelEntity(requestEntity);
+                    continue;
+                }
+
                 var rerollPrice = _gameSettingsService.GetUnitShopRerollPrice();
-                ref var gold = ref _goldPool.GetOrAdd(runEntity);
+                ref var gold = ref _goldPool.Get(runEntity);
                 if (gold.Value < rerollPrice)
                 {
                     world.DelEntity(requestEntity);
@@ -57,14 +89,24 @@ namespace Plinko.Scripts.ECS.Systems
                 }
 
                 gold.Value -= rerollPrice;
-                ref var purchaseState = ref _purchasePhaseStatePool.GetOrAdd(runEntity);
-                purchaseState.RerollCount++;
                 _goldChangedEventPool.Add(world.NewEntity()).Value = gold.Value;
 
-                ref var generateRequest = ref _generateOffersRequestPool.Add(world.NewEntity());
-                generateRequest.OfferCount = _gameSettingsService.GetUnitShopOfferCount();
-                generateRequest.Offset = purchaseState.RerollCount * Mathf.Max(1, generateRequest.OfferCount);
+                var levelData = PurchasePhaseUtility.GetCurrentLevelData(_levelConfigService, _locationPool, _levelPool, runEntity);
+                var pool = PurchasePhaseUtility.BuildUnlockedPool(_unitConfigService, levelData);
+                PurchasePhaseUtility.GenerateFullShop(
+                    world,
+                    _gameSettingsService.GetUnitShopOfferCount(),
+                    pool,
+                    _weightedRandomService,
+                    _shopOfferIndex,
+                    _offerPool,
+                    _pricePool,
+                    _unitTypePool);
 
+                ref var purchaseState = ref _purchaseStatePool.Get(runEntity);
+                purchaseState.RerollCount++;
+                purchaseState.CanEnterBattle = purchaseState.ActiveTrainingCount <= 0;
+                _shopOffersChangedEventPool.Add(world.NewEntity());
                 world.DelEntity(requestEntity);
             }
         }

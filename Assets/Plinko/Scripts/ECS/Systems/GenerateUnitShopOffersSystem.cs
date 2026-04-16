@@ -1,9 +1,10 @@
-using System.Collections.Generic;
 using Leopotam.EcsLite;
+using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
+using Plinko.Scripts.ECS.Utils;
 using Plinko.Scripts.Services;
 using UnityEngine;
 
@@ -11,90 +12,95 @@ namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class GenerateUnitShopOffersSystem : IEcsInitSystem, IEcsRunSystem
     {
+        private readonly GameSettingsService _gameSettingsService;
+        private readonly LevelConfigService _levelConfigService;
         private readonly UnitConfigService _unitConfigService;
+        private readonly WeightedRandomService _weightedRandomService;
+        private readonly RunEntityIndex _runEntityIndex;
         private readonly ShopOfferIndex _shopOfferIndex;
 
+        private EcsFilter _phaseChangedFilter;
         private EcsFilter _requestFilter;
-        private EcsFilter _existingOfferFilter;
-        private EcsFilter _ownedUnitFilter;
-        private EcsFilter _stagedPurchasedUnitFilter;
+        private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
         private EcsPool<GenerateUnitShopOffersRequest> _requestPool;
+        private EcsPool<CurrentLocationComponent> _locationPool;
+        private EcsPool<CurrentLevelComponent> _levelPool;
+        private EcsPool<PurchasePhaseStateComponent> _purchaseStatePool;
         private EcsPool<UnitShopOfferComponent> _offerPool;
-        private EcsPool<ShopOfferUnitTypeIdComponent> _offerUnitTypePool;
         private EcsPool<OfferPriceComponent> _pricePool;
-        private EcsPool<UnitTypeIdComponent> _unitTypePool;
+        private EcsPool<ShopOfferUnitTypeIdComponent> _unitTypePool;
         private EcsPool<ShopOffersChangedEvent> _shopOffersChangedEventPool;
 
-        public GenerateUnitShopOffersSystem(UnitConfigService unitConfigService, ShopOfferIndex shopOfferIndex)
+        public GenerateUnitShopOffersSystem(
+            GameSettingsService gameSettingsService,
+            LevelConfigService levelConfigService,
+            UnitConfigService unitConfigService,
+            WeightedRandomService weightedRandomService,
+            RunEntityIndex runEntityIndex,
+            ShopOfferIndex shopOfferIndex)
         {
+            _gameSettingsService = gameSettingsService;
+            _levelConfigService = levelConfigService;
             _unitConfigService = unitConfigService;
+            _weightedRandomService = weightedRandomService;
+            _runEntityIndex = runEntityIndex;
             _shopOfferIndex = shopOfferIndex;
         }
-
+        
         public void Init(IEcsSystems systems)
         {
             var world = systems.GetWorld();
+            _phaseChangedFilter = world.Filter<PhaseChangedEvent>().End();
             _requestFilter = world.Filter<GenerateUnitShopOffersRequest>().End();
-            _existingOfferFilter = world.Filter<UnitShopOfferComponent>().End();
-            _ownedUnitFilter = world.Filter<OwnedUnitComponent>().Inc<UnitTypeIdComponent>().End();
-            _stagedPurchasedUnitFilter = world.Filter<StagedPurchasedUnitComponent>().Inc<UnitTypeIdComponent>().End();
+            _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
             _requestPool = world.GetPool<GenerateUnitShopOffersRequest>();
+            _locationPool = world.GetPool<CurrentLocationComponent>();
+            _levelPool = world.GetPool<CurrentLevelComponent>();
+            _purchaseStatePool = world.GetPool<PurchasePhaseStateComponent>();
             _offerPool = world.GetPool<UnitShopOfferComponent>();
-            _offerUnitTypePool = world.GetPool<ShopOfferUnitTypeIdComponent>();
             _pricePool = world.GetPool<OfferPriceComponent>();
-            _unitTypePool = world.GetPool<UnitTypeIdComponent>();
+            _unitTypePool = world.GetPool<ShopOfferUnitTypeIdComponent>();
             _shopOffersChangedEventPool = world.GetPool<ShopOffersChangedEvent>();
         }
-
+        
         public void Run(IEcsSystems systems)
         {
             var world = systems.GetWorld();
+            if (!_runEntityIndex.TryGetRunEntity(out var runEntity))
+            {
+                return;
+            }
+
+            var shouldGenerate = false;
+            var offerCount = _gameSettingsService.GetUnitShopOfferCount();
+
+            foreach (var eventEntity in _phaseChangedFilter)
+            {
+                if (_phaseChangedEventPool.Get(eventEntity).Value == Enums.PhaseType.PurchasePhase)
+                {
+                    shouldGenerate = true;
+                }
+            }
+
             foreach (var requestEntity in _requestFilter)
             {
-                ClearExistingOffers(world);
-
-                var excludedUnitTypeIds = new HashSet<string>();
-                foreach (var ownedUnitEntity in _ownedUnitFilter)
-                {
-                    excludedUnitTypeIds.Add(_unitTypePool.Get(ownedUnitEntity).Value);
-                }
-
-                foreach (var stagedUnitEntity in _stagedPurchasedUnitFilter)
-                {
-                    excludedUnitTypeIds.Add(_unitTypePool.Get(stagedUnitEntity).Value);
-                }
-
-                var candidates = _unitConfigService.GetShopUnits(excludedUnitTypeIds);
-                var offerCount = Mathf.Min(_requestPool.Get(requestEntity).OfferCount, candidates.Count);
-                var offset = _requestPool.Get(requestEntity).Offset;
-                for (var i = 0; i < offerCount; i++)
-                {
-                    var unitIndex = candidates.Count > 0 ? (offset + i) % candidates.Count : 0;
-                    var unit = candidates[unitIndex];
-                    var offerEntity = world.NewEntity();
-                    var offerId = i + 1;
-
-                    _offerPool.Add(offerEntity).OfferId = offerId;
-                    _offerUnitTypePool.Add(offerEntity).Value = unit.Id;
-                    _pricePool.Add(offerEntity).Value = unit.ShopPrice;
-                    _shopOfferIndex.Register(offerId, offerEntity);
-                }
-
-                _shopOffersChangedEventPool.Add(world.NewEntity());
+                shouldGenerate = true;
+                offerCount = Mathf.Max(1, _requestPool.Get(requestEntity).OfferCount);
                 world.DelEntity(requestEntity);
             }
-        }
 
-        private void ClearExistingOffers(EcsWorld world)
-        {
-            foreach (var offerEntity in _existingOfferFilter)
+            if (!shouldGenerate)
             {
-                var offerId = _offerPool.Get(offerEntity).OfferId;
-                _shopOfferIndex.Unregister(offerId);
-                world.DelEntity(offerEntity);
+                return;
             }
 
-            _shopOfferIndex.Clear();
+            var levelData = PurchasePhaseUtility.GetCurrentLevelData(_levelConfigService, _locationPool, _levelPool, runEntity);
+            var pool = PurchasePhaseUtility.BuildUnlockedPool(_unitConfigService, levelData);
+            PurchasePhaseUtility.GenerateFullShop(world, offerCount, pool, _weightedRandomService, _shopOfferIndex, _offerPool, _pricePool, _unitTypePool);
+
+            ref var purchaseState = ref _purchaseStatePool.Get(runEntity);
+            purchaseState.CanEnterBattle = purchaseState.ActiveTrainingCount <= 0;
+            _shopOffersChangedEventPool.Add(world.NewEntity());
         }
     }
 }

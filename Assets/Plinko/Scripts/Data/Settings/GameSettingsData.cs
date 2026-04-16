@@ -1,6 +1,5 @@
-    using System.Collections.Generic;
-    using Plinko.Scripts.Data.Pins;
-    using UnityEngine;
+using Plinko.Scripts.Data.Pins;
+using UnityEngine;
 
 namespace Plinko.Scripts.Data.Settings
 {
@@ -11,24 +10,24 @@ namespace Plinko.Scripts.Data.Settings
         [SerializeField] private int startingBaseHealth;
         [SerializeField] private int handSize = 3;
         [SerializeField] private int manaPerTurn = 3;
-        [SerializeField] private int boardSlotCount = 5;
         [SerializeField] private int unitShopOfferCount = 3;
         [SerializeField] private int pinShopOfferCount = 3;
         [SerializeField] private int unitShopRerollPrice = 1;
         [SerializeField] private int pinShopRerollPrice = 1;
-        [SerializeField] private int upgradeSelectionLimit = 5;
-        [SerializeField] private List<PlinkoBoardRowData> plinkoBoardRows = new();
+        [SerializeField] private int defaultRetrainingSelectionLimit = 3;
+        [SerializeField] private float battleTickDuration = 0.2f;
+        [SerializeField] private PlinkoFieldSettingsData fallbackPlinkoField;
 
         public int StartingGold => startingGold;
         public int StartingBaseHealth => startingBaseHealth;
         public int HandSize => handSize;
         public int ManaPerTurn => manaPerTurn;
-        public int BoardSlotCount => boardSlotCount;
         public int UnitShopOfferCount => unitShopOfferCount;
         public int PinShopOfferCount => pinShopOfferCount;
         public int UnitShopRerollPrice => unitShopRerollPrice;
         public int PinShopRerollPrice => pinShopRerollPrice;
-        public int UpgradeSelectionLimit => upgradeSelectionLimit;
-        public IReadOnlyList<PlinkoBoardRowData> PlinkoBoardRows => plinkoBoardRows;
+        public int DefaultRetrainingSelectionLimit => defaultRetrainingSelectionLimit;
+        public float BattleTickDuration => battleTickDuration;
+        public PlinkoFieldSettingsData FallbackPlinkoField => fallbackPlinkoField;
     }
 }

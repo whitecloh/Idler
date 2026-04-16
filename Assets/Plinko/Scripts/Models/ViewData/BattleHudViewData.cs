@@ -10,6 +10,7 @@ namespace Plinko.Scripts.Models.ViewData
         public int PlayerBaseHealth;
         public int EnemyBaseHealth;
         public int CurrentTurn;
+        public string ActiveEnemyWaveDebug;
         public bool IsBattleResolved;
         public List<HandCardViewData> HandCards = new();
     }

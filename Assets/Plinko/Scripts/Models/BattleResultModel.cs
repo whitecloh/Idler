@@ -8,5 +8,6 @@ namespace Plinko.Scripts.Models
         public int PlayerBaseHealthAfter;
         public int EnemyBaseHealthAfter;
         public bool IsVictory;
+        public bool IsDefeat;
     }
 }

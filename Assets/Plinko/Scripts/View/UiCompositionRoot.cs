@@ -10,54 +10,31 @@ namespace Plinko.Scripts.View
         [SerializeField] private MainMenuBridge mainMenuBridge;
         [SerializeField] private LocationBridge locationBridge;
         [SerializeField] private PurchasePhaseBridge purchasePhaseBridge;
-        [SerializeField] private UpgradePhaseBridge upgradePhaseBridge;
-        [SerializeField] private FieldUpgradePhaseBridge fieldUpgradePhaseBridge;
+        [SerializeField] private RetrainingPhaseBridge retrainingPhaseBridge;
+        [SerializeField] private FieldUpgradeBridge fieldUpgradeBridge;
         [SerializeField] private BattleBridge battleBridge;
         [SerializeField] private PurchasePhaseScreenController purchasePhaseScreenController;
-        [SerializeField] private UpgradePhaseScreenController upgradePhaseScreenController;
+        [SerializeField] private RetrainingPhaseScreenController retrainingPhaseScreenController;
         [SerializeField] private FieldUpgradePhaseScreenController fieldUpgradePhaseScreenController;
         [SerializeField] private BattleScreenController battleScreenController;
         [SerializeField] private BattleResultScreenController battleResultScreenController;
         [SerializeField] private OwnedUnitsScreenController ownedUnitsScreenController;
 
         public PurchasePhaseScreenController PurchasePhaseScreenController => purchasePhaseScreenController;
-        public UpgradePhaseScreenController UpgradePhaseScreenController => upgradePhaseScreenController;
+        public RetrainingPhaseScreenController RetrainingPhaseScreenController => retrainingPhaseScreenController;
         public FieldUpgradePhaseScreenController FieldUpgradePhaseScreenController => fieldUpgradePhaseScreenController;
         public BattleScreenController BattleScreenController => battleScreenController;
         public BattleResultScreenController BattleResultScreenController => battleResultScreenController;
         public OwnedUnitsScreenController OwnedUnitsScreenController => ownedUnitsScreenController;
-        
+
         public void Init(EcsWorld world)
         {
-            if (mainMenuBridge != null)
-            {
-                mainMenuBridge.Init(world);
-            }
-
-            if (locationBridge != null)
-            {
-                locationBridge.Init(world);
-            }
-
-            if (purchasePhaseBridge != null)
-            {
-                purchasePhaseBridge.Init(world);
-            }
-
-            if (upgradePhaseBridge != null)
-            {
-                upgradePhaseBridge.Init(world);
-            }
-
-            if (fieldUpgradePhaseBridge != null)
-            {
-                fieldUpgradePhaseBridge.Init(world);
-            }
-
-            if (battleBridge != null)
-            {
-                battleBridge.Init(world);
-            }
+            if (mainMenuBridge != null) mainMenuBridge.Init(world);
+            if (locationBridge != null) locationBridge.Init(world);
+            if (purchasePhaseBridge != null) purchasePhaseBridge.Init(world);
+            if (retrainingPhaseBridge != null) retrainingPhaseBridge.Init(world);
+            if (fieldUpgradeBridge != null) fieldUpgradeBridge.Init(world);
+            if (battleBridge != null) battleBridge.Init(world);
         }
     }
 }
