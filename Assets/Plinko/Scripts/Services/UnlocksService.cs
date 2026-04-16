@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Plinko.Scripts.Data.Meta;
+using Plinko.Scripts.Models;
 using UnityEngine;
 
 namespace Plinko.Scripts.Services
@@ -53,6 +54,73 @@ namespace Plinko.Scripts.Services
             {
                 _completedLocations.Add(locationId);
             }
+        }
+
+        public int GetMaxCompletedLevelIndex(string locationId)
+        {
+            return !string.IsNullOrWhiteSpace(locationId) &&
+                   _maxCompletedLevelIndexByLocation.TryGetValue(locationId, out var maxLevelIndex)
+                ? maxLevelIndex
+                : -1;
+        }
+
+        public bool IsLocationCompleted(string locationId)
+        {
+            return !string.IsNullOrWhiteSpace(locationId) && _completedLocations.Contains(locationId);
+        }
+
+        public void ImportProgress(MetaSaveDto dto)
+        {
+            _completedLocations.Clear();
+            _maxCompletedLevelIndexByLocation.Clear();
+            if (dto == null)
+            {
+                return;
+            }
+
+            if (dto.CompletedLocationIds != null)
+            {
+                foreach (var locationId in dto.CompletedLocationIds)
+                {
+                    if (!string.IsNullOrWhiteSpace(locationId))
+                    {
+                        _completedLocations.Add(locationId);
+                    }
+                }
+            }
+
+            if (dto.LocationProgress != null)
+            {
+                foreach (var progress in dto.LocationProgress)
+                {
+                    if (progress == null || string.IsNullOrWhiteSpace(progress.LocationId))
+                    {
+                        continue;
+                    }
+
+                    _maxCompletedLevelIndexByLocation[progress.LocationId] = Mathf.Max(-1, progress.MaxCompletedLevelIndex);
+                }
+            }
+        }
+
+        public MetaSaveDto ExportProgress()
+        {
+            var dto = new MetaSaveDto();
+            foreach (var locationId in _completedLocations)
+            {
+                dto.CompletedLocationIds.Add(locationId);
+            }
+
+            foreach (var pair in _maxCompletedLevelIndexByLocation)
+            {
+                dto.LocationProgress.Add(new LocationProgressSaveDto
+                {
+                    LocationId = pair.Key,
+                    MaxCompletedLevelIndex = pair.Value
+                });
+            }
+
+            return dto;
         }
     }
 }

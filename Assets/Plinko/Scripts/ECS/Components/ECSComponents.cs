@@ -39,6 +39,9 @@ namespace Plinko.Scripts.ECS.Components
     {
         public int CurrentTurn;
         public bool IsResolved;
+        public int NextDeploymentOrder;
+        public bool IsPlayerTurnActive;
+        public bool HasGeneratedHandThisTurn;
     }
 
     public struct CurrentEnemyWaveComponent
@@ -76,6 +79,7 @@ namespace Plinko.Scripts.ECS.Components
     public struct HandCardComponent { public int HandCardRuntimeId; }
     public struct HandCardOwnerUnitComponent { public int OwnedUnitRuntimeId; }
     public struct DeployedForTurnComponent { }
+    public struct DeploymentOrderComponent { public int Value; }
 
     public struct HandStateComponent
     {

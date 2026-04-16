@@ -78,13 +78,25 @@ namespace Plinko.Scripts.ECS.Systems
                     registerRequest.PassiveAbilityId = result.Result.PassiveAbilityId;
                     registerRequest.UpgradeCount = result.Result.UpgradeCount;
 
-                    ref var purchaseState = ref _purchaseStatePool.Get(runEntity);
-                    purchaseState.ActiveTrainingCount = Mathf.Max(0, purchaseState.ActiveTrainingCount - 1);
-                    purchaseState.CanEnterBattle = purchaseState.ActiveTrainingCount <= 0;
-
                     _plinkoRuntimeService.RemoveResult(runtimeId);
+                }
+                else if (stagedEntity < 0)
+                {
+                    Debug.LogWarning($"Purchased training completed without a staged trainee entity for unit {runtimeId}.");
+                }
+                else
+                {
+                    Debug.LogWarning($"Purchased training completed without a runtime result for unit {runtimeId}.");
+                }
+
+                if (stagedEntity >= 0)
+                {
                     world.DelEntity(stagedEntity);
                 }
+
+                ref var purchaseState = ref _purchaseStatePool.Get(runEntity);
+                purchaseState.ActiveTrainingCount = Mathf.Max(0, purchaseState.ActiveTrainingCount - 1);
+                purchaseState.CanEnterBattle = purchaseState.ActiveTrainingCount <= 0;
 
                 world.DelEntity(eventEntity);
             }

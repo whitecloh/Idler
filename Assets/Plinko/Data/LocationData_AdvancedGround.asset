@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7be898d61fe438ba157b3572b630085, type: 3}
+  m_Name: LocationData_AdvancedGround
+  m_EditorClassIdentifier: 
+  id: location_advanced_ground
+  displayName: Advanced Ground
+  art: {fileID: 0}
+  defaultPlinkoField: {fileID: 11400000, guid: 11d62c9f32f845f1b2a3323f6b7d4101, type: 2}
+  unlockCondition: {fileID: 11400000, guid: a1143f7b4c8548c8a1f0b80b0110a404, type: 2}
+  levels:
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: a1113f7b4c8548c8a1f0b80b0110a401, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0101, type: 2}
+  - {fileID: 11400000, guid: a1123f7b4c8548c8a1f0b80b0110a402, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: a1133f7b4c8548c8a1f0b80b0110a403, type: 2}

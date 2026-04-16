@@ -21,25 +21,42 @@ namespace Plinko.Scripts.Bootstrap
         public GameServicesContext Build()
         {
             var unlocksService = new UnlocksService();
+            var metaSaveService = new MetaSaveService(Path.Combine(Application.persistentDataPath, "session_meta_save.json"));
+            unlocksService.ImportProgress(metaSaveService.Load());
             var gameSettingsService = new GameSettingsService(gameSettingsData);
             var locationConfigService = new LocationConfigService(locations);
+            var levelConfigService = new LevelConfigService(locationConfigService);
+            var unitConfigService = new UnitConfigService(unitTypes, unlocksService);
+            var pinConfigService = new PinConfigService(pinTypes, unlocksService);
+            var plinkoConfigService = new PlinkoConfigService(gameSettingsService);
+            var plinkoPathFactory = new PlinkoPathFactory();
+            var plinkoRuntimeService = new PlinkoRuntimeService();
 
             return new GameServicesContext
             {
                 GameSettingsService = gameSettingsService,
                 LocationConfigService = locationConfigService,
-                LevelConfigService = new LevelConfigService(locationConfigService),
+                LevelConfigService = levelConfigService,
                 UnlocksService = unlocksService,
                 WeightedRandomService = new WeightedRandomService(),
-                UnitConfigService = new UnitConfigService(unitTypes, unlocksService),
-                PinConfigService = new PinConfigService(pinTypes, unlocksService),
-                PlinkoConfigService = new PlinkoConfigService(gameSettingsService),
+                UnitConfigService = unitConfigService,
+                PinConfigService = pinConfigService,
+                PlinkoConfigService = plinkoConfigService,
                 EnemyWaveSelectionService = new EnemyWaveSelectionService(),
                 UnitNamingService = new UnitNamingService(unitNamesData),
-                PlinkoPathFactory = new PlinkoPathFactory(),
+                PlinkoPathFactory = plinkoPathFactory,
                 BattleRuntimeService = new BattleRuntimeService(),
-                PlinkoRuntimeService = new PlinkoRuntimeService(),
+                PlinkoRuntimeService = plinkoRuntimeService,
+                TrainingPipelineService = new TrainingPipelineService(
+                    unitConfigService,
+                    pinConfigService,
+                    locationConfigService,
+                    levelConfigService,
+                    plinkoConfigService,
+                    plinkoPathFactory,
+                    plinkoRuntimeService),
                 RunSaveService = new RunSaveService(Path.Combine(Application.persistentDataPath, "session_run_save.json")),
+                MetaSaveService = metaSaveService,
                 RunEntityIndex = new RunEntityIndex(),
                 OwnedUnitIndex = new OwnedUnitIndex(),
                 ShopOfferIndex = new ShopOfferIndex(),

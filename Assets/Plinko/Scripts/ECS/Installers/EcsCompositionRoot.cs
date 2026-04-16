@@ -21,7 +21,11 @@ namespace Plinko.Scripts.ECS.Installers
         {
             return new EcsSystems(world)
                 .Add(new StartNewRunSystem(
+                    _services.LocationConfigService,
+                    _services.UnlocksService,
                     _services.GameSettingsService,
+                    _services.PlinkoRuntimeService,
+                    _services.BattleRuntimeService,
                     _services.RunEntityIndex,
                     _services.OwnedUnitIndex,
                     _services.ShopOfferIndex,
@@ -29,7 +33,11 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.InstalledPinIndex))
                 .Add(new ContinueRunSystem(
                     _services.RunSaveService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
                     _services.GameSettingsService,
+                    _services.PlinkoRuntimeService,
+                    _services.BattleRuntimeService,
                     _services.RunEntityIndex,
                     _services.OwnedUnitIndex,
                     _services.ShopOfferIndex,
@@ -40,7 +48,11 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.RunEntityIndex,
                     _services.InstalledPinIndex))
                 .Add(new RestoreOwnedUnitsSystem(_services.OwnedUnitIndex))
-                .Add(new LoadLevelSystem(_services.LevelConfigService, _services.RunEntityIndex))
+                .Add(new LoadLevelSystem(
+                    _services.LevelConfigService,
+                    _services.GameSettingsService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
                 .Add(new RouteLevelTypeToPhaseSystem(
                     _services.LevelConfigService,
                     _services.GameSettingsService,
@@ -71,39 +83,103 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.RunEntityIndex,
                     _services.ShopOfferIndex))
                 .Add(new BeginPurchasedTrainingSystem(
-                    _services.UnitConfigService,
-                    _services.PinConfigService,
-                    _services.LocationConfigService,
-                    _services.LevelConfigService,
-                    _services.PlinkoConfigService,
-                    _services.PlinkoPathFactory,
-                    _services.PlinkoRuntimeService,
+                    _services.TrainingPipelineService,
                     _services.RunEntityIndex))
                 .Add(new AdvancePlinkoTrainingPlaybackSystem())
                 .Add(new CompletePurchasedTrainingSystem(
                     _services.PlinkoRuntimeService,
                     _services.RunEntityIndex))
-                .Add(new SelectUnitsForRetrainingSystem())
-                .Add(new ConfirmRetrainingSelectionSystem())
-                .Add(new BeginRetrainingSystem())
-                .Add(new CompleteRetrainingSystem())
-                .Add(new GeneratePinShopOffersSystem())
-                .Add(new RerollPinShopSystem())
-                .Add(new BuyPinSystem())
-                .Add(new SelectBoardSlotSystem())
-                .Add(new ReplaceBoardPinSystem())
-                .Add(new GenerateHandSystem())
-                .Add(new ClearHandSystem())
-                .Add(new DeployCardSystem())
-                .Add(new SelectEnemyWaveSystem())
-                .Add(new ResolveBattleSystem())
-                .Add(new StartBattlePlaybackSystem())
-                .Add(new RouteBattleOutcomeAfterPlaybackSystem())
-                .Add(new AdvanceToNextLevelSystem())
-                .Add(new ReturnToMenuSystem())
+                .Add(new SelectUnitsForRetrainingSystem(
+                    _services.RunEntityIndex,
+                    _services.OwnedUnitIndex))
+                .Add(new ConfirmRetrainingSelectionSystem(_services.RunEntityIndex))
+                .Add(new BeginRetrainingSystem(
+                    _services.TrainingPipelineService,
+                    _services.RunEntityIndex))
+                .Add(new CompleteRetrainingSystem(
+                    _services.PlinkoRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new GeneratePinShopOffersSystem(
+                    _services.GameSettingsService,
+                    _services.LevelConfigService,
+                    _services.PinConfigService,
+                    _services.WeightedRandomService,
+                    _services.RunEntityIndex,
+                    _services.PinShopOfferIndex))
+                .Add(new RerollPinShopSystem(
+                    _services.GameSettingsService,
+                    _services.LevelConfigService,
+                    _services.PinConfigService,
+                    _services.WeightedRandomService,
+                    _services.RunEntityIndex,
+                    _services.PinShopOfferIndex))
+                .Add(new BuyPinSystem(
+                    _services.LevelConfigService,
+                    _services.PinConfigService,
+                    _services.WeightedRandomService,
+                    _services.RunEntityIndex,
+                    _services.PinShopOfferIndex))
+                .Add(new SelectBoardSlotSystem(
+                    _services.RunEntityIndex,
+                    _services.InstalledPinIndex))
+                .Add(new ReplaceBoardPinSystem(
+                    _services.RunEntityIndex,
+                    _services.InstalledPinIndex))
+                .Add(new SelectEnemyWaveSystem(
+                    _services.EnemyWaveSelectionService,
+                    _services.LevelConfigService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new ResolveBattleSystem(
+                    _services.BattleRuntimeService,
+                    _services.GameSettingsService,
+                    _services.OwnedUnitIndex,
+                    _services.RunEntityIndex))
+                .Add(new StartBattlePlaybackSystem(
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new RouteBattleOutcomeAfterPlaybackSystem(
+                    _services.BattleRuntimeService,
+                    _services.LevelConfigService,
+                    _services.LocationConfigService,
+                    _services.RunEntityIndex))
+                .Add(new BeginBattleTurnSystem(
+                    _services.GameSettingsService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new GenerateHandSystem(
+                    _services.GameSettingsService,
+                    _services.RunEntityIndex))
+                .Add(new ClearHandSystem(_services.RunEntityIndex))
+                .Add(new DeployCardSystem(
+                    _services.RunEntityIndex,
+                    _services.OwnedUnitIndex))
+                .Add(new AdvanceToNextLevelSystem(
+                    _services.BattleRuntimeService,
+                    _services.LevelConfigService,
+                    _services.RunEntityIndex))
+                .Add(new PersistMetaProgressSystem(
+                    _services.UnlocksService,
+                    _services.MetaSaveService,
+                    _services.RunEntityIndex))
+                .Add(new ReturnToMenuSystem(
+                    _services.RunSaveService,
+                    _services.PlinkoRuntimeService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex,
+                    _services.OwnedUnitIndex,
+                    _services.ShopOfferIndex,
+                    _services.PinShopOfferIndex,
+                    _services.InstalledPinIndex))
                 .Add(new RegisterOwnedUnitSystem(_services.OwnedUnitIndex))
                 .Add(new ReplaceOwnedUnitSystem(_services.OwnedUnitIndex))
                 .Add(new WriteRunSaveSystem(_services.RunSaveService, _services.RunEntityIndex))
+                .Add(new RefreshMenuLocationUiSystem(
+                    _services.RunSaveService,
+                    _services.LocationConfigService,
+                    _services.UnlocksService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
                 .Add(new RefreshPurchasePhaseUiSystem())
                 .Add(new RefreshRetrainingPhaseUiSystem())
                 .Add(new RefreshFieldUpgradeUiSystem())

@@ -10,7 +10,11 @@ namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class StartNewRunSystem : IEcsInitSystem, IEcsRunSystem
     {
+        private readonly LocationConfigService _locationConfigService;
+        private readonly UnlocksService _unlocksService;
         private readonly GameSettingsService _gameSettingsService;
+        private readonly PlinkoRuntimeService _plinkoRuntimeService;
+        private readonly BattleRuntimeService _battleRuntimeService;
         private readonly RunEntityIndex _runEntityIndex;
         private readonly OwnedUnitIndex _ownedUnitIndex;
         private readonly ShopOfferIndex _shopOfferIndex;
@@ -29,6 +33,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<EnemyBaseHealthComponent> _enemyBasePool;
         private EcsPool<RunStatusComponent> _statusPool;
         private EcsPool<CurrentManaComponent> _manaPool;
+        private EcsPool<HandStateComponent> _handStatePool;
         private EcsPool<PurchasePhaseStateComponent> _purchasePool;
         private EcsPool<RetrainingPhaseStateComponent> _retrainingPool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradePool;
@@ -38,14 +43,22 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<StartLevelRequest> _startLevelRequestPool;
 
         public StartNewRunSystem(
+            LocationConfigService locationConfigService,
+            UnlocksService unlocksService,
             GameSettingsService gameSettingsService,
+            PlinkoRuntimeService plinkoRuntimeService,
+            BattleRuntimeService battleRuntimeService,
             RunEntityIndex runEntityIndex,
             OwnedUnitIndex ownedUnitIndex,
             ShopOfferIndex shopOfferIndex,
             PinShopOfferIndex pinShopOfferIndex,
             InstalledPinIndex installedPinIndex)
         {
+            _locationConfigService = locationConfigService;
+            _unlocksService = unlocksService;
             _gameSettingsService = gameSettingsService;
+            _plinkoRuntimeService = plinkoRuntimeService;
+            _battleRuntimeService = battleRuntimeService;
             _runEntityIndex = runEntityIndex;
             _ownedUnitIndex = ownedUnitIndex;
             _shopOfferIndex = shopOfferIndex;
@@ -68,6 +81,7 @@ namespace Plinko.Scripts.ECS.Systems
             _enemyBasePool = world.GetPool<EnemyBaseHealthComponent>();
             _statusPool = world.GetPool<RunStatusComponent>();
             _manaPool = world.GetPool<CurrentManaComponent>();
+            _handStatePool = world.GetPool<HandStateComponent>();
             _purchasePool = world.GetPool<PurchasePhaseStateComponent>();
             _retrainingPool = world.GetPool<RetrainingPhaseStateComponent>();
             _fieldUpgradePool = world.GetPool<FieldUpgradePhaseStateComponent>();
@@ -83,7 +97,16 @@ namespace Plinko.Scripts.ECS.Systems
             foreach (var requestEntity in _requestFilter)
             {
                 ref var request = ref _requestPool.Get(requestEntity);
+                var location = _locationConfigService.GetLocation(request.LocationId);
+                if (location == null || !_unlocksService.IsUnlocked(location.UnlockCondition))
+                {
+                    world.DelEntity(requestEntity);
+                    continue;
+                }
+
                 RuntimeEntityCleanup.ClearForNewRun(world, _runEntityIndex, _ownedUnitIndex, _shopOfferIndex, _pinShopOfferIndex, _installedPinIndex);
+                _plinkoRuntimeService.Clear();
+                _battleRuntimeService.Clear();
 
                 var runEntity = world.NewEntity();
                 _runPool.Add(runEntity);
@@ -100,6 +123,7 @@ namespace Plinko.Scripts.ECS.Systems
                 _enemyBasePool.Add(runEntity) = new EnemyBaseHealthComponent { Value = 0, MaxValue = 0 };
                 _statusPool.Add(runEntity).Value = Enums.RunStatus.InProgress;
                 _manaPool.Add(runEntity).Value = _gameSettingsService.GetManaPerTurn();
+                _handStatePool.Add(runEntity) = new HandStateComponent { CardCount = 0, NextRuntimeId = 1 };
                 _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = 0, ActiveTrainingCount = 0, CanEnterBattle = false };
                 _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
                 {
@@ -109,7 +133,14 @@ namespace Plinko.Scripts.ECS.Systems
                     ActiveTrainingCount = 0
                 };
                 _fieldUpgradePool.Add(runEntity) = new FieldUpgradePhaseStateComponent { RerollCount = 0, SelectedSlotIndex = -1, IsPlacementHighlighted = false };
-                _battlePool.Add(runEntity) = new BattleStateComponent { CurrentTurn = 0, IsResolved = false };
+                _battlePool.Add(runEntity) = new BattleStateComponent
+                {
+                    CurrentTurn = 0,
+                    IsResolved = false,
+                    NextDeploymentOrder = 0,
+                    IsPlayerTurnActive = false,
+                    HasGeneratedHandThisTurn = false
+                };
 
                 _runEntityIndex.SetRunEntity(runEntity);
 

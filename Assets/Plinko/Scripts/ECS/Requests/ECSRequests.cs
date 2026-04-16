@@ -54,6 +54,7 @@ namespace Plinko.Scripts.ECS.Requests
     public struct SelectBoardSlotRequest { public int SlotIndex; }
     public struct ReplaceBoardPinRequest { }
     public struct GenerateHandRequest { }
+    public struct BeginBattleTurnRequest { }
     public struct ClearHandRequest { }
     public struct DeployCardRequest { public int HandCardRuntimeId; }
     public struct StartBattleRequest { }

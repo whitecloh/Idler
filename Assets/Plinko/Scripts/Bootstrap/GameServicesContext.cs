@@ -20,7 +20,9 @@ namespace Plinko.Scripts.Bootstrap
         public PlinkoPathFactory PlinkoPathFactory;
         public BattleRuntimeService BattleRuntimeService;
         public PlinkoRuntimeService PlinkoRuntimeService;
+        public TrainingPipelineService TrainingPipelineService;
         public RunSaveService RunSaveService;
+        public MetaSaveService MetaSaveService;
         public RunEntityIndex RunEntityIndex;
         public OwnedUnitIndex OwnedUnitIndex;
         public ShopOfferIndex ShopOfferIndex;

@@ -7,7 +7,8 @@ namespace Plinko.Scripts.Data.Common
             None = 0,
             Purchase = 1,
             Retraining = 2,
-            FieldUpgrade = 3
+            FieldUpgrade = 3,
+            Battle = 4
         }
 
         public enum PhaseType

@@ -263,6 +263,7 @@ MonoBehaviour:
   gameSettingsData: {fileID: 11400000, guid: dbb93022748edf542a33ca2206a6f0c8, type: 2}
   locations:
   - {fileID: 11400000, guid: 29a7e88275f3c574a85179ac7c2cc33b, type: 2}
+  - {fileID: 11400000, guid: a1153f7b4c8548c8a1f0b80b0110a405, type: 2}
   unitTypes:
   - {fileID: 11400000, guid: 26e9b8c26ad5b854d96b7807f220fd04, type: 2}
   - {fileID: 11400000, guid: 7b1ea76d2b3f4948ba7949f0ecce5101, type: 2}
@@ -309,6 +310,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameServicesInstaller: {fileID: 301000002}
   uiCompositionRoot: {fileID: 301000003}
+  attachDevHarness: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

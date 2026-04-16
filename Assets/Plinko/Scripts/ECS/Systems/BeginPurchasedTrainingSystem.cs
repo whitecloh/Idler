@@ -1,23 +1,16 @@
 using System.Collections.Generic;
 using Leopotam.EcsLite;
-using Plinko.Scripts.Data.Pins;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
+using Plinko.Scripts.Models;
 using Plinko.Scripts.Services;
-using UnityEngine;
 
 namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class BeginPurchasedTrainingSystem : IEcsInitSystem, IEcsRunSystem
     {
-        private readonly UnitConfigService _unitConfigService;
-        private readonly PinConfigService _pinConfigService;
-        private readonly LocationConfigService _locationConfigService;
-        private readonly LevelConfigService _levelConfigService;
-        private readonly PlinkoConfigService _plinkoConfigService;
-        private readonly PlinkoPathFactory _plinkoPathFactory;
-        private readonly PlinkoRuntimeService _plinkoRuntimeService;
+        private readonly TrainingPipelineService _trainingPipelineService;
         private readonly RunEntityIndex _runEntityIndex;
 
         private EcsFilter _eventFilter;
@@ -35,22 +28,10 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<TrainingPlaybackStartedEvent> _trainingPlaybackStartedEventPool;
 
         public BeginPurchasedTrainingSystem(
-            UnitConfigService unitConfigService,
-            PinConfigService pinConfigService,
-            LocationConfigService locationConfigService,
-            LevelConfigService levelConfigService,
-            PlinkoConfigService plinkoConfigService,
-            PlinkoPathFactory plinkoPathFactory,
-            PlinkoRuntimeService plinkoRuntimeService,
+            TrainingPipelineService trainingPipelineService,
             RunEntityIndex runEntityIndex)
         {
-            _unitConfigService = unitConfigService;
-            _pinConfigService = pinConfigService;
-            _locationConfigService = locationConfigService;
-            _levelConfigService = levelConfigService;
-            _plinkoConfigService = plinkoConfigService;
-            _plinkoPathFactory = plinkoPathFactory;
-            _plinkoRuntimeService = plinkoRuntimeService;
+            _trainingPipelineService = trainingPipelineService;
             _runEntityIndex = runEntityIndex;
         }
         
@@ -80,6 +61,10 @@ namespace Plinko.Scripts.ECS.Systems
                 return;
             }
 
+            var locationId = _locationPool.Get(runEntity).LocationId;
+            var levelIndex = _levelPool.Get(runEntity).LevelIndex;
+            var installedPins = BuildInstalledPinSnapshots();
+
             foreach (var eventEntity in _eventFilter)
             {
                 var runtimeId = _unitPurchasedEventPool.Get(eventEntity).RuntimeId;
@@ -99,43 +84,49 @@ namespace Plinko.Scripts.ECS.Systems
                     continue;
                 }
 
-                var location = _locationConfigService.GetLocation(_locationPool.Get(runEntity).LocationId);
-                var levelData = _levelConfigService.GetLevel(_locationPool.Get(runEntity).LocationId, _levelPool.Get(runEntity).LevelIndex);
-                var field = _plinkoConfigService.GetField(location, levelData);
-                var installedPins = new Dictionary<int, PinTypeData>();
-                foreach (var pinEntity in _installedPinFilter)
+                if (!_trainingPipelineService.TryPreparePurchaseTraining(
+                        runtimeId,
+                        _unitTypeIdPool.Get(stagedEntity).Value,
+                        _displayNamePool.Get(stagedEntity).Value,
+                        locationId,
+                        levelIndex,
+                        installedPins,
+                        out var trainingRun))
                 {
-                    var installedPin = _installedPinPool.Get(pinEntity);
-                    var pinType = _pinConfigService.GetPin(installedPin.PinTypeId);
-                    if (pinType != null)
-                    {
-                        installedPins[installedPin.SlotIndex] = pinType;
-                    }
+                    world.DelEntity(eventEntity);
+                    continue;
                 }
-
-                var unitType = _unitConfigService.GetUnit(_unitTypeIdPool.Get(stagedEntity).Value);
-                var result = _plinkoPathFactory.GeneratePurchaseResult(
-                    runtimeId,
-                    unitType,
-                    _displayNamePool.Get(stagedEntity).Value,
-                    field,
-                    installedPins);
-                _plinkoRuntimeService.SetResult(runtimeId, result);
 
                 var playbackEntity = world.NewEntity();
                 ref var playback = ref _playbackPool.Add(playbackEntity);
                 playback.RuntimeId = runtimeId;
                 playback.IsRetraining = false;
-                playback.Duration = Mathf.Max(0.75f, result != null && result.Nodes != null ? result.Nodes.Count * 0.2f : 0.75f);
+                playback.Duration = trainingRun.PlaybackDuration;
                 playback.Elapsed = 0f;
                 playback.CurrentNodeIndex = 0;
-                playback.TotalNodeCount = result != null && result.Nodes != null ? result.Nodes.Count : 0;
+                playback.TotalNodeCount = trainingRun.TotalNodeCount;
                 playback.IsCompleted = false;
 
                 _unitTrainingStartedEventPool.Add(world.NewEntity()).RuntimeId = runtimeId;
                 _trainingPlaybackStartedEventPool.Add(world.NewEntity()).RuntimeId = runtimeId;
                 world.DelEntity(eventEntity);
             }
+        }
+
+        private List<InstalledPinSnapshotModel> BuildInstalledPinSnapshots()
+        {
+            var installedPins = new List<InstalledPinSnapshotModel>();
+            foreach (var pinEntity in _installedPinFilter)
+            {
+                var installedPin = _installedPinPool.Get(pinEntity);
+                installedPins.Add(new InstalledPinSnapshotModel
+                {
+                    SlotIndex = installedPin.SlotIndex,
+                    PinTypeId = installedPin.PinTypeId
+                });
+            }
+
+            return installedPins;
         }
     }
 }

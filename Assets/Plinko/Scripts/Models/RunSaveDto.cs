@@ -11,13 +11,20 @@ namespace Plinko.Scripts.Models
         public int LevelIndex;
         public Enums.LevelType LevelType;
         public Enums.PhaseType PhaseType;
+        public Enums.RunStatus RunStatus;
         public int Gold;
+        public int CurrentMana;
         public int PlayerBaseHealth;
         public int EnemyBaseHealth;
+        public int BattleTurn;
+        public int HandNextRuntimeId;
+        public int NextDeploymentOrder;
         public int PurchaseRerollCount;
         public int PinRerollCount;
         public bool HasActiveRun;
         public List<OwnedUnitSaveDto> OwnedUnits = new();
+        public List<HandCardSaveDto> HandCards = new();
+        public List<DeployedUnitSaveDto> DeployedUnits = new();
         public PlinkoBoardSaveDto Board = new();
     }
 }

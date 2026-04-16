@@ -12,17 +12,26 @@ namespace Plinko.Scripts.Services
         {
             if (levelData == null || levelData.HpThresholdWaves == null || levelData.HpThresholdWaves.Count == 0)
             {
-                return new EnemyWaveModel();
+                return new EnemyWaveModel
+                {
+                    Enemies = new List<EnemyUnitSnapshotModel>()
+                };
             }
 
             var maxHealth = Mathf.Max(1, levelData.EnemyBaseMaxHealth);
-            var currentPercent = Mathf.CeilToInt(currentEnemyBaseHealth * 100f / maxHealth);
+            var currentPercent = Mathf.Clamp(Mathf.CeilToInt(currentEnemyBaseHealth * 100f / maxHealth), 0, 100);
             EnemyWaveThresholdData best = null;
+            EnemyWaveThresholdData fallback = null;
             foreach (var wave in levelData.HpThresholdWaves)
             {
                 if (wave == null)
                 {
                     continue;
+                }
+
+                if (fallback == null || wave.ThresholdPercent > fallback.ThresholdPercent)
+                {
+                    fallback = wave;
                 }
 
                 if (currentPercent <= wave.ThresholdPercent)
@@ -36,14 +45,19 @@ namespace Plinko.Scripts.Services
 
             if (best == null)
             {
-                best = levelData.HpThresholdWaves[0];
+                best = fallback;
             }
 
             var model = new EnemyWaveModel
             {
-                ThresholdPercent = best.ThresholdPercent,
+                ThresholdPercent = best != null ? best.ThresholdPercent : 0,
                 Enemies = new List<EnemyUnitSnapshotModel>()
             };
+
+            if (best == null || best.Enemies == null)
+            {
+                return model;
+            }
 
             foreach (var enemy in best.Enemies)
             {
@@ -59,7 +73,9 @@ namespace Plinko.Scripts.Services
                     Attack = enemy.Attack,
                     Health = enemy.Health,
                     BoardX = enemy.BoardX,
-                    BoardY = enemy.BoardY
+                    BoardY = enemy.BoardY,
+                    MoveRange = enemy.MoveRange,
+                    AttackRange = enemy.AttackRange
                 });
                 model.TotalAttack += enemy.Attack;
                 model.TotalHealth += enemy.Health;

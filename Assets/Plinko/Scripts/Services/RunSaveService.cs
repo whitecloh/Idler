@@ -9,6 +9,8 @@ namespace Plinko.Scripts.Services
     {
         private readonly string _savePath;
 
+        public string SavePath => _savePath;
+
         public RunSaveService(string savePath)
         {
             _savePath = savePath;
@@ -43,6 +45,21 @@ namespace Plinko.Scripts.Services
             catch (Exception exception)
             {
                 Debug.LogError($"Run save write failed: {exception.Message}");
+            }
+        }
+
+        public void Clear()
+        {
+            try
+            {
+                if (File.Exists(_savePath))
+                {
+                    File.Delete(_savePath);
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"Run save clear failed: {exception.Message}");
             }
         }
     }

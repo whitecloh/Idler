@@ -17,6 +17,11 @@ namespace Plinko.Scripts.Services
             return _resultsByRuntimeId.TryGetValue(runtimeId, out result);
         }
 
+        public IReadOnlyDictionary<int, PlinkoPathResultModel> GetAllResults()
+        {
+            return _resultsByRuntimeId;
+        }
+
         public void RemoveResult(int runtimeId)
         {
             _resultsByRuntimeId.Remove(runtimeId);

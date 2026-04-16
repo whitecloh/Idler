@@ -11,5 +11,7 @@ namespace Plinko.Scripts.Models
         public int Health;
         public int BoardX;
         public int BoardY;
+        public int MoveRange;
+        public int AttackRange;
     }
 }
