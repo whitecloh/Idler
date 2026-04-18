@@ -46,8 +46,9 @@ namespace Plinko.Scripts.ECS.Requests
     public struct GenerateUnitShopOffersRequest { public int OfferCount; }
     public struct RerollUnitShopRequest { }
     public struct BuyUnitRequest { public int OfferId; }
-    public struct SelectUnitsForRetrainingRequest { public int RuntimeId; }
-    public struct ConfirmRetrainingSelectionRequest { }
+    public struct GenerateRetrainingShopOffersRequest { public int OfferCount; }
+    public struct RerollRetrainingShopRequest { }
+    public struct BuyRetrainingBatchRequest { }
     public struct GeneratePinShopOffersRequest { public int OfferCount; }
     public struct RerollPinShopRequest { }
     public struct BuyPinRequest { public int OfferId; }

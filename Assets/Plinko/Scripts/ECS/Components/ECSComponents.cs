@@ -22,9 +22,8 @@ namespace Plinko.Scripts.ECS.Components
 
     public struct RetrainingPhaseStateComponent
     {
-        public int SelectedCount;
-        public int SelectionLimit;
-        public bool IsSelectionLocked;
+        public int OfferCount;
+        public int RerollCount;
         public int ActiveTrainingCount;
     }
 
@@ -42,6 +41,9 @@ namespace Plinko.Scripts.ECS.Components
         public int NextDeploymentOrder;
         public bool IsPlayerTurnActive;
         public bool HasGeneratedHandThisTurn;
+        public int TotalEnemyKills;
+        public int TotalDamageToEnemyBase;
+        public int TotalDamageToPlayerBase;
     }
 
     public struct CurrentEnemyWaveComponent
@@ -60,6 +62,7 @@ namespace Plinko.Scripts.ECS.Components
     public struct UnitLevelComponent { public int Value; }
     public struct PassiveAbilityIdComponent { public string Value; }
     public struct UpgradeCountComponent { public int Value; }
+    public struct RetrainingPurchasedOnLevelComponent { }
     public struct SelectedForRetrainingComponent { }
 
     public struct InstalledPinComponent
@@ -88,6 +91,8 @@ namespace Plinko.Scripts.ECS.Components
     }
 
     public struct UnitShopOfferComponent { public int OfferId; }
+    public struct RetrainingShopOfferComponent { public int OfferSlotIndex; }
+    public struct RetrainingOfferOwnerUnitComponent { public int RuntimeId; }
     public struct PinShopOfferComponent { public int OfferId; }
     public struct OfferPriceComponent { public int Value; }
     public struct ShopOfferUnitTypeIdComponent { public string Value; }
@@ -104,6 +109,8 @@ namespace Plinko.Scripts.ECS.Components
     {
         public int RuntimeId;
         public bool IsRetraining;
+        public float StartDelay;
+        public bool HasStarted;
         public float Duration;
         public float Elapsed;
         public int CurrentNodeIndex;

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Plinko.Scripts.Models.ViewData
 {
@@ -10,7 +11,11 @@ namespace Plinko.Scripts.Models.ViewData
         public int ColumnIndex;
         public string PinTypeId;
         public string DisplayName;
+        public Sprite Sprite;
         public bool IsSelected;
         public bool IsPlacementHighlighted;
+        public bool IsAvailableForReplacement;
+        public bool IsSelectedForReplacement;
+        public bool IsNotSelectedForReplacement;
     }
 }

@@ -13,7 +13,12 @@ MonoBehaviour:
   m_Name: LevelData_Battle_01
   m_EditorClassIdentifier: 
   id: level_battle_01
-  levelType: 4
+  levelType: 3
+  progressSprite: {fileID: 0}
+  gridSprite: {fileID: 0}
+  playerBaseSprite: {fileID: 0}
+  enemyBaseSprite: {fileID: 0}
+  backgroundSprite: {fileID: 0}
   preBattlePhase: {fileID: 0}
   enemyBaseMaxHealth: 28
   victoryReward: 5

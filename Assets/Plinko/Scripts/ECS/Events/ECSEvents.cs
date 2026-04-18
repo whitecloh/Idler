@@ -16,8 +16,8 @@ namespace Plinko.Scripts.ECS.Events
     public struct FieldUpgradePhaseEnteredEvent { }
     public struct ShopOffersChangedEvent { }
     public struct PinShopOffersChangedEvent { }
-    public struct RetrainingSelectionChangedEvent { public int SelectedCount; }
-    public struct RetrainingSelectionConfirmedEvent { }
+    public struct RetrainingShopOffersChangedEvent { }
+    public struct RetrainingBatchPurchasedEvent { }
     public struct BoardSlotSelectionChangedEvent { public int SlotIndex; }
     public struct PlinkoBoardChangedEvent { }
     public struct PinPurchasedEvent { public int OfferId; public string PinTypeId; }

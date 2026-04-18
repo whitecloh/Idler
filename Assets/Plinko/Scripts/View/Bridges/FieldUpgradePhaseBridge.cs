@@ -11,6 +11,7 @@ namespace Plinko.Scripts.View.Bridges
         public void RequestBuyPin(int offerId) => _world.GetPool<BuyPinRequest>().Add(_world.NewEntity()).OfferId = offerId;
         public void RequestRerollShop() => _world.GetPool<RerollPinShopRequest>().Add(_world.NewEntity());
         public void RequestSelectBoardSlot(int slotIndex) => _world.GetPool<SelectBoardSlotRequest>().Add(_world.NewEntity()).SlotIndex = slotIndex;
+        public void RequestCancelBoardSlotSelection(int slotIndex) => _world.GetPool<SelectBoardSlotRequest>().Add(_world.NewEntity()).SlotIndex = slotIndex;
         public void RequestReplaceBoardPin() => _world.GetPool<ReplaceBoardPinRequest>().Add(_world.NewEntity());
     }
 }

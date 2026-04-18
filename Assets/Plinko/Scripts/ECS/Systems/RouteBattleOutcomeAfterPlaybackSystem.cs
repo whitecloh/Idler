@@ -4,6 +4,7 @@ using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
+using Plinko.Scripts.Models;
 using Plinko.Scripts.Services;
 
 namespace Plinko.Scripts.ECS.Systems
@@ -86,6 +87,8 @@ namespace Plinko.Scripts.ECS.Systems
 
                 if (result.IsDefeat)
                 {
+                    result.BaseReward = 0;
+                    result.RewardGranted = 0;
                     _statusPool.Get(runEntity).Value = Enums.RunStatus.Defeat;
                     SetPhase(world, runEntity, Enums.PhaseType.Result);
                     _runFailedEventPool.Add(world.NewEntity());
@@ -96,7 +99,7 @@ namespace Plinko.Scripts.ECS.Systems
 
                 if (result.IsVictory)
                 {
-                    ApplyVictoryReward(world, runEntity);
+                    ApplyVictoryReward(world, runEntity, result);
                     _levelCompletedEventPool.Add(world.NewEntity());
 
                     if (HasNextLevel(runEntity))
@@ -126,18 +129,43 @@ namespace Plinko.Scripts.ECS.Systems
             _beginBattleTurnRequestPool.Add(world.NewEntity());
         }
 
-        private void ApplyVictoryReward(EcsWorld world, int runEntity)
+        private void ApplyVictoryReward(EcsWorld world, int runEntity, BattleResultModel result)
         {
-            var locationId = _locationPool.Get(runEntity).LocationId;
-            var levelIndex = _levelPool.Get(runEntity).LevelIndex;
-            var levelData = _levelConfigService.GetLevel(locationId, levelIndex);
-            if (levelData == null || levelData.VictoryReward == 0)
+            var levelData = GetCurrentLevel(runEntity);
+            if (result == null || levelData == null)
             {
                 return;
             }
 
-            _goldPool.Get(runEntity).Value += levelData.VictoryReward;
+            var turnsPenalty = result.TurnsSpent > 1 ? (result.TurnsSpent - 1) * 2 : 0;
+            var enemyKillBonus = result.EnemyKillsTotal * 3;
+            var enemyBaseDamageBonus = result.DamageToEnemyBaseTotal / 5;
+            var playerBaseDamagePenalty = result.DamageToPlayerBaseTotal / 4;
+            var reward = UnityEngine.Mathf.Max(
+                0,
+                levelData.VictoryReward +
+                enemyKillBonus +
+                enemyBaseDamageBonus -
+                playerBaseDamagePenalty -
+                turnsPenalty);
+
+            result.BaseReward = levelData.VictoryReward;
+            result.RewardGranted = reward;
+
+            if (reward <= 0)
+            {
+                return;
+            }
+
+            _goldPool.Get(runEntity).Value += reward;
             _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
+        }
+
+        private Plinko.Scripts.Data.Levels.LevelData GetCurrentLevel(int runEntity)
+        {
+            var locationId = _locationPool.Get(runEntity).LocationId;
+            var levelIndex = _levelPool.Get(runEntity).LevelIndex;
+            return _levelConfigService.GetLevel(locationId, levelIndex);
         }
 
         private bool HasNextLevel(int runEntity)

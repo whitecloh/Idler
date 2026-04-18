@@ -30,9 +30,12 @@ namespace Plinko.Scripts.View
         [SerializeField] private BattleScreenController battleScreenController;
         [SerializeField] private BattleResultScreenController battleResultScreenController;
         [SerializeField] private OwnedUnitsScreenController ownedUnitsScreenController;
+        [SerializeField] private UiWindowManager windowManager;
 
         private ShellScreen _shellScreen = ShellScreen.MainMenu;
         private bool _hadRunEntity;
+        private bool _currentHasRunEntity;
+        private Enums.PhaseType _currentPhase = Enums.PhaseType.MainMenu;
 
         public MainMenuScreenController MainMenuScreenController => mainMenuScreenController;
         public LocationSelectionScreenController LocationSelectionScreenController => locationSelectionScreenController;
@@ -43,38 +46,178 @@ namespace Plinko.Scripts.View
         public BattleResultScreenController BattleResultScreenController => battleResultScreenController;
         public OwnedUnitsScreenController OwnedUnitsScreenController => ownedUnitsScreenController;
 
+        private void Awake()
+        {
+            if (windowManager != null)
+            {
+                windowManager.Configure(
+                    mainMenuScreenController,
+                    purchasePhaseScreenController,
+                    retrainingPhaseScreenController,
+                    fieldUpgradePhaseScreenController,
+                    battleScreenController,
+                    battleResultScreenController);
+                windowManager.ShowImmediate(UiWindowManager.WindowId.MainMenu);
+            }
+            else if (mainMenuScreenController != null)
+            {
+                mainMenuScreenController.SetVisibleImmediate(true);
+            }
+
+            if (locationSelectionScreenController != null)
+            {
+                locationSelectionScreenController.SetVisibleImmediate(false);
+            }
+
+            if (ownedUnitsScreenController != null)
+            {
+                ownedUnitsScreenController.SetVisibleImmediate(false);
+            }
+        }
+
         public void Configure(GameServicesContext services)
         {
-            EnsureRuntimeWiring();
         }
 
         public void Init(EcsWorld world)
         {
-            EnsureRuntimeWiring();
-            if (mainMenuBridge != null) mainMenuBridge.Init(world);
-            if (locationBridge != null) locationBridge.Init(world);
-            if (purchasePhaseBridge != null) purchasePhaseBridge.Init(world);
-            if (retrainingPhaseBridge != null) retrainingPhaseBridge.Init(world);
-            if (fieldUpgradeBridge != null) fieldUpgradeBridge.Init(world);
-            if (battleBridge != null) battleBridge.Init(world);
+            if (mainMenuScreenController != null || locationSelectionScreenController != null)
+            {
+                mainMenuBridge.Init(world);
+            }
 
-            mainMenuScreenController?.Init(mainMenuBridge, ShowLocationSelection);
-            locationSelectionScreenController?.Init(mainMenuBridge, ShowMainMenu);
+            if (purchasePhaseScreenController != null ||
+                retrainingPhaseScreenController != null ||
+                fieldUpgradePhaseScreenController != null ||
+                battleResultScreenController != null)
+            {
+                locationBridge.Init(world);
+            }
+
+            if (purchasePhaseScreenController != null)
+            {
+                purchasePhaseBridge.Init(world);
+            }
+
+            if (retrainingPhaseScreenController != null)
+            {
+                retrainingPhaseBridge.Init(world);
+            }
+
+            if (fieldUpgradePhaseScreenController != null)
+            {
+                fieldUpgradeBridge.Init(world);
+            }
+
+            if (battleScreenController != null || battleResultScreenController != null)
+            {
+                battleBridge.Init(world);
+            }
+
+            if (mainMenuScreenController != null)
+            {
+                mainMenuScreenController.Init(mainMenuBridge, ShowLocationSelection);
+            }
+
+            if (locationSelectionScreenController != null)
+            {
+                locationSelectionScreenController.Init(mainMenuBridge, ShowMainMenu);
+            }
+
+            if (purchasePhaseScreenController != null)
+            {
+                purchasePhaseScreenController.Init(purchasePhaseBridge, locationBridge);
+            }
+
+            if (retrainingPhaseScreenController != null)
+            {
+                retrainingPhaseScreenController.Init(retrainingPhaseBridge, locationBridge);
+            }
+
+            if (fieldUpgradePhaseScreenController != null)
+            {
+                fieldUpgradePhaseScreenController.Init(fieldUpgradeBridge, locationBridge);
+            }
+
+            if (battleScreenController != null)
+            {
+                battleScreenController.Init(battleBridge);
+            }
+
+            if (battleResultScreenController != null)
+            {
+                battleResultScreenController.Init(locationBridge, battleBridge);
+            }
+
             ShowMainMenu();
+            SyncScreenVisibility(false, Enums.PhaseType.MainMenu);
         }
 
         public void RefreshMainMenu(MainMenuViewData viewData)
         {
-            mainMenuScreenController?.Refresh(viewData);
+            if (mainMenuScreenController != null)
+            {
+                mainMenuScreenController.Refresh(viewData);
+            }
         }
 
         public void RefreshLocationSelection(LocationSelectionViewData viewData)
         {
-            locationSelectionScreenController?.Refresh(viewData);
+            if (locationSelectionScreenController != null)
+            {
+                locationSelectionScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshPurchasePhase(PurchasePhaseViewData viewData)
+        {
+            if (purchasePhaseScreenController != null)
+            {
+                purchasePhaseScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshRetrainingPhase(RetrainingPhaseViewData viewData)
+        {
+            if (retrainingPhaseScreenController != null)
+            {
+                retrainingPhaseScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshFieldUpgradePhase(FieldUpgradePhaseViewData viewData)
+        {
+            if (fieldUpgradePhaseScreenController != null)
+            {
+                fieldUpgradePhaseScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshOwnedUnits(System.Collections.Generic.IReadOnlyList<OwnedUnitViewData> ownedUnits)
+        {
+        }
+
+        public void RefreshBattleHud(BattleHudViewData viewData)
+        {
+            if (battleScreenController != null)
+            {
+                battleScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshBattleResult(BattleResultViewData viewData)
+        {
+            if (battleResultScreenController != null)
+            {
+                battleResultScreenController.Refresh(viewData);
+            }
         }
 
         public void SyncScreenVisibility(bool hasRunEntity, Enums.PhaseType phase)
         {
+            _currentHasRunEntity = hasRunEntity;
+            _currentPhase = phase;
+
             if (!hasRunEntity && _hadRunEntity)
             {
                 _shellScreen = ShellScreen.MainMenu;
@@ -82,52 +225,90 @@ namespace Plinko.Scripts.View
 
             _hadRunEntity = hasRunEntity;
 
-            var showMainMenu = !hasRunEntity && _shellScreen == ShellScreen.MainMenu;
+            var showMainMenu = !hasRunEntity;
             var showLocationSelection = !hasRunEntity && _shellScreen == ShellScreen.LocationSelection;
-            mainMenuScreenController?.Show(showMainMenu);
-            locationSelectionScreenController?.Show(showLocationSelection);
 
-            purchasePhaseScreenController?.Show(hasRunEntity && phase == Enums.PhaseType.PurchasePhase);
-            retrainingPhaseScreenController?.Show(hasRunEntity && phase == Enums.PhaseType.RetrainingPhase);
-            fieldUpgradePhaseScreenController?.Show(hasRunEntity && phase == Enums.PhaseType.FieldUpgradePhase);
-            battleScreenController?.Show(hasRunEntity &&
-                                         (phase == Enums.PhaseType.BattlePreparation ||
-                                          phase == Enums.PhaseType.Battle ||
-                                          phase == Enums.PhaseType.BattlePlayback));
-            battleResultScreenController?.Show(hasRunEntity && phase == Enums.PhaseType.Result);
-            ownedUnitsScreenController?.Show(hasRunEntity &&
-                                             (phase == Enums.PhaseType.PurchasePhase ||
-                                              phase == Enums.PhaseType.RetrainingPhase ||
-                                              phase == Enums.PhaseType.FieldUpgradePhase ||
-                                              phase == Enums.PhaseType.BattlePreparation));
+            if (windowManager != null)
+            {
+                windowManager.Show(ResolvePrimaryWindow(hasRunEntity, phase));
+            }
+            else if (mainMenuScreenController != null)
+            {
+                mainMenuScreenController.Show(showMainMenu);
+            }
+
+            if (locationSelectionScreenController != null)
+            {
+                locationSelectionScreenController.Show(showLocationSelection);
+            }
+
+            if (windowManager == null)
+            {
+                if (purchasePhaseScreenController != null)
+                {
+                    purchasePhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.PurchasePhase);
+                }
+
+                if (retrainingPhaseScreenController != null)
+                {
+                    retrainingPhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.RetrainingPhase);
+                }
+
+                if (fieldUpgradePhaseScreenController != null)
+                {
+                    fieldUpgradePhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.FieldUpgradePhase);
+                }
+
+                if (battleScreenController != null)
+                {
+                    battleScreenController.Show(hasRunEntity &&
+                                                (phase == Enums.PhaseType.BattlePreparation ||
+                                                 phase == Enums.PhaseType.Battle ||
+                                                 phase == Enums.PhaseType.BattlePlayback));
+                }
+
+                if (battleResultScreenController != null)
+                {
+                    battleResultScreenController.Show(hasRunEntity && phase == Enums.PhaseType.Result);
+                }
+            }
+
+            if (ownedUnitsScreenController != null)
+            {
+                ownedUnitsScreenController.Show(false);
+            }
         }
 
         private void ShowMainMenu()
         {
             _shellScreen = ShellScreen.MainMenu;
+            SyncScreenVisibility(_currentHasRunEntity, _currentPhase);
         }
 
         private void ShowLocationSelection()
         {
             _shellScreen = ShellScreen.LocationSelection;
+            SyncScreenVisibility(_currentHasRunEntity, _currentPhase);
         }
 
-        private void EnsureRuntimeWiring()
+        private static UiWindowManager.WindowId ResolvePrimaryWindow(bool hasRunEntity, Enums.PhaseType phase)
         {
-            mainMenuBridge ??= GetComponent<MainMenuBridge>() ?? gameObject.AddComponent<MainMenuBridge>();
-            locationBridge ??= GetComponent<LocationBridge>() ?? gameObject.AddComponent<LocationBridge>();
-            purchasePhaseBridge ??= GetComponent<PurchasePhaseBridge>() ?? gameObject.AddComponent<PurchasePhaseBridge>();
-            retrainingPhaseBridge ??= GetComponent<RetrainingPhaseBridge>() ?? gameObject.AddComponent<RetrainingPhaseBridge>();
-            fieldUpgradeBridge ??= GetComponent<FieldUpgradeBridge>() ?? gameObject.AddComponent<FieldUpgradeBridge>();
-            battleBridge ??= GetComponent<BattleBridge>() ?? gameObject.AddComponent<BattleBridge>();
-            mainMenuScreenController ??= GetComponent<MainMenuScreenController>() ?? gameObject.AddComponent<MainMenuScreenController>();
-            locationSelectionScreenController ??= GetComponent<LocationSelectionScreenController>() ?? gameObject.AddComponent<LocationSelectionScreenController>();
-            purchasePhaseScreenController ??= GetComponent<PurchasePhaseScreenController>() ?? gameObject.AddComponent<PurchasePhaseScreenController>();
-            retrainingPhaseScreenController ??= GetComponent<RetrainingPhaseScreenController>() ?? gameObject.AddComponent<RetrainingPhaseScreenController>();
-            fieldUpgradePhaseScreenController ??= GetComponent<FieldUpgradePhaseScreenController>() ?? gameObject.AddComponent<FieldUpgradePhaseScreenController>();
-            battleScreenController ??= GetComponent<BattleScreenController>() ?? gameObject.AddComponent<BattleScreenController>();
-            battleResultScreenController ??= GetComponent<BattleResultScreenController>() ?? gameObject.AddComponent<BattleResultScreenController>();
-            ownedUnitsScreenController ??= GetComponent<OwnedUnitsScreenController>() ?? gameObject.AddComponent<OwnedUnitsScreenController>();
+            if (!hasRunEntity)
+            {
+                return UiWindowManager.WindowId.MainMenu;
+            }
+
+            return phase switch
+            {
+                Enums.PhaseType.PurchasePhase => UiWindowManager.WindowId.Purchase,
+                Enums.PhaseType.RetrainingPhase => UiWindowManager.WindowId.Retraining,
+                Enums.PhaseType.FieldUpgradePhase => UiWindowManager.WindowId.FieldUpgrade,
+                Enums.PhaseType.BattlePreparation => UiWindowManager.WindowId.Battle,
+                Enums.PhaseType.Battle => UiWindowManager.WindowId.Battle,
+                Enums.PhaseType.BattlePlayback => UiWindowManager.WindowId.Battle,
+                Enums.PhaseType.Result => UiWindowManager.WindowId.BattleResult,
+                _ => UiWindowManager.WindowId.MainMenu
+            };
         }
     }
 }

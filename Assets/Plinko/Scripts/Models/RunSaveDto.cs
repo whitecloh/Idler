@@ -19,9 +19,13 @@ namespace Plinko.Scripts.Models
         public int BattleTurn;
         public int HandNextRuntimeId;
         public int NextDeploymentOrder;
+        public int BattleEnemyKillsTotal;
+        public int BattleDamageToEnemyBaseTotal;
+        public int BattleDamageToPlayerBaseTotal;
         public int PurchaseRerollCount;
         public int PinRerollCount;
         public bool HasActiveRun;
+        public BattleResultModel BattleResult;
         public List<OwnedUnitSaveDto> OwnedUnits = new();
         public List<HandCardSaveDto> HandCards = new();
         public List<DeployedUnitSaveDto> DeployedUnits = new();

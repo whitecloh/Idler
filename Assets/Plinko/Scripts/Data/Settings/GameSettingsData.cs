@@ -1,5 +1,6 @@
 using Plinko.Scripts.Data.Pins;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Plinko.Scripts.Data.Settings
 {
@@ -14,7 +15,9 @@ namespace Plinko.Scripts.Data.Settings
         [SerializeField] private int pinShopOfferCount = 3;
         [SerializeField] private int unitShopRerollPrice = 1;
         [SerializeField] private int pinShopRerollPrice = 1;
-        [SerializeField] private int defaultRetrainingSelectionLimit = 3;
+        [FormerlySerializedAs("defaultRetrainingSelectionLimit")]
+        [SerializeField] private int defaultRetrainingOfferCount = 3;
+        [SerializeField] private int retrainingShopRerollPrice = 1;
         [SerializeField] private float battleTickDuration = 0.2f;
         [SerializeField] private PlinkoFieldSettingsData fallbackPlinkoField;
 
@@ -26,7 +29,9 @@ namespace Plinko.Scripts.Data.Settings
         public int PinShopOfferCount => pinShopOfferCount;
         public int UnitShopRerollPrice => unitShopRerollPrice;
         public int PinShopRerollPrice => pinShopRerollPrice;
-        public int DefaultRetrainingSelectionLimit => defaultRetrainingSelectionLimit;
+        public int DefaultRetrainingOfferCount => defaultRetrainingOfferCount;
+        public int RetrainingShopRerollPrice => retrainingShopRerollPrice;
+        public int DefaultRetrainingSelectionLimit => defaultRetrainingOfferCount;
         public float BattleTickDuration => battleTickDuration;
         public PlinkoFieldSettingsData FallbackPlinkoField => fallbackPlinkoField;
     }

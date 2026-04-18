@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Plinko.Scripts.Models.ViewData
 {
@@ -7,6 +8,7 @@ namespace Plinko.Scripts.Models.ViewData
     {
         public string LocationId;
         public string DisplayName;
+        public Sprite Art;
         public bool IsUnlocked;
         public bool IsCompleted;
         public int MaxCompletedLevelIndex;

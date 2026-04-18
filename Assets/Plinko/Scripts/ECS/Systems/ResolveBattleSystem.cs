@@ -239,8 +239,11 @@ namespace Plinko.Scripts.ECS.Systems
             List<CombatantState> players,
             List<CombatantState> enemies)
         {
+            var playerBaseBefore = _playerBasePool.Get(runEntity).Value;
+            var enemyBaseBefore = _enemyBasePool.Get(runEntity).Value;
             var playerSurvivors = GetAliveCombatants(players);
             var enemySurvivors = GetAliveCombatants(enemies);
+            var enemyKillsThisTurn = Mathf.Max(0, enemies.Count - enemySurvivors.Count);
 
             var damageToEnemyBase = enemySurvivors.Count == 0 ? SumAttack(playerSurvivors) : 0;
             var damageToPlayerBase = playerSurvivors.Count == 0 ? SumAttack(enemySurvivors) : 0;
@@ -249,15 +252,43 @@ namespace Plinko.Scripts.ECS.Systems
             timeline.SurvivorDamageToPlayerBase = damageToPlayerBase;
             AppendBaseDamageTick(timeline, damageToEnemyBase, damageToPlayerBase);
 
-            var playerBaseAfter = Mathf.Max(0, _playerBasePool.Get(runEntity).Value - damageToPlayerBase);
-            var enemyBaseAfter = Mathf.Max(0, _enemyBasePool.Get(runEntity).Value - damageToEnemyBase);
+            var playerBaseAfter = Mathf.Max(0, playerBaseBefore - damageToPlayerBase);
+            var enemyBaseAfter = Mathf.Max(0, enemyBaseBefore - damageToEnemyBase);
             _playerBasePool.Get(runEntity).Value = playerBaseAfter;
             _enemyBasePool.Get(runEntity).Value = enemyBaseAfter;
 
+            var enemyKillsTotal = enemyKillsThisTurn;
+            var damageToEnemyBaseTotal = damageToEnemyBase;
+            var damageToPlayerBaseTotal = damageToPlayerBase;
+            var turnsSpent = 1;
+
+            if (_battleStatePool.Has(runEntity))
+            {
+                ref var battleState = ref _battleStatePool.Get(runEntity);
+                battleState.TotalEnemyKills += enemyKillsThisTurn;
+                battleState.TotalDamageToEnemyBase += damageToEnemyBase;
+                battleState.TotalDamageToPlayerBase += damageToPlayerBase;
+                enemyKillsTotal = battleState.TotalEnemyKills;
+                damageToEnemyBaseTotal = battleState.TotalDamageToEnemyBase;
+                damageToPlayerBaseTotal = battleState.TotalDamageToPlayerBase;
+                turnsSpent = Mathf.Max(1, battleState.CurrentTurn);
+            }
+
             return new BattleResultModel
             {
+                PlayerBaseHealthBefore = playerBaseBefore,
                 PlayerBaseHealthAfter = playerBaseAfter,
+                EnemyBaseHealthBefore = enemyBaseBefore,
                 EnemyBaseHealthAfter = enemyBaseAfter,
+                EnemyKillsThisTurn = enemyKillsThisTurn,
+                EnemyKillsTotal = enemyKillsTotal,
+                DamageToEnemyBaseThisTurn = damageToEnemyBase,
+                DamageToEnemyBaseTotal = damageToEnemyBaseTotal,
+                DamageToPlayerBaseThisTurn = damageToPlayerBase,
+                DamageToPlayerBaseTotal = damageToPlayerBaseTotal,
+                TurnsSpent = turnsSpent,
+                BaseReward = 0,
+                RewardGranted = 0,
                 IsVictory = enemyBaseAfter <= 0,
                 IsDefeat = playerBaseAfter <= 0
             };

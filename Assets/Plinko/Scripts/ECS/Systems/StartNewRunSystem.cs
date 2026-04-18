@@ -127,9 +127,8 @@ namespace Plinko.Scripts.ECS.Systems
                 _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = 0, ActiveTrainingCount = 0, CanEnterBattle = false };
                 _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
                 {
-                    SelectedCount = 0,
-                    SelectionLimit = _gameSettingsService.GetDefaultRetrainingSelectionLimit(),
-                    IsSelectionLocked = false,
+                    OfferCount = _gameSettingsService.GetDefaultRetrainingOfferCount(),
+                    RerollCount = 0,
                     ActiveTrainingCount = 0
                 };
                 _fieldUpgradePool.Add(runEntity) = new FieldUpgradePhaseStateComponent { RerollCount = 0, SelectedSlotIndex = -1, IsPlacementHighlighted = false };
@@ -139,7 +138,10 @@ namespace Plinko.Scripts.ECS.Systems
                     IsResolved = false,
                     NextDeploymentOrder = 0,
                     IsPlayerTurnActive = false,
-                    HasGeneratedHandThisTurn = false
+                    HasGeneratedHandThisTurn = false,
+                    TotalEnemyKills = 0,
+                    TotalDamageToEnemyBase = 0,
+                    TotalDamageToPlayerBase = 0
                 };
 
                 _runEntityIndex.SetRunEntity(runEntity);

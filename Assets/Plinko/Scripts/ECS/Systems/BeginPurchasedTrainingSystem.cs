@@ -101,6 +101,8 @@ namespace Plinko.Scripts.ECS.Systems
                 ref var playback = ref _playbackPool.Add(playbackEntity);
                 playback.RuntimeId = runtimeId;
                 playback.IsRetraining = false;
+                playback.StartDelay = 0f;
+                playback.HasStarted = true;
                 playback.Duration = trainingRun.PlaybackDuration;
                 playback.Elapsed = 0f;
                 playback.CurrentNodeIndex = 0;
@@ -108,7 +110,6 @@ namespace Plinko.Scripts.ECS.Systems
                 playback.IsCompleted = false;
 
                 _unitTrainingStartedEventPool.Add(world.NewEntity()).RuntimeId = runtimeId;
-                _trainingPlaybackStartedEventPool.Add(world.NewEntity()).RuntimeId = runtimeId;
                 world.DelEntity(eventEntity);
             }
         }

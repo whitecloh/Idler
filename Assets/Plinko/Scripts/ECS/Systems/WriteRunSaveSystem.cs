@@ -11,6 +11,7 @@ namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class WriteRunSaveSystem : IEcsInitSystem, IEcsRunSystem
     {
+        private readonly BattleRuntimeService _battleRuntimeService;
         private readonly RunSaveService _runSaveService;
         private readonly RunEntityIndex _runEntityIndex;
 
@@ -49,9 +50,13 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsFilter _handCardFilter;
         private EcsFilter _deployedFilter;
 
-        public WriteRunSaveSystem(RunSaveService runSaveService, RunEntityIndex runEntityIndex)
+        public WriteRunSaveSystem(
+            RunSaveService runSaveService,
+            BattleRuntimeService battleRuntimeService,
+            RunEntityIndex runEntityIndex)
         {
             _runSaveService = runSaveService;
+            _battleRuntimeService = battleRuntimeService;
             _runEntityIndex = runEntityIndex;
         }
         
@@ -118,8 +123,12 @@ namespace Plinko.Scripts.ECS.Systems
                     BattleTurn = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).CurrentTurn : 0,
                     HandNextRuntimeId = _handStatePool.Has(runEntity) ? _handStatePool.Get(runEntity).NextRuntimeId : 1,
                     NextDeploymentOrder = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).NextDeploymentOrder : 0,
+                    BattleEnemyKillsTotal = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).TotalEnemyKills : 0,
+                    BattleDamageToEnemyBaseTotal = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).TotalDamageToEnemyBase : 0,
+                    BattleDamageToPlayerBaseTotal = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).TotalDamageToPlayerBase : 0,
                     PurchaseRerollCount = _purchasePool.Has(runEntity) ? _purchasePool.Get(runEntity).RerollCount : 0,
                     PinRerollCount = _fieldUpgradePool.Has(runEntity) ? _fieldUpgradePool.Get(runEntity).RerollCount : 0,
+                    BattleResult = CloneBattleResult(_battleRuntimeService.CurrentResult),
                     OwnedUnits = new List<OwnedUnitSaveDto>(),
                     HandCards = new List<HandCardSaveDto>(),
                     DeployedUnits = new List<DeployedUnitSaveDto>(),
@@ -179,6 +188,33 @@ namespace Plinko.Scripts.ECS.Systems
                 _runSavedEventPool.Add(world.NewEntity());
                 world.DelEntity(requestEntity);
             }
+        }
+
+        private static BattleResultModel CloneBattleResult(BattleResultModel source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            return new BattleResultModel
+            {
+                PlayerBaseHealthBefore = source.PlayerBaseHealthBefore,
+                PlayerBaseHealthAfter = source.PlayerBaseHealthAfter,
+                EnemyBaseHealthBefore = source.EnemyBaseHealthBefore,
+                EnemyBaseHealthAfter = source.EnemyBaseHealthAfter,
+                EnemyKillsThisTurn = source.EnemyKillsThisTurn,
+                EnemyKillsTotal = source.EnemyKillsTotal,
+                DamageToEnemyBaseThisTurn = source.DamageToEnemyBaseThisTurn,
+                DamageToEnemyBaseTotal = source.DamageToEnemyBaseTotal,
+                DamageToPlayerBaseThisTurn = source.DamageToPlayerBaseThisTurn,
+                DamageToPlayerBaseTotal = source.DamageToPlayerBaseTotal,
+                TurnsSpent = source.TurnsSpent,
+                BaseReward = source.BaseReward,
+                RewardGranted = source.RewardGranted,
+                IsVictory = source.IsVictory,
+                IsDefeat = source.IsDefeat
+            };
         }
     }
 }

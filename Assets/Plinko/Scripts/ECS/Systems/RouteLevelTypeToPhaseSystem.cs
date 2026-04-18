@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Leopotam.EcsLite;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.ECS.Components;
@@ -16,14 +15,15 @@ namespace Plinko.Scripts.ECS.Systems
         private readonly RunEntityIndex _runEntityIndex;
 
         private EcsFilter _levelLoadedFilter;
-        private EcsFilter _selectedForRetrainingFilter;
+        private EcsFilter _retrainingOfferFilter;
+        private EcsFilter _purchasedOnLevelFilter;
         private EcsPool<LevelLoadedEvent> _levelLoadedEventPool;
         private EcsPool<CurrentLocationComponent> _locationPool;
         private EcsPool<CurrentLevelComponent> _levelPool;
         private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<RetrainingPhaseStateComponent> _retrainingPool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradePool;
-        private EcsPool<SelectedForRetrainingComponent> _selectedForRetrainingPool;
+        private EcsPool<RetrainingPurchasedOnLevelComponent> _purchasedOnLevelPool;
         private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
         private EcsPool<PurchasePhaseEnteredEvent> _purchasePhaseEnteredEventPool;
         private EcsPool<RetrainingPhaseEnteredEvent> _retrainingPhaseEnteredEventPool;
@@ -42,14 +42,15 @@ namespace Plinko.Scripts.ECS.Systems
         {
             var world = systems.GetWorld();
             _levelLoadedFilter = world.Filter<LevelLoadedEvent>().End();
-            _selectedForRetrainingFilter = world.Filter<SelectedForRetrainingComponent>().End();
+            _retrainingOfferFilter = world.Filter<RetrainingShopOfferComponent>().End();
+            _purchasedOnLevelFilter = world.Filter<RetrainingPurchasedOnLevelComponent>().End();
             _levelLoadedEventPool = world.GetPool<LevelLoadedEvent>();
             _locationPool = world.GetPool<CurrentLocationComponent>();
             _levelPool = world.GetPool<CurrentLevelComponent>();
             _phasePool = world.GetPool<CurrentPhaseComponent>();
             _retrainingPool = world.GetPool<RetrainingPhaseStateComponent>();
             _fieldUpgradePool = world.GetPool<FieldUpgradePhaseStateComponent>();
-            _selectedForRetrainingPool = world.GetPool<SelectedForRetrainingComponent>();
+            _purchasedOnLevelPool = world.GetPool<RetrainingPurchasedOnLevelComponent>();
             _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
             _purchasePhaseEnteredEventPool = world.GetPool<PurchasePhaseEnteredEvent>();
             _retrainingPhaseEnteredEventPool = world.GetPool<RetrainingPhaseEnteredEvent>();
@@ -97,26 +98,24 @@ namespace Plinko.Scripts.ECS.Systems
                 _phasePool.Get(runEntity).Value = nextPhase;
 
                 ref var retrainingState = ref _retrainingPool.Get(runEntity);
-                retrainingState.SelectedCount = 0;
-                retrainingState.SelectionLimit = levelData.PreBattlePhase != null && levelData.PreBattlePhase.OverrideRetrainingSelectionLimit > 0
-                    ? levelData.PreBattlePhase.OverrideRetrainingSelectionLimit
-                    : _gameSettingsService.GetDefaultRetrainingSelectionLimit();
-                retrainingState.IsSelectionLocked = false;
+                retrainingState.OfferCount = levelData.PreBattlePhase != null && levelData.PreBattlePhase.OverrideRetrainingOfferCount > 0
+                    ? levelData.PreBattlePhase.OverrideRetrainingOfferCount
+                    : _gameSettingsService.GetDefaultRetrainingOfferCount();
+                retrainingState.RerollCount = 0;
                 retrainingState.ActiveTrainingCount = 0;
 
                 ref var fieldUpgradeState = ref _fieldUpgradePool.Get(runEntity);
                 fieldUpgradeState.SelectedSlotIndex = -1;
                 fieldUpgradeState.IsPlacementHighlighted = false;
 
-                var selectedEntities = new List<int>();
-                foreach (var selectedEntity in _selectedForRetrainingFilter)
+                foreach (var offerEntity in _retrainingOfferFilter)
                 {
-                    selectedEntities.Add(selectedEntity);
+                    world.DelEntity(offerEntity);
                 }
 
-                foreach (var selectedEntity in selectedEntities)
+                foreach (var purchasedEntity in _purchasedOnLevelFilter)
                 {
-                    _selectedForRetrainingPool.Del(selectedEntity);
+                    _purchasedOnLevelPool.Del(purchasedEntity);
                 }
 
                 _phaseChangedEventPool.Add(world.NewEntity()).Value = nextPhase;

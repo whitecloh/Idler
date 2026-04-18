@@ -1,4 +1,6 @@
 using System;
+using Plinko.Scripts.Data.Visuals;
+using UnityEngine;
 
 namespace Plinko.Scripts.Models.ViewData
 {
@@ -14,5 +16,7 @@ namespace Plinko.Scripts.Models.ViewData
         public int Health;
         public int ManaCost;
         public bool IsDeployed;
+        public Sprite PortraitSprite;
+        public CharacterAnimationSetData BattleAnimations;
     }
 }

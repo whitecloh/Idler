@@ -95,17 +95,17 @@ namespace Plinko.Scripts.Debugging
 
             if (Input.GetKeyDown(KeyCode.T))
             {
-                QueueSelectOwnedUnitsForRetraining(1);
+                QueueRerollRetrainingShop();
             }
 
             if (Input.GetKeyDown(KeyCode.Y))
             {
-                QueueSelectOwnedUnitsForRetraining(2);
+                QueueBuyRetrainingBatch();
             }
 
             if (Input.GetKeyDown(KeyCode.U))
             {
-                QueueConfirmRetraining();
+                QueueBuyRetrainingBatch();
             }
 
             if (Input.GetKeyDown(KeyCode.P))
@@ -261,19 +261,14 @@ namespace Plinko.Scripts.Debugging
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Select 1 Owned"))
+            if (GUILayout.Button("Reroll Retraining"))
             {
-                QueueSelectOwnedUnitsForRetraining(1);
+                QueueRerollRetrainingShop();
             }
 
-            if (GUILayout.Button("Select 2 Owned"))
+            if (GUILayout.Button("Buy Retraining Batch"))
             {
-                QueueSelectOwnedUnitsForRetraining(2);
-            }
-
-            if (GUILayout.Button("Confirm Retraining"))
-            {
-                QueueConfirmRetraining();
+                QueueBuyRetrainingBatch();
             }
             GUILayout.EndHorizontal();
 
@@ -411,7 +406,7 @@ namespace Plinko.Scripts.Debugging
             {
                 var retrainingState = retrainingPool.Get(runEntity);
                 builder.AppendLine(
-                    $"Retraining: selected={retrainingState.SelectedCount}/{retrainingState.SelectionLimit}, locked={retrainingState.IsSelectionLocked}, activeTraining={retrainingState.ActiveTrainingCount}");
+                    $"Retraining: offers={retrainingState.OfferCount}, rerolls={retrainingState.RerollCount}, activeTraining={retrainingState.ActiveTrainingCount}");
             }
 
             if (fieldUpgradePool.Has(runEntity))
@@ -425,7 +420,7 @@ namespace Plinko.Scripts.Debugging
             {
                 var battleState = battlePool.Get(runEntity);
                 builder.AppendLine(
-                    $"Battle: turn={battleState.CurrentTurn}, resolved={battleState.IsResolved}, active={battleState.IsPlayerTurnActive}, handGenerated={battleState.HasGeneratedHandThisTurn}, nextDeploy={battleState.NextDeploymentOrder}");
+                    $"Battle: turn={battleState.CurrentTurn}, resolved={battleState.IsResolved}, active={battleState.IsPlayerTurnActive}, handGenerated={battleState.HasGeneratedHandThisTurn}, nextDeploy={battleState.NextDeploymentOrder}, kills={battleState.TotalEnemyKills}, dmgEnemy={battleState.TotalDamageToEnemyBase}, dmgPlayer={battleState.TotalDamageToPlayerBase}");
             }
 
             if (enemyWavePool.Has(runEntity))
@@ -437,6 +432,7 @@ namespace Plinko.Scripts.Debugging
 
             builder.AppendLine();
             AppendOwnedUnits(world, builder);
+            AppendRetrainingOffers(world, builder);
             AppendUnitOffers(world, builder);
             AppendPinOffers(world, builder);
             AppendHand(world, builder);
@@ -461,13 +457,13 @@ namespace Plinko.Scripts.Debugging
             var displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             var levelPool = world.GetPool<UnitLevelComponent>();
             var upgradePool = world.GetPool<UpgradeCountComponent>();
-            var selectedPool = world.GetPool<SelectedForRetrainingComponent>();
+            var purchasedOnLevelPool = world.GetPool<RetrainingPurchasedOnLevelComponent>();
             var ownedUnits = new List<string>();
 
             foreach (var entity in world.Filter<OwnedUnitComponent>().End())
             {
                 var runtimeId = ownedPool.Get(entity).RuntimeId;
-                var selectedMark = selectedPool.Has(entity) ? "*" : string.Empty;
+                var selectedMark = purchasedOnLevelPool.Has(entity) ? "*" : string.Empty;
                 ownedUnits.Add(
                     $"{runtimeId}{selectedMark}: {displayNamePool.Get(entity).Value} ({unitTypePool.Get(entity).Value}) atk={unitStatsPool.Get(entity).Attack} hp={unitStatsPool.Get(entity).Health} mana={manaCostPool.Get(entity).Value} lvl={levelPool.Get(entity).Value} upg={upgradePool.Get(entity).Value}");
             }
@@ -481,6 +477,39 @@ namespace Plinko.Scripts.Debugging
             }
 
             foreach (var line in ownedUnits)
+            {
+                builder.AppendLine($"  {line}");
+            }
+        }
+
+        private static void AppendRetrainingOffers(EcsWorld world, StringBuilder builder)
+        {
+            var offerPool = world.GetPool<RetrainingShopOfferComponent>();
+            var ownerPool = world.GetPool<RetrainingOfferOwnerUnitComponent>();
+            var displayNamePool = world.GetPool<UnitDisplayNameComponent>();
+            var unitTypePool = world.GetPool<UnitTypeIdComponent>();
+            var statsPool = world.GetPool<UnitStatsComponent>();
+            var manaCostPool = world.GetPool<UnitManaCostComponent>();
+            var upgradePool = world.GetPool<UpgradeCountComponent>();
+            var pricePool = world.GetPool<OfferPriceComponent>();
+            var offers = new List<string>();
+
+            foreach (var entity in world.Filter<RetrainingShopOfferComponent>().Inc<RetrainingOfferOwnerUnitComponent>().End())
+            {
+                var offer = offerPool.Get(entity);
+                offers.Add(
+                    $"slot={offer.OfferSlotIndex}: runtime={ownerPool.Get(entity).RuntimeId} {displayNamePool.Get(entity).Value} ({unitTypePool.Get(entity).Value}) atk={statsPool.Get(entity).Attack} hp={statsPool.Get(entity).Health} mana={manaCostPool.Get(entity).Value} upg={upgradePool.Get(entity).Value} price={pricePool.Get(entity).Value}");
+            }
+
+            offers.Sort();
+            builder.AppendLine($"RetrainingOffers [{offers.Count}]:");
+            if (offers.Count == 0)
+            {
+                builder.AppendLine("  none");
+                return;
+            }
+
+            foreach (var line in offers)
             {
                 builder.AppendLine($"  {line}");
             }
@@ -647,7 +676,7 @@ namespace Plinko.Scripts.Debugging
             if (result != null)
             {
                 builder.AppendLine(
-                    $"  result: victory={result.IsVictory} defeat={result.IsDefeat} playerBaseAfter={result.PlayerBaseHealthAfter} enemyBaseAfter={result.EnemyBaseHealthAfter}");
+                    $"  result: victory={result.IsVictory} defeat={result.IsDefeat} playerBase={result.PlayerBaseHealthBefore}->{result.PlayerBaseHealthAfter} enemyBase={result.EnemyBaseHealthBefore}->{result.EnemyBaseHealthAfter} turns={result.TurnsSpent} kills={result.EnemyKillsTotal} dmgEnemy={result.DamageToEnemyBaseTotal} dmgPlayer={result.DamageToPlayerBaseTotal} reward={result.RewardGranted}");
             }
 
             if (timeline != null)
@@ -977,31 +1006,19 @@ namespace Plinko.Scripts.Debugging
             RefreshSnapshot();
         }
 
-        private void QueueSelectOwnedUnitsForRetraining(int count)
+        private void QueueRerollRetrainingShop()
         {
-            var runtimeIds = GetFirstOwnedRuntimeIds(count);
-            if (runtimeIds.Count == 0)
-            {
-                _lastActionLabel = "SelectOwnedUnits skipped: no owned units";
-                RefreshSnapshot();
-                return;
-            }
-
-            foreach (var runtimeId in runtimeIds)
-            {
-                var entity = _bootstrapper.World.NewEntity();
-                _bootstrapper.World.GetPool<SelectUnitsForRetrainingRequest>().Add(entity).RuntimeId = runtimeId;
-            }
-
-            _lastActionLabel = $"Queued SelectOwnedUnits({string.Join(",", runtimeIds)})";
+            var entity = _bootstrapper.World.NewEntity();
+            _bootstrapper.World.GetPool<RerollRetrainingShopRequest>().Add(entity);
+            _lastActionLabel = "Queued RerollRetrainingShop";
             RefreshSnapshot();
         }
 
-        private void QueueConfirmRetraining()
+        private void QueueBuyRetrainingBatch()
         {
             var entity = _bootstrapper.World.NewEntity();
-            _bootstrapper.World.GetPool<ConfirmRetrainingSelectionRequest>().Add(entity);
-            _lastActionLabel = "Queued ConfirmRetraining";
+            _bootstrapper.World.GetPool<BuyRetrainingBatchRequest>().Add(entity);
+            _lastActionLabel = "Queued BuyRetrainingBatch";
             RefreshSnapshot();
         }
 

@@ -107,7 +107,10 @@ namespace Plinko.Scripts.ECS.Systems
                         IsResolved = false,
                         NextDeploymentOrder = 0,
                         IsPlayerTurnActive = false,
-                        HasGeneratedHandThisTurn = false
+                        HasGeneratedHandThisTurn = false,
+                        TotalEnemyKills = 0,
+                        TotalDamageToEnemyBase = 0,
+                        TotalDamageToPlayerBase = 0
                     };
                 }
 

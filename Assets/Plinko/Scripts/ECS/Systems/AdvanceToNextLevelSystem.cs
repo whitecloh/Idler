@@ -104,18 +104,25 @@ namespace Plinko.Scripts.ECS.Systems
                            _purchaseStatePool.Get(runEntity).ActiveTrainingCount <= 0;
                 case Enums.PhaseType.RetrainingPhase:
                     return !_retrainingStatePool.Has(runEntity) ||
-                           (_retrainingStatePool.Get(runEntity).ActiveTrainingCount <= 0 &&
-                            !_retrainingStatePool.Get(runEntity).IsSelectionLocked);
+                           _retrainingStatePool.Get(runEntity).ActiveTrainingCount <= 0;
                 case Enums.PhaseType.FieldUpgradePhase:
                     return !_fieldUpgradeStatePool.Has(runEntity) ||
                            (_fieldUpgradeStatePool.Get(runEntity).SelectedSlotIndex < 0 && !HasPendingPins());
                 case Enums.PhaseType.Result:
                     return _battleRuntimeService.CurrentResult != null &&
                            _battleRuntimeService.CurrentResult.IsVictory &&
-                           !_battleRuntimeService.CurrentResult.IsDefeat;
+                           !_battleRuntimeService.CurrentResult.IsDefeat &&
+                           HasNextLevel(runEntity);
                 default:
                     return false;
             }
+        }
+
+        private bool HasNextLevel(int runEntity)
+        {
+            var locationId = _locationPool.Get(runEntity).LocationId;
+            var nextLevelIndex = _levelPool.Get(runEntity).LevelIndex + 1;
+            return _levelConfigService.GetLevel(locationId, nextLevelIndex) != null;
         }
 
         private bool HasPendingPins()

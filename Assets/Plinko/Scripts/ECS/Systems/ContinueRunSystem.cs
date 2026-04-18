@@ -173,9 +173,9 @@ namespace Plinko.Scripts.ECS.Systems
                 _plinkoRuntimeService.Clear();
                 _battleRuntimeService.Clear();
                 var battleRestore = BuildBattleRestoreState(dto, levelData, ownedUnits, normalizedPhase);
-                var selectionLimit = levelData != null && levelData.PreBattlePhase != null && levelData.PreBattlePhase.OverrideRetrainingSelectionLimit > 0
-                    ? levelData.PreBattlePhase.OverrideRetrainingSelectionLimit
-                    : _gameSettingsService.GetDefaultRetrainingSelectionLimit();
+                var retrainingOfferCount = levelData != null && levelData.PreBattlePhase != null && levelData.PreBattlePhase.OverrideRetrainingOfferCount > 0
+                    ? levelData.PreBattlePhase.OverrideRetrainingOfferCount
+                    : _gameSettingsService.GetDefaultRetrainingOfferCount();
                 var enemyBaseMaxHealth = levelData.EnemyBaseMaxHealth > 0 ? levelData.EnemyBaseMaxHealth : dto.EnemyBaseHealth;
 
                 var runEntity = world.NewEntity();
@@ -205,9 +205,8 @@ namespace Plinko.Scripts.ECS.Systems
                 _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = Mathf.Max(0, dto.PurchaseRerollCount), ActiveTrainingCount = 0, CanEnterBattle = true };
                 _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
                 {
-                    SelectedCount = 0,
-                    SelectionLimit = selectionLimit,
-                    IsSelectionLocked = false,
+                    OfferCount = retrainingOfferCount,
+                    RerollCount = 0,
                     ActiveTrainingCount = 0
                 };
                 _fieldUpgradePool.Add(runEntity) = new FieldUpgradePhaseStateComponent { RerollCount = Mathf.Max(0, dto.PinRerollCount), SelectedSlotIndex = -1, IsPlacementHighlighted = false };
@@ -217,10 +216,14 @@ namespace Plinko.Scripts.ECS.Systems
                     IsResolved = false,
                     NextDeploymentOrder = battleRestore.NextDeploymentOrder,
                     IsPlayerTurnActive = battleRestore.IsPlayerTurnActive,
-                    HasGeneratedHandThisTurn = battleRestore.HasGeneratedHandThisTurn
+                    HasGeneratedHandThisTurn = battleRestore.HasGeneratedHandThisTurn,
+                    TotalEnemyKills = battleRestore.TotalEnemyKills,
+                    TotalDamageToEnemyBase = battleRestore.TotalDamageToEnemyBase,
+                    TotalDamageToPlayerBase = battleRestore.TotalDamageToPlayerBase
                 };
 
                 _runEntityIndex.SetRunEntity(runEntity);
+                _battleRuntimeService.CurrentResult = CloneBattleResult(battleRestore.RestoredResult);
 
                 _restoreOwnedUnitsRequestPool.Add(world.NewEntity()).OwnedUnits = ownedUnits;
                 _restoreBoardRequestPool.Add(world.NewEntity()).Board = dto.Board ?? new PlinkoBoardSaveDto();
@@ -269,9 +272,8 @@ namespace Plinko.Scripts.ECS.Systems
             _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = 0, ActiveTrainingCount = 0, CanEnterBattle = false };
             _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
             {
-                SelectedCount = 0,
-                SelectionLimit = _gameSettingsService.GetDefaultRetrainingSelectionLimit(),
-                IsSelectionLocked = false,
+                OfferCount = _gameSettingsService.GetDefaultRetrainingOfferCount(),
+                RerollCount = 0,
                 ActiveTrainingCount = 0
             };
             _fieldUpgradePool.Add(runEntity) = new FieldUpgradePhaseStateComponent { RerollCount = 0, SelectedSlotIndex = -1, IsPlacementHighlighted = false };
@@ -281,7 +283,10 @@ namespace Plinko.Scripts.ECS.Systems
                 IsResolved = false,
                 NextDeploymentOrder = 0,
                 IsPlayerTurnActive = false,
-                HasGeneratedHandThisTurn = false
+                HasGeneratedHandThisTurn = false,
+                TotalEnemyKills = 0,
+                TotalDamageToEnemyBase = 0,
+                TotalDamageToPlayerBase = 0
             };
 
             _runEntityIndex.SetRunEntity(runEntity);
@@ -306,11 +311,19 @@ namespace Plinko.Scripts.ECS.Systems
                 NextDeploymentOrder = Mathf.Max(0, dto.NextDeploymentOrder),
                 IsPlayerTurnActive = levelData.LevelType == Enums.LevelType.Battle && normalizedPhase == Enums.PhaseType.BattlePreparation,
                 HasGeneratedHandThisTurn = false,
-                ShouldGenerateHand = false
+                ShouldGenerateHand = false,
+                TotalEnemyKills = Mathf.Max(0, dto.BattleEnemyKillsTotal),
+                TotalDamageToEnemyBase = Mathf.Max(0, dto.BattleDamageToEnemyBaseTotal),
+                TotalDamageToPlayerBase = Mathf.Max(0, dto.BattleDamageToPlayerBaseTotal)
             };
 
             if (levelData.LevelType != Enums.LevelType.Battle || normalizedPhase != Enums.PhaseType.BattlePreparation)
             {
+                if (normalizedPhase == Enums.PhaseType.Result)
+                {
+                    restoreState.RestoredResult = BuildSavedOrFallbackBattleResult(dto, restoreState);
+                }
+
                 return restoreState;
             }
 
@@ -433,6 +446,61 @@ namespace Plinko.Scripts.ECS.Systems
             }
         }
 
+        private static BattleResultModel BuildSavedOrFallbackBattleResult(RunSaveDto dto, BattleRestoreState restoreState)
+        {
+            var savedResult = CloneBattleResult(dto.BattleResult);
+            if (savedResult != null)
+            {
+                return savedResult;
+            }
+
+            return new BattleResultModel
+            {
+                PlayerBaseHealthBefore = dto.PlayerBaseHealth + restoreState.TotalDamageToPlayerBase,
+                PlayerBaseHealthAfter = dto.PlayerBaseHealth,
+                EnemyBaseHealthBefore = dto.EnemyBaseHealth + restoreState.TotalDamageToEnemyBase,
+                EnemyBaseHealthAfter = dto.EnemyBaseHealth,
+                EnemyKillsThisTurn = 0,
+                EnemyKillsTotal = restoreState.TotalEnemyKills,
+                DamageToEnemyBaseThisTurn = 0,
+                DamageToEnemyBaseTotal = restoreState.TotalDamageToEnemyBase,
+                DamageToPlayerBaseThisTurn = 0,
+                DamageToPlayerBaseTotal = restoreState.TotalDamageToPlayerBase,
+                TurnsSpent = Mathf.Max(1, restoreState.CurrentTurn),
+                BaseReward = 0,
+                RewardGranted = 0,
+                IsVictory = dto.RunStatus == Enums.RunStatus.Victory || dto.RunStatus == Enums.RunStatus.InProgress,
+                IsDefeat = dto.RunStatus == Enums.RunStatus.Defeat
+            };
+        }
+
+        private static BattleResultModel CloneBattleResult(BattleResultModel source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            return new BattleResultModel
+            {
+                PlayerBaseHealthBefore = source.PlayerBaseHealthBefore,
+                PlayerBaseHealthAfter = source.PlayerBaseHealthAfter,
+                EnemyBaseHealthBefore = source.EnemyBaseHealthBefore,
+                EnemyBaseHealthAfter = source.EnemyBaseHealthAfter,
+                EnemyKillsThisTurn = source.EnemyKillsThisTurn,
+                EnemyKillsTotal = source.EnemyKillsTotal,
+                DamageToEnemyBaseThisTurn = source.DamageToEnemyBaseThisTurn,
+                DamageToEnemyBaseTotal = source.DamageToEnemyBaseTotal,
+                DamageToPlayerBaseThisTurn = source.DamageToPlayerBaseThisTurn,
+                DamageToPlayerBaseTotal = source.DamageToPlayerBaseTotal,
+                TurnsSpent = source.TurnsSpent,
+                BaseReward = source.BaseReward,
+                RewardGranted = source.RewardGranted,
+                IsVictory = source.IsVictory,
+                IsDefeat = source.IsDefeat
+            };
+        }
+
         private bool AreOwnedUnitsValid(IReadOnlyList<OwnedUnitSaveDto> ownedUnits)
         {
             var uniqueRuntimeIds = new HashSet<int>();
@@ -454,6 +522,9 @@ namespace Plinko.Scripts.ECS.Systems
                    dto.CurrentMana >= 0 &&
                    dto.PlayerBaseHealth >= 0 &&
                    dto.EnemyBaseHealth >= 0 &&
+                   dto.BattleEnemyKillsTotal >= 0 &&
+                   dto.BattleDamageToEnemyBaseTotal >= 0 &&
+                   dto.BattleDamageToPlayerBaseTotal >= 0 &&
                    dto.PurchaseRerollCount >= 0 &&
                    dto.PinRerollCount >= 0 &&
                    dto.HandNextRuntimeId >= 0 &&
@@ -504,6 +575,10 @@ namespace Plinko.Scripts.ECS.Systems
             public bool IsPlayerTurnActive;
             public bool HasGeneratedHandThisTurn;
             public bool ShouldGenerateHand;
+            public int TotalEnemyKills;
+            public int TotalDamageToEnemyBase;
+            public int TotalDamageToPlayerBase;
+            public BattleResultModel RestoredResult;
             public List<HandCardSaveDto> HandCards = new();
             public List<DeployedUnitSaveDto> DeployedUnits = new();
         }

@@ -17,8 +17,8 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsFilter _fieldUpgradePhaseEnteredFilter;
         private EcsFilter _shopOffersChangedFilter;
         private EcsFilter _pinShopOffersChangedFilter;
-        private EcsFilter _retrainingSelectionChangedFilter;
-        private EcsFilter _retrainingSelectionConfirmedFilter;
+        private EcsFilter _retrainingShopOffersChangedFilter;
+        private EcsFilter _retrainingBatchPurchasedFilter;
         private EcsFilter _boardSlotSelectionChangedFilter;
         private EcsFilter _plinkoBoardChangedFilter;
         private EcsFilter _pinPurchasedFilter;
@@ -54,8 +54,8 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _fieldUpgradePhaseEnteredFilter = world.Filter<FieldUpgradePhaseEnteredEvent>().End();
             _shopOffersChangedFilter = world.Filter<ShopOffersChangedEvent>().End();
             _pinShopOffersChangedFilter = world.Filter<PinShopOffersChangedEvent>().End();
-            _retrainingSelectionChangedFilter = world.Filter<RetrainingSelectionChangedEvent>().End();
-            _retrainingSelectionConfirmedFilter = world.Filter<RetrainingSelectionConfirmedEvent>().End();
+            _retrainingShopOffersChangedFilter = world.Filter<RetrainingShopOffersChangedEvent>().End();
+            _retrainingBatchPurchasedFilter = world.Filter<RetrainingBatchPurchasedEvent>().End();
             _boardSlotSelectionChangedFilter = world.Filter<BoardSlotSelectionChangedEvent>().End();
             _plinkoBoardChangedFilter = world.Filter<PlinkoBoardChangedEvent>().End();
             _pinPurchasedFilter = world.Filter<PinPurchasedEvent>().End();
@@ -92,8 +92,8 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             DeleteFilter(world, _fieldUpgradePhaseEnteredFilter);
             DeleteFilter(world, _shopOffersChangedFilter);
             DeleteFilter(world, _pinShopOffersChangedFilter);
-            DeleteFilter(world, _retrainingSelectionChangedFilter);
-            DeleteFilter(world, _retrainingSelectionConfirmedFilter);
+            DeleteFilter(world, _retrainingShopOffersChangedFilter);
+            DeleteFilter(world, _retrainingBatchPurchasedFilter);
             DeleteFilter(world, _boardSlotSelectionChangedFilter);
             DeleteFilter(world, _plinkoBoardChangedFilter);
             DeleteFilter(world, _pinPurchasedFilter);

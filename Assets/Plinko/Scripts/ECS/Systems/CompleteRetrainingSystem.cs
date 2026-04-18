@@ -94,11 +94,6 @@ namespace Plinko.Scripts.ECS.Systems
 
                 ref var retrainingState = ref _retrainingStatePool.Get(runEntity);
                 retrainingState.ActiveTrainingCount = Mathf.Max(0, retrainingState.ActiveTrainingCount - 1);
-                if (retrainingState.ActiveTrainingCount <= 0)
-                {
-                    retrainingState.ActiveTrainingCount = 0;
-                    retrainingState.SelectedCount = 0;
-                }
 
                 world.DelEntity(eventEntity);
             }

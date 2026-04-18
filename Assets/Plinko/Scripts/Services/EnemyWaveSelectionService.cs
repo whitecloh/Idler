@@ -75,7 +75,10 @@ namespace Plinko.Scripts.Services
                     BoardX = enemy.BoardX,
                     BoardY = enemy.BoardY,
                     MoveRange = enemy.MoveRange,
-                    AttackRange = enemy.AttackRange
+                    AttackRange = enemy.AttackRange,
+                    PortraitSprite = enemy.PortraitSprite,
+                    TrainingFieldSprite = enemy.TrainingFieldSprite,
+                    BattleAnimations = enemy.BattleAnimations
                 });
                 model.TotalAttack += enemy.Attack;
                 model.TotalHealth += enemy.Health;

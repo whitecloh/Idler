@@ -1,4 +1,6 @@
 using System;
+using Plinko.Scripts.Data.Visuals;
+using UnityEngine;
 
 namespace Plinko.Scripts.Models
 {
@@ -13,5 +15,8 @@ namespace Plinko.Scripts.Models
         public int BoardY;
         public int MoveRange;
         public int AttackRange;
+        public Sprite PortraitSprite;
+        public Sprite TrainingFieldSprite;
+        public CharacterAnimationSetData BattleAnimations;
     }
 }

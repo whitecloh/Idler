@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Plinko.Scripts.Models.ViewData;
 using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
@@ -10,15 +8,12 @@ namespace Plinko.Scripts.View.Controllers
 
         public void Show(bool isVisible)
         {
-            if (root != null)
-            {
-                root.SetActive(isVisible);
-            }
+            root.SetActive(isVisible);
         }
 
-        public void Refresh(IReadOnlyList<OwnedUnitViewData> ownedUnits)
+        public void SetVisibleImmediate(bool isVisible)
         {
-            Debug.Log($"Owned units refresh count={ownedUnits.Count}");
+            root.SetActive(isVisible);
         }
     }
 }

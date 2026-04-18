@@ -20,6 +20,8 @@ namespace Plinko.Scripts.Services
         public int GetPinShopOfferCount() => _settings != null ? _settings.PinShopOfferCount : 3;
         public int GetUnitShopRerollPrice() => _settings != null ? _settings.UnitShopRerollPrice : 1;
         public int GetPinShopRerollPrice() => _settings != null ? _settings.PinShopRerollPrice : 1;
+        public int GetDefaultRetrainingOfferCount() => _settings != null ? _settings.DefaultRetrainingOfferCount : 3;
+        public int GetRetrainingShopRerollPrice() => _settings != null ? _settings.RetrainingShopRerollPrice : 1;
         public int GetDefaultRetrainingSelectionLimit() => _settings != null ? _settings.DefaultRetrainingSelectionLimit : 3;
         public float GetBattleTickDuration() => _settings != null ? _settings.BattleTickDuration : 0.2f;
         public PlinkoFieldSettingsData GetFallbackPlinkoField() => _settings != null ? _settings.FallbackPlinkoField : null;

@@ -1,3 +1,4 @@
+using Plinko.Scripts.Data.Visuals;
 using UnityEngine;
 
 namespace Plinko.Scripts.Data.Enemies
@@ -13,6 +14,9 @@ namespace Plinko.Scripts.Data.Enemies
         [SerializeField] private int boardY;
         [SerializeField] private int moveRange = 1;
         [SerializeField] private int attackRange = 1;
+        [SerializeField] private Sprite portraitSprite;
+        [SerializeField] private CharacterAnimationSetData battleAnimations = new();
+        [SerializeField] private Sprite trainingFieldSprite;
 
         public string Id => id;
         public string DisplayName => displayName;
@@ -22,5 +26,8 @@ namespace Plinko.Scripts.Data.Enemies
         public int BoardY => boardY;
         public int MoveRange => moveRange;
         public int AttackRange => attackRange;
+        public Sprite PortraitSprite => portraitSprite;
+        public CharacterAnimationSetData BattleAnimations => battleAnimations;
+        public Sprite TrainingFieldSprite => trainingFieldSprite;
     }
 }

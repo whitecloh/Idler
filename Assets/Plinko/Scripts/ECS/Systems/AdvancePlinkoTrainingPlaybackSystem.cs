@@ -9,6 +9,7 @@ namespace Plinko.Scripts.ECS.Systems
     {
         private EcsFilter _playbackFilter;
         private EcsPool<PlinkoTrainingPlaybackComponent> _playbackPool;
+        private EcsPool<TrainingPlaybackStartedEvent> _trainingPlaybackStartedEventPool;
         private EcsPool<TrainingCompletedEvent> _trainingCompletedEventPool;
 
         public void Init(IEcsSystems systems)
@@ -16,6 +17,7 @@ namespace Plinko.Scripts.ECS.Systems
             var world = systems.GetWorld();
             _playbackFilter = world.Filter<PlinkoTrainingPlaybackComponent>().End();
             _playbackPool = world.GetPool<PlinkoTrainingPlaybackComponent>();
+            _trainingPlaybackStartedEventPool = world.GetPool<TrainingPlaybackStartedEvent>();
             _trainingCompletedEventPool = world.GetPool<TrainingCompletedEvent>();
         }
 
@@ -28,6 +30,19 @@ namespace Plinko.Scripts.ECS.Systems
                 if (playback.IsCompleted)
                 {
                     continue;
+                }
+
+                if (!playback.HasStarted)
+                {
+                    playback.StartDelay -= Time.deltaTime;
+                    if (playback.StartDelay > 0f)
+                    {
+                        continue;
+                    }
+
+                    playback.StartDelay = 0f;
+                    playback.HasStarted = true;
+                    _trainingPlaybackStartedEventPool.Add(world.NewEntity()).RuntimeId = playback.RuntimeId;
                 }
 
                 playback.Elapsed += Time.deltaTime;

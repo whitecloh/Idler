@@ -8,7 +8,7 @@ namespace Plinko.Scripts.View.Bridges
     {
         private EcsWorld _world;
         public void Init(EcsWorld world) => _world = world;
-        public void RequestSelectOwnedUnit(int runtimeId) => _world.GetPool<SelectUnitsForRetrainingRequest>().Add(_world.NewEntity()).RuntimeId = runtimeId;
-        public void RequestConfirmRetrainingSelection() => _world.GetPool<ConfirmRetrainingSelectionRequest>().Add(_world.NewEntity());
+        public void RequestRerollShop() => _world.GetPool<RerollRetrainingShopRequest>().Add(_world.NewEntity());
+        public void RequestBuyBatch() => _world.GetPool<BuyRetrainingBatchRequest>().Add(_world.NewEntity());
     }
 }

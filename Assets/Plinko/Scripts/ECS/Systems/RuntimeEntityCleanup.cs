@@ -34,6 +34,11 @@ namespace Plinko.Scripts.ECS.Systems
                 world.DelEntity(entity);
             }
 
+            foreach (var entity in world.Filter<RetrainingShopOfferComponent>().End())
+            {
+                world.DelEntity(entity);
+            }
+
             foreach (var entity in world.Filter<PinShopOfferComponent>().End())
             {
                 world.DelEntity(entity);

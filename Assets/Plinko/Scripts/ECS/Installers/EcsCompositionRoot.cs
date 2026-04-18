@@ -89,12 +89,19 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new CompletePurchasedTrainingSystem(
                     _services.PlinkoRuntimeService,
                     _services.RunEntityIndex))
-                .Add(new SelectUnitsForRetrainingSystem(
+                .Add(new GenerateRetrainingShopOffersSystem(
+                    _services.UnitConfigService,
+                    _services.RunEntityIndex))
+                .Add(new RerollRetrainingShopSystem(
+                    _services.GameSettingsService,
+                    _services.UnitConfigService,
+                    _services.RunEntityIndex))
+                .Add(new BuyRetrainingBatchSystem(
                     _services.RunEntityIndex,
                     _services.OwnedUnitIndex))
-                .Add(new ConfirmRetrainingSelectionSystem(_services.RunEntityIndex))
                 .Add(new BeginRetrainingSystem(
                     _services.TrainingPipelineService,
+                    _services.UnitConfigService,
                     _services.RunEntityIndex))
                 .Add(new CompleteRetrainingSystem(
                     _services.PlinkoRuntimeService,
@@ -173,19 +180,63 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.InstalledPinIndex))
                 .Add(new RegisterOwnedUnitSystem(_services.OwnedUnitIndex))
                 .Add(new ReplaceOwnedUnitSystem(_services.OwnedUnitIndex))
-                .Add(new WriteRunSaveSystem(_services.RunSaveService, _services.RunEntityIndex))
+                .Add(new WriteRunSaveSystem(
+                    _services.RunSaveService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
                 .Add(new RefreshMenuLocationUiSystem(
                     _services.RunSaveService,
                     _services.LocationConfigService,
                     _services.UnlocksService,
                     _services.RunEntityIndex,
                     _uiCompositionRoot))
-                .Add(new RefreshPurchasePhaseUiSystem())
-                .Add(new RefreshRetrainingPhaseUiSystem())
-                .Add(new RefreshFieldUpgradeUiSystem())
-                .Add(new RefreshOwnedUnitsUiSystem())
-                .Add(new RefreshBattleHudUiSystem())
-                .Add(new RefreshBattleResultUiSystem())
+                .Add(new RefreshPurchasePhaseUiSystem(
+                    _services.GameSettingsService,
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.PlinkoConfigService,
+                    _services.PinConfigService,
+                    _services.PlinkoRuntimeService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshRetrainingWindowUiSystem(
+                    _services.GameSettingsService,
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.PlinkoConfigService,
+                    _services.PinConfigService,
+                    _services.PlinkoRuntimeService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshFieldUpgradeUiSystem(
+                    _services.GameSettingsService,
+                    _services.PinConfigService,
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.PlinkoConfigService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshOwnedUnitsUiSystem(
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshBattleHudUiSystem(
+                    _services.GameSettingsService,
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.EnemyWaveSelectionService,
+                    _services.BattleRuntimeService,
+                    _services.OwnedUnitIndex,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshBattleResultUiSystem(
+                    _services.BattleRuntimeService,
+                    _services.LocationConfigService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
                 .Add(new CleanupTransientEventsSystem());
         }
     }

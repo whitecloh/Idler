@@ -78,7 +78,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
 
             viewData.CanContinue = true;
             viewData.ContinueTitle = $"Continue: {location.DisplayName}";
-            viewData.ContinueSubtitle = $"Level {dto.LevelIndex + 1} • {FormatPhase(dto.PhaseType)}";
+            viewData.ContinueSubtitle = $"Level {dto.LevelIndex + 1} | {FormatPhase(dto.PhaseType)}";
             return viewData;
         }
 
@@ -101,6 +101,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 {
                     LocationId = location.Id,
                     DisplayName = string.IsNullOrWhiteSpace(location.DisplayName) ? location.Id : location.DisplayName,
+                    Art = location.Art,
                     IsUnlocked = isUnlocked,
                     IsCompleted = _unlocksService.IsLocationCompleted(location.Id),
                     MaxCompletedLevelIndex = maxCompletedLevelIndex,
@@ -117,11 +118,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         {
             if (_unlocksService.IsLocationCompleted(locationId))
             {
-                return $"Completed • {totalLevelCount}/{totalLevelCount} levels";
+                return $"Completed | {totalLevelCount}/{totalLevelCount} levels";
             }
 
             var completedLevelCount = maxCompletedLevelIndex + 1;
-            return $"Progress • {completedLevelCount}/{totalLevelCount} levels";
+            return $"Progress | {completedLevelCount}/{totalLevelCount} levels";
         }
 
         private string BuildUnlockDescription(UnlockConditionData condition)

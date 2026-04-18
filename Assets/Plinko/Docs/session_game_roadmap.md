@@ -95,22 +95,30 @@
 
 ## Шаг 2. Реализовать retraining phase
 ### Что заполняем
-- `SelectUnitsForRetrainingSystem`
-- `ConfirmRetrainingSelectionSystem`
+- `GenerateRetrainingShopBatchSystem`
+- `RerollRetrainingShopSystem`
+- `BuyRetrainingBatchSystem`
 - `BeginRetrainingSystem`
 - `CompleteRetrainingSystem`
 
 ### Что должно получиться
-- игрок может выбрать от `1` до `N` юнитов;
-- `N` берётся из settings / level override;
-- после confirm выбранные юниты отправляются на retraining;
+- при входе в retraining level генерируется batch из `M` owned units;
+- `M` берётся из settings / level override;
+- если eligible units меньше `M`, показывается только доступное количество;
+- batch строится из owned unit pool, а не из unit types;
+- reroll выбирает новый batch из eligible owned units и может показать тот же состав снова;
+- reroll недоступен, если текущий batch уже показывает всех eligible units;
+- покупка списывает сумму `ShopPrice` всех юнитов batch;
+- после покупки весь batch отправляется на retraining;
+- юниты, уже upgraded на этом уровне, исключаются из следующих batch generation;
 - для них генерируются новые результаты через тот же plinko pipeline;
 - после завершения старые версии юнитов заменяются новыми;
-- owned pool остаётся консистентным.
+- owned pool остаётся консистентным;
+- переход на следующий уровень доступен, если нет активного training.
 
 ### Критерий готовности
 Сценарий:
-`enter retraining level -> select 1..N owned units -> confirm -> playback проходит -> stats/mana обновлены`
+`enter retraining level -> batch M owned units generated -> buy batch or reroll -> bought units go through playback -> stats/mana обновлены -> upgraded units больше не участвуют в batch generation на этом уровне`
 
 ---
 

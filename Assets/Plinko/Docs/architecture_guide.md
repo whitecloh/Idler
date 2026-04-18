@@ -191,11 +191,23 @@ Purchase phase отвечает только за:
 
 ### 6.2 Retraining phase
 Retraining phase отвечает только за:
-- selection from owned unit pool
-- selection limit
-- confirm selection
-- sending selected owned units into retraining
+- building a retraining shop batch from owned unit pool
+- rerolling the batch while eligible owned units remain outside the shown batch
+- buying the whole current batch for total batch price
+- sending the whole bought batch into retraining
+- excluding units already upgraded on this level from future retraining shop generation
 - replacing owned units after retraining completes
+
+Правила retraining phase:
+- batch строится из **owned units**, а не из unit types;
+- каждый owned unit — отдельный кандидат, даже если тип совпадает;
+- размер batch равен `M`, где `M` берётся из settings или level override;
+- если eligible owned units меньше `M`, показывается только доступное количество;
+- цена покупки batch равна сумме `UnitTypeData.ShopPrice` всех юнитов в batch;
+- reroll не гарантирует новый состав, если eligible pool больше batch size;
+- reroll недоступен, если текущий batch уже содержит все eligible units;
+- юниты, уже upgraded на этом retraining level, больше не попадают в generation этого уровня;
+- переход на следующий уровень доступен, если нет активного training.
 
 ### 6.3 Field upgrade phase
 Field upgrade phase отвечает только за:
