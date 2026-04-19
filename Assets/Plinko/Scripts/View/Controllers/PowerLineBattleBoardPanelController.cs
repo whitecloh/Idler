@@ -20,10 +20,6 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private BattleTurnBannerView titleBannerView;
         [SerializeField] private bool autoPositionLaneViews;
         [SerializeField] private RenderTexture sharedRenderTexture;
-        [SerializeField] private int renderTextureWidth = 1920;
-        [SerializeField] private int renderTextureHeight = 640;
-        [SerializeField] private int renderTextureDepth = 16;
-        [SerializeField] private FilterMode renderTextureFilterMode = FilterMode.Bilinear;
 
         private PowerLineBattleHudViewData _viewData = new();
         private Action<int> _laneClicked;

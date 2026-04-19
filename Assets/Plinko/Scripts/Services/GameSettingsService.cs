@@ -29,6 +29,7 @@ namespace Plinko.Scripts.Services
         public int GetPowerLineManaPerTick() => _settings != null ? _settings.PowerLineManaPerTick : 1;
         public int GetPowerLineManaTickInterval() => _settings != null ? _settings.PowerLineManaTickInterval : 5;
         public int GetPowerLineRerollManaCost() => _settings != null ? _settings.PowerLineRerollManaCost : 1;
+        public float GetPowerLineMovementStep() => _settings != null ? _settings.PowerLineMovementStep : 0.1f;
         public PlinkoFieldSettingsData GetFallbackPlinkoField() => _settings != null ? _settings.FallbackPlinkoField : null;
     }
 }

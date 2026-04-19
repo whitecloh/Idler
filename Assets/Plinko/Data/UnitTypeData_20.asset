@@ -15,15 +15,21 @@ MonoBehaviour:
   id: unit_20
   displayName: Ranger
   description: Fast backline trainee with higher attack.
-  portraitSprite: {fileID: 0}
+  portraitSprite: {fileID: 21300000, guid: 9d7fada4a0d34ad4683cd006d5f1f7d8, type: 3}
   battleAnimations:
-    idleFrames: []
-    runFrames: []
-    attackFrames: []
-    hitFrames: []
-    castFrames: []
-    deathFrames: []
-  trainingFieldSprite: {fileID: 0}
+    idleFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    runFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    attackFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    hitFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    castFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    deathFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  trainingFieldSprite: {fileID: 21300000, guid: 9d7fada4a0d34ad4683cd006d5f1f7d8, type: 3}
   baseAttack: 5
   baseHealth: 30
   defaultManaCost: 0

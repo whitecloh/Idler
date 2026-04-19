@@ -170,6 +170,7 @@ namespace Plinko.Scripts.ECS.Systems
 
         private void SimulateAllLanes(EcsWorld world, int runEntity, PowerLineBattleStateModel state, float tickDuration)
         {
+            var movementStep = Mathf.Max(0f, _gameSettingsService.GetPowerLineMovementStep());
             for (var laneIndex = 0; laneIndex < state.Lanes.Count; laneIndex++)
             {
                 var laneState = state.Lanes[laneIndex];
@@ -178,17 +179,17 @@ namespace Plinko.Scripts.ECS.Systems
                     continue;
                 }
 
-                SimulatePlayersOnLane(world, runEntity, state, laneState, tickDuration);
+                SimulatePlayersOnLane(world, runEntity, state, laneState, tickDuration, movementStep);
                 if (laneState.IsConnected)
                 {
                     continue;
                 }
 
-                SimulateEnemiesOnLane(world, state, laneState, tickDuration);
+                SimulateEnemiesOnLane(world, state, laneState, tickDuration, movementStep);
             }
         }
 
-        private void SimulatePlayersOnLane(EcsWorld world, int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
+        private void SimulatePlayersOnLane(EcsWorld world, int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration, float movementStep)
         {
             var lane = laneState.Lane;
             var units = new List<PowerLineUnitStateModel>();
@@ -222,7 +223,7 @@ namespace Plinko.Scripts.ECS.Systems
                 }
 
                 unit.AttackAccumulator = 0f;
-                unit.Position = Mathf.Clamp(unit.Position + unit.MoveSpeed * tickDuration, 0f, state.LaneLength);
+                unit.Position = Mathf.Clamp(unit.Position + unit.MoveSpeed * movementStep, 0f, state.LaneLength);
                 if (TryPickupPlug(laneState, unit))
                 {
                     _powerLinePlugStateChangedEventPool.Add(world.NewEntity()) = new PowerLinePlugStateChangedEvent
@@ -247,7 +248,7 @@ namespace Plinko.Scripts.ECS.Systems
             }
         }
 
-        private void SimulateEnemiesOnLane(EcsWorld world, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
+        private void SimulateEnemiesOnLane(EcsWorld world, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration, float movementStep)
         {
             var lane = laneState.Lane;
             var units = new List<PowerLineUnitStateModel>();
@@ -287,7 +288,7 @@ namespace Plinko.Scripts.ECS.Systems
                 }
 
                 unit.AttackAccumulator = 0f;
-                unit.Position = Mathf.Clamp(unit.Position - unit.MoveSpeed * tickDuration, 0f, state.LaneLength);
+                unit.Position = Mathf.Clamp(unit.Position - unit.MoveSpeed * movementStep, 0f, state.LaneLength);
             }
         }
 

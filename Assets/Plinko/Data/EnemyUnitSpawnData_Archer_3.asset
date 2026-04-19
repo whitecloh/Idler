@@ -24,12 +24,18 @@ MonoBehaviour:
   attackSpeed: 1
   canAttackOtherLines: 0
   canMoveBetweenLines: 0
-  portraitSprite: {fileID: 0}
+  portraitSprite: {fileID: 21300000, guid: 2738ed824bfa25e409e90681a53faba7, type: 3}
   battleAnimations:
-    idleFrames: []
-    runFrames: []
-    attackFrames: []
-    hitFrames: []
-    castFrames: []
-    deathFrames: []
-  trainingFieldSprite: {fileID: 0}
+    idleFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    runFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    attackFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    hitFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    castFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    deathFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  trainingFieldSprite: {fileID: 21300000, guid: 2738ed824bfa25e409e90681a53faba7, type: 3}

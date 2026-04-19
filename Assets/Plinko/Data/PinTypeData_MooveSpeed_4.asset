@@ -15,7 +15,7 @@ MonoBehaviour:
   id: pin_moovespeed_4
   displayName: Moove Speed Pin
   rarity: unique
-  fieldSprite: {fileID: 0}
+  fieldSprite: {fileID: 21300000, guid: 63a99cf191b40af4d9404368585101a9, type: 3}
   shopPrice: 40
   generationWeight: 1
   attackModifier: 0

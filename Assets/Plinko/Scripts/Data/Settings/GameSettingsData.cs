@@ -24,6 +24,7 @@ namespace Plinko.Scripts.Data.Settings
         [SerializeField] private int powerLineManaPerTick = 1;
         [SerializeField] private int powerLineManaTickInterval = 5;
         [SerializeField] private int powerLineRerollManaCost = 1;
+        [SerializeField] private float powerLineMovementStep = 0.1f;
         [SerializeField] private PlinkoFieldSettingsData fallbackPlinkoField;
 
         public int StartingGold => startingGold;
@@ -43,6 +44,7 @@ namespace Plinko.Scripts.Data.Settings
         public int PowerLineManaPerTick => powerLineManaPerTick;
         public int PowerLineManaTickInterval => powerLineManaTickInterval;
         public int PowerLineRerollManaCost => powerLineRerollManaCost;
+        public float PowerLineMovementStep => powerLineMovementStep;
         public PlinkoFieldSettingsData FallbackPlinkoField => fallbackPlinkoField;
     }
 }
