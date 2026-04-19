@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: basket_3
   displayName: Mana 3
+  fieldSprite: {fileID: 0}
   manaValue: 3
-  generationWeight: 1
+  generationWeight: 3

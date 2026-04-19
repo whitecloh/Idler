@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd790beaed464b718a3dd0fcd53cf04e, type: 3}
+  m_Name: EnemyUnitSpawnData_Brute_3
+  m_EditorClassIdentifier: 
+  id: enemy_brute_3
+  displayName: Brute
+  attack: 100
+  health: 150
+  boardX: 0
+  boardY: 0
+  moveRange: 1
+  attackRange: 2
+  moveSpeed: 3
+  attackSpeed: 2
+  canAttackOtherLines: 0
+  canMoveBetweenLines: 0
+  portraitSprite: {fileID: 0}
+  battleAnimations:
+    idleFrames: []
+    runFrames: []
+    attackFrames: []
+    hitFrames: []
+    castFrames: []
+    deathFrames: []
+  trainingFieldSprite: {fileID: 0}

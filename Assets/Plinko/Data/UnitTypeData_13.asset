@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9546d2f1a0043b3832721603fec5520, type: 3}
+  m_Name: UnitTypeData_13
+  m_EditorClassIdentifier: 
+  id: unit_13
+  displayName: Ranger
+  description: Fast backline trainee with higher attack.
+  portraitSprite: {fileID: 0}
+  battleAnimations:
+    idleFrames: []
+    runFrames: []
+    attackFrames: []
+    hitFrames: []
+    castFrames: []
+    deathFrames: []
+  trainingFieldSprite: {fileID: 0}
+  baseAttack: 10
+  baseHealth: 50
+  defaultManaCost: 0
+  baseMoveSpeed: 3
+  battleMoveRange: 0
+  battleAttackRange: 2
+  baseAttackSpeed: 2
+  canAttackOtherLines: 1
+  canMoveBetweenLines: 0
+  shopPrice: 30
+  generationWeight: 2
+  passiveAbility: {fileID: 11400000, guid: 48ad2df78f1b4e0ea67e5b8d2aa76101, type: 2}
+  unlockCondition: {fileID: 0}

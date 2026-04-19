@@ -13,10 +13,27 @@ MonoBehaviour:
   m_Name: LevelPhaseData_FieldUpgrade
   m_EditorClassIdentifier: 
   id: phase_field_upgrade_01
-  overrideRetrainingSelectionLimit: 0
+  overrideRetrainingOfferCount: 3
   explicitUnitShopPool: []
   explicitPinShopPool:
-  - {fileID: 11400000, guid: e9e0a61d85ec6b64886e58df57b8d54f, type: 2}
   - {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
+  - {fileID: 11400000, guid: b923e8758a4f58942bf885896e513a04, type: 2}
+  - {fileID: 11400000, guid: 99d2796a4e1db2a4a985b33383b99e80, type: 2}
+  - {fileID: 11400000, guid: ab742a10a76c0b749a916a822fe85248, type: 2}
+  - {fileID: 11400000, guid: 30a9857802bd5ce4eb5d8ddf951a7753, type: 2}
+  - {fileID: 11400000, guid: 6e3e1ef4c9e94e442b69503100d02d92, type: 2}
+  - {fileID: 11400000, guid: 0b3495c7662757f41a475dbfc8753b2e, type: 2}
+  - {fileID: 11400000, guid: e9ae762391ed8ae42bd3942382552225, type: 2}
+  - {fileID: 11400000, guid: 1e93be426d5073c4d9e735111465c840, type: 2}
+  - {fileID: 11400000, guid: 14e6e8145617cd74f9937730f78e7f75, type: 2}
+  - {fileID: 11400000, guid: eabac669de01091458ca1cfab6692edf, type: 2}
+  - {fileID: 11400000, guid: 5f8822f9cb01e0a4e8e4c24eff828263, type: 2}
   - {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
+  - {fileID: 11400000, guid: 8fef37482d6e3d94e93cd672cb07c928, type: 2}
+  - {fileID: 11400000, guid: ebb8bff96cb4cf74a8c5c1ad6c59acd5, type: 2}
+  - {fileID: 11400000, guid: ae42d940d00eae54baa7edec73cd5b89, type: 2}
+  - {fileID: 11400000, guid: 4ce38a216e2da0d49b219994456282e9, type: 2}
+  - {fileID: 11400000, guid: f9c40ee78b9578f43b5324079ba18ccd, type: 2}
+  - {fileID: 11400000, guid: f64c0808c2b06874db29046557330747, type: 2}
+  - {fileID: 11400000, guid: a4c699c062664fd41afe52f2d37b794b, type: 2}
   overridePlinkoField: {fileID: 11400000, guid: 11d62c9f32f845f1b2a3323f6b7d4101, type: 2}

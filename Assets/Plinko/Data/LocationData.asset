@@ -14,13 +14,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: location_training_ground
   displayName: Training Ground
-  art: {fileID: 0}
+  headerArt: {fileID: 0}
+  backgroundSprite: {fileID: 0}
   defaultPlinkoField: {fileID: 11400000, guid: 11d62c9f32f845f1b2a3323f6b7d4101, type: 2}
   unlockCondition: {fileID: 0}
   levels:
   - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
   - {fileID: 11400000, guid: a1113f7b4c8548c8a1f0b80b0110a401, type: 2}
-  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0101, type: 2}
-  - {fileID: 11400000, guid: a1123f7b4c8548c8a1f0b80b0110a402, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 12e83fd881f67324894f02b0dfa87a16, type: 2}
   - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
-  - {fileID: 11400000, guid: a1133f7b4c8548c8a1f0b80b0110a403, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 0e57273a11bbd4347a37db81baef8713, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 31660e64eac2d694fb419a501b335876, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0101, type: 2}
+  - {fileID: 11400000, guid: 307258525bff78743aa6b90e089ab6ff, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 36eaa7935cf6f6a47b8a1e8e12e89826, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 07584df72ca2b4e4cb5b66af77d132e3, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0101, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: f9669bc7e29a9234bbb4bb6c854a879a, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 05be0df08bf9c564fbfbf744111e349d, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0101, type: 2}
+  - {fileID: 11400000, guid: 60a3f1dbd2c64ef896cce0d5982b0102, type: 2}
+  - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
+  - {fileID: 11400000, guid: 950a428d6238cd540956776130ab0907, type: 2}

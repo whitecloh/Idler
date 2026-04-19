@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LevelPhaseData_Retraining
   m_EditorClassIdentifier: 
   id: phase_retraining_01
-  overrideRetrainingSelectionLimit: 2
+  overrideRetrainingOfferCount: 3
   explicitUnitShopPool: []
   explicitPinShopPool: []
   overridePlinkoField: {fileID: 11400000, guid: 11d62c9f32f845f1b2a3323f6b7d4101, type: 2}

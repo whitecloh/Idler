@@ -15,23 +15,37 @@ MonoBehaviour:
   id: field_training_ground
   rows:
   - cells:
-    - pinType: {fileID: 11400000, guid: e9e0a61d85ec6b64886e58df57b8d54f, type: 2}
-  - cells:
-    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
-    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
-  - cells:
-    - pinType: {fileID: 11400000, guid: e9e0a61d85ec6b64886e58df57b8d54f, type: 2}
-    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
     - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
   - cells:
     - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
-    - pinType: {fileID: 11400000, guid: e9e0a61d85ec6b64886e58df57b8d54f, type: 2}
     - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
-    - pinType: {fileID: 11400000, guid: e9e0a61d85ec6b64886e58df57b8d54f, type: 2}
+  - cells:
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
+    - pinType: {fileID: 11400000, guid: 1e93be426d5073c4d9e735111465c840, type: 2}
+  - cells:
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
+    - pinType: {fileID: 11400000, guid: 1e93be426d5073c4d9e735111465c840, type: 2}
+    - pinType: {fileID: 11400000, guid: 4ce38a216e2da0d49b219994456282e9, type: 2}
+  - cells:
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
+    - pinType: {fileID: 11400000, guid: 1e93be426d5073c4d9e735111465c840, type: 2}
+    - pinType: {fileID: 11400000, guid: 4ce38a216e2da0d49b219994456282e9, type: 2}
+    - pinType: {fileID: 11400000, guid: 30a9857802bd5ce4eb5d8ddf951a7753, type: 2}
+  - cells:
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946101, type: 2}
+    - pinType: {fileID: 11400000, guid: 1e93be426d5073c4d9e735111465c840, type: 2}
+    - pinType: {fileID: 11400000, guid: 4ce38a216e2da0d49b219994456282e9, type: 2}
+    - pinType: {fileID: 11400000, guid: 30a9857802bd5ce4eb5d8ddf951a7753, type: 2}
+    - pinType: {fileID: 11400000, guid: 5fc8e4d25f6d4e76b2c42740b6946102, type: 2}
   baskets:
   - {fileID: 11400000, guid: 09b9bd1e447d4e3dac4c15d2f7ab1101, type: 2}
   - {fileID: 11400000, guid: 09b9bd1e447d4e3dac4c15d2f7ab1102, type: 2}
   - {fileID: 11400000, guid: 09b9bd1e447d4e3dac4c15d2f7ab1103, type: 2}
   - {fileID: 11400000, guid: 09b9bd1e447d4e3dac4c15d2f7ab1104, type: 2}
+  - {fileID: 11400000, guid: 54dd79e9142c5e74d93af570bbfb8174, type: 2}
   horizontalSpacing: 1
   verticalSpacing: 1
