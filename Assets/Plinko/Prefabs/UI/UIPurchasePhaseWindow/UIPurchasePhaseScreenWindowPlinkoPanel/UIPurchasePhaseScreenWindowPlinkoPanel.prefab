@@ -312,4 +312,4 @@ MonoBehaviour:
   basketPrefab: {fileID: 8897598199327966218, guid: f85578d64173a2744be291db99ab1a07, type: 3}
   tokensRoot: {fileID: 4962539735713704341}
   tokenPrefab: {fileID: 8546170697545017146, guid: ecade9eef55309248afa2bc2ef66431d, type: 3}
-  pixelsPerFieldUnit: 120
+  pixelsPerFieldUnit: 50

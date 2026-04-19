@@ -13,10 +13,26 @@ MonoBehaviour:
   m_Name: LevelData_Purchase
   m_EditorClassIdentifier: 
   id: level_purchase_01
+  displayName: 
   levelType: 1
+  progressSprite: {fileID: 0}
+  gridSprite: {fileID: 0}
+  playerBaseSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  enemyBaseSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  backgroundSprite: {fileID: 0}
   preBattlePhase: {fileID: 11400000, guid: 2f3b87a0d8a64de1b8c332261c30a101, type: 2}
   enemyBaseMaxHealth: 24
   victoryReward: 4
   hpThresholdWaves:
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939101, type: 2}
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939102, type: 2}
+  baseDefenseBattle:
+    startingMana: 1
+    maxMana: 10
+    laneCount: 4
+    cellsPerLane: 6
+    playerSideCellCount: 3
+    waves: []
+  powerLineBattle:
+    laneLength: 12
+    spawns: []

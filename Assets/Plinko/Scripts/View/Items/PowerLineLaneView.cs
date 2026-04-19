@@ -8,10 +8,12 @@ namespace Plinko.Scripts.View.Items
 {
     public sealed class PowerLineLaneView : MonoBehaviour
     {
+        [SerializeField] private Enums.PowerLineLane lane;
         [SerializeField] private RectTransform root;
         [SerializeField] private RectTransform contentRoot;
         [SerializeField] private RectTransform lineStartAnchor;
         [SerializeField] private RectTransform lineEndAnchor;
+        [SerializeField] private RectTransform plugSocketAnchor;
         [SerializeField] private Button spawnButton;
         [SerializeField] private GameObject availableStateRoot;
         [SerializeField] private GameObject selectedStateRoot;
@@ -20,6 +22,7 @@ namespace Plinko.Scripts.View.Items
 
         private Action<PowerLineLaneView> _clicked;
 
+        public Enums.PowerLineLane Lane => lane;
         public RectTransform Root => root;
         public RectTransform ContentRoot => contentRoot;
 
@@ -60,6 +63,17 @@ namespace Plinko.Scripts.View.Items
             var clamped = Mathf.Clamp01(normalizedPosition);
             var worldPosition = Vector3.Lerp(lineStartAnchor.position, lineEndAnchor.position, clamped);
             return UiRectTransformUtility.WorldToAnchoredPosition(targetRoot, uiCamera, worldPosition) + new Vector2(0f, yOffset);
+        }
+
+        public Vector2 GetWireStartAnchoredPosition(RectTransform targetRoot, Camera uiCamera)
+        {
+            return UiRectTransformUtility.WorldToAnchoredPosition(targetRoot, uiCamera, lineStartAnchor.position);
+        }
+
+        public Vector2 GetPlugSocketAnchoredPosition(RectTransform targetRoot, Camera uiCamera)
+        {
+            var anchor = plugSocketAnchor != null ? plugSocketAnchor : lineEndAnchor;
+            return UiRectTransformUtility.WorldToAnchoredPosition(targetRoot, uiCamera, anchor.position);
         }
 
         public float GetNormalizedDistance(Vector3 worldPosition)

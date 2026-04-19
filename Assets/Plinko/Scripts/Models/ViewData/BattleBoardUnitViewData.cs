@@ -11,7 +11,11 @@ namespace Plinko.Scripts.Models.ViewData
         public string DisplayName;
         public int Attack;
         public int Health;
+        public int MaxHealth;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public int BoardIndex;
         public int LaneIndex;
         public int CellIndex;

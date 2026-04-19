@@ -17,8 +17,8 @@ MonoBehaviour:
   levelType: 6
   progressSprite: {fileID: 0}
   gridSprite: {fileID: 0}
-  playerBaseSprite: {fileID: 0}
-  enemyBaseSprite: {fileID: 0}
+  playerBaseSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  enemyBaseSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   backgroundSprite: {fileID: 0}
   preBattlePhase: {fileID: 0}
   enemyBaseMaxHealth: 28

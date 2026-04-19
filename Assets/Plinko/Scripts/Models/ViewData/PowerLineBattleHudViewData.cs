@@ -30,6 +30,10 @@ namespace Plinko.Scripts.Models.ViewData
         public List<PowerLineLaneViewData> Lanes = new();
         public List<PowerLineUnitViewData> PlayerUnits = new();
         public List<PowerLineUnitViewData> EnemyUnits = new();
+        public List<PowerLineUnitSpawnedEventViewData> UnitSpawnEvents = new();
+        public List<PowerLineDamageEventViewData> DamageEvents = new();
+        public List<PowerLinePlugEventViewData> PlugEvents = new();
+        public List<PowerLineLaneConnectedEventViewData> LaneConnectedEvents = new();
     }
 
     [Serializable]
@@ -57,12 +61,51 @@ namespace Plinko.Scripts.Models.ViewData
         public string DisplayName;
         public int Attack;
         public int Health;
+        public int MaxHealth;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public int LaneIndex;
         public float NormalizedPosition;
         public bool IsEnemy;
         public bool IsCarryingPlug;
         public Sprite PortraitSprite;
         public CharacterAnimationSetData BattleAnimations;
+    }
+
+    [Serializable]
+    public sealed class PowerLineUnitSpawnedEventViewData
+    {
+        public int RuntimeId;
+        public bool IsEnemy;
+        public int LaneIndex;
+        public float NormalizedPosition;
+    }
+
+    [Serializable]
+    public sealed class PowerLineDamageEventViewData
+    {
+        public int TargetRuntimeId;
+        public bool TargetIsEnemy;
+        public bool TargetIsBase;
+        public int LaneIndex;
+        public float NormalizedPosition;
+        public int Amount;
+    }
+
+    [Serializable]
+    public sealed class PowerLinePlugEventViewData
+    {
+        public int LaneIndex;
+        public PowerLinePlugStatus Status;
+        public float NormalizedPosition;
+        public int CarrierRuntimeId;
+    }
+
+    [Serializable]
+    public sealed class PowerLineLaneConnectedEventViewData
+    {
+        public int LaneIndex;
     }
 }

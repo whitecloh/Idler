@@ -1,93 +1,89 @@
 using System;
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Bridges;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
 {
     public sealed class BattleResultScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
+        [SerializeField] private UiCanvasGroupVisibility visibility;
+        [SerializeField] private TMP_Text titleText;
+        [SerializeField] private TMP_Text descriptionText;
+        [SerializeField] private TMP_Text playerBaseHealthText;
+        [SerializeField] private TMP_Text enemyBaseHealthText;
+        [SerializeField] private TMP_Text rewardText;
+        [SerializeField] private TMP_Text rewardBreakdownText;
+        [SerializeField] private Button primaryActionButton;
+        [SerializeField] private TMP_Text primaryActionButtonText;
 
         private LocationBridge _locationBridge;
         private BattleBridge _battleBridge;
         private BattleResultViewData _viewData = new();
         private bool _isVisible;
+        private bool _listenersBound;
 
         public void Init(LocationBridge locationBridge, BattleBridge battleBridge)
         {
             _locationBridge = locationBridge;
             _battleBridge = battleBridge;
+            BindListeners();
+            ApplyViewData();
         }
 
         public void Show(bool isVisible)
         {
+            if (_isVisible == isVisible)
+            {
+                return;
+            }
+
             _isVisible = isVisible;
-            root.SetActive(isVisible);
+            if (visibility != null)
+            {
+                if (isVisible)
+                {
+                    visibility.ShowAnimated();
+                }
+                else
+                {
+                    visibility.HideAnimated();
+                }
+
+                return;
+            }
+
+            ResolveRoot().SetActive(isVisible);
         }
 
         public void SetVisibleImmediate(bool isVisible)
         {
             _isVisible = isVisible;
-            root.SetActive(isVisible);
+            if (visibility != null)
+            {
+                if (isVisible)
+                {
+                    visibility.ShowImmediate();
+                }
+                else
+                {
+                    visibility.HideImmediate();
+                }
+
+                return;
+            }
+
+            ResolveRoot().SetActive(isVisible);
         }
 
         public void Refresh(BattleResultViewData viewData)
         {
             _viewData = viewData;
-        }
-
-        private void OnGUI()
-        {
-            if (!_isVisible)
-            {
-                return;
-            }
-
-            var width = 440f;
-            var height = 280f;
-            var area = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
-            GUILayout.BeginArea(area, GUI.skin.window);
-            GUILayout.Label(string.IsNullOrWhiteSpace(_viewData.Title) ? "Battle Result" : _viewData.Title);
-            GUILayout.Space(8f);
-
-            if (!string.IsNullOrWhiteSpace(_viewData.Description))
-            {
-                GUILayout.Label(_viewData.Description);
-                GUILayout.Space(6f);
-            }
-
-            GUILayout.Label($"Player Base: {_viewData.PlayerBaseHealthAfter}");
-            GUILayout.Label($"Enemy Base: {_viewData.EnemyBaseHealthAfter}");
-
-            if (!string.IsNullOrWhiteSpace(_viewData.RewardText))
-            {
-                GUILayout.Space(6f);
-                GUILayout.Label(_viewData.RewardText);
-            }
-
-            if (!string.IsNullOrWhiteSpace(_viewData.RewardBreakdownText))
-            {
-                GUILayout.Label(_viewData.RewardBreakdownText);
-            }
-
-            GUILayout.FlexibleSpace();
-            using (new GuiEnabledScope(_viewData.CanAdvance || _viewData.CanReturnToMenu))
-            {
-                if (GUILayout.Button(GetPrimaryActionLabel(), GUILayout.Height(34f)))
-                {
-                    if (_viewData.CanAdvance)
-                    {
-                        _locationBridge.RequestAdvanceToNextLevel();
-                    }
-                    else if (_viewData.CanReturnToMenu)
-                    {
-                        _battleBridge.RequestReturnToMenu();
-                    }
-                }
-            }
-
-            GUILayout.EndArea();
+            ApplyViewData();
         }
 
         private string GetPrimaryActionLabel()
@@ -110,20 +106,55 @@ namespace Plinko.Scripts.View.Controllers
             return "Close";
         }
 
-        private readonly struct GuiEnabledScope : IDisposable
+        private void BindListeners()
         {
-            private readonly bool _previousValue;
-
-            public GuiEnabledScope(bool isEnabled)
+            if (_listenersBound)
             {
-                _previousValue = GUI.enabled;
-                GUI.enabled = isEnabled;
+                return;
             }
 
-            public void Dispose()
+            primaryActionButton.onClick.AddListener(OnPrimaryActionClicked);
+            _listenersBound = true;
+        }
+
+        private void ApplyViewData()
+        {
+            titleText.text = string.IsNullOrWhiteSpace(_viewData.Title) ? "Battle Result" : _viewData.Title;
+            descriptionText.text = _viewData.Description ?? string.Empty;
+            descriptionText.gameObject.SetActive(!string.IsNullOrWhiteSpace(_viewData.Description));
+
+            playerBaseHealthText.text = _viewData.PlayerBaseHealthAfter.ToString();
+            enemyBaseHealthText.text = _viewData.EnemyBaseHealthAfter.ToString();
+
+            rewardText.text = _viewData.RewardText ?? string.Empty;
+            rewardText.gameObject.SetActive(!string.IsNullOrWhiteSpace(_viewData.RewardText));
+
+            rewardBreakdownText.text = _viewData.RewardBreakdownText ?? string.Empty;
+            rewardBreakdownText.gameObject.SetActive(!string.IsNullOrWhiteSpace(_viewData.RewardBreakdownText));
+
+            primaryActionButtonText.text = GetPrimaryActionLabel();
+            primaryActionButton.interactable = _viewData.CanAdvance || _viewData.CanReturnToMenu;
+        }
+
+        private void OnPrimaryActionClicked()
+        {
+            UiAnimationManager.Instance.PlaySpringPunch(primaryActionButton.transform as RectTransform);
+
+            if (_viewData.CanAdvance)
             {
-                GUI.enabled = _previousValue;
+                _locationBridge.RequestAdvanceToNextLevel();
+                return;
             }
+
+            if (_viewData.CanReturnToMenu)
+            {
+                _battleBridge.RequestReturnToMenu();
+            }
+        }
+
+        private GameObject ResolveRoot()
+        {
+            return root;
         }
     }
 }

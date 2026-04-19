@@ -9,6 +9,7 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private GameObject root;
         [SerializeField] private PurchaseLevelTrackPanelController levelTrackPanel;
         [SerializeField] private PowerLineBattleBoardPanelController boardPanel;
+        [SerializeField] private PowerLineBattleWorldPresenter worldPresenter;
         [SerializeField] private PowerLineBattleTurnPanelController turnPanel;
 
         private PowerLineBattleHudViewData _viewData = new();
@@ -18,6 +19,7 @@ namespace Plinko.Scripts.View.Controllers
         {
             turnPanel.Init(battleBridge);
             boardPanel.Init(HandleLaneClicked);
+            boardPanel.BindWorldPresenter(worldPresenter);
             turnPanel.SetLaneSelectionHandler(HandleSelectedCardChanged);
         }
 
@@ -25,6 +27,7 @@ namespace Plinko.Scripts.View.Controllers
         {
             _isVisible = isVisible;
             root.SetActive(isVisible);
+            worldPresenter.SetVisible(isVisible);
             if (!isVisible)
             {
                 ResetState();
@@ -38,6 +41,7 @@ namespace Plinko.Scripts.View.Controllers
         {
             _isVisible = isVisible;
             root.SetActive(isVisible);
+            worldPresenter.SetVisible(isVisible);
             if (!isVisible)
             {
                 ResetState();
@@ -62,6 +66,7 @@ namespace Plinko.Scripts.View.Controllers
         {
             levelTrackPanel.ResetState();
             boardPanel.ResetState();
+            worldPresenter.ResetState();
             turnPanel.ResetState();
         }
 
@@ -69,13 +74,16 @@ namespace Plinko.Scripts.View.Controllers
         {
             levelTrackPanel.Refresh(_viewData);
             boardPanel.Refresh(_viewData);
+            worldPresenter.Refresh(_viewData);
             turnPanel.Refresh(_viewData);
             boardPanel.SetSelectedCard(turnPanel.SelectedCard, _viewData.CurrentMana);
+            worldPresenter.SetSelectedCard(turnPanel.SelectedCard, _viewData.CurrentMana);
         }
 
         private void HandleSelectedCardChanged(HandCardViewData selectedCard)
         {
             boardPanel.SetSelectedCard(selectedCard, _viewData.CurrentMana);
+            worldPresenter.SetSelectedCard(selectedCard, _viewData.CurrentMana);
         }
 
         private void HandleLaneClicked(int laneIndex)
@@ -86,6 +94,7 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             boardPanel.SetSelectedCard(null, _viewData.CurrentMana);
+            worldPresenter.SetSelectedCard(null, _viewData.CurrentMana);
         }
     }
 }

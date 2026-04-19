@@ -3,6 +3,7 @@ using Leopotam.EcsLite;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Data.Locations;
 using Plinko.Scripts.ECS.Components;
+using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.Models;
 using Plinko.Scripts.Models.ViewData;
@@ -33,10 +34,19 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsPool<UnitLevelComponent> _unitLevelPool;
         private EcsPool<UnitTypeIdComponent> _unitTypePool;
         private EcsPool<UnitStatsComponent> _statsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _manaCostPool;
 
         private EcsFilter _handFilter;
         private EcsFilter _ownedFilter;
+        private EcsFilter _unitSpawnedFilter;
+        private EcsFilter _damageFilter;
+        private EcsFilter _plugChangedFilter;
+        private EcsFilter _laneConnectedFilter;
+        private EcsPool<PowerLineUnitSpawnedEvent> _unitSpawnedEventPool;
+        private EcsPool<PowerLineDamageEvent> _damageEventPool;
+        private EcsPool<PowerLinePlugStateChangedEvent> _plugChangedEventPool;
+        private EcsPool<PowerLineLaneConnectedEvent> _laneConnectedEventPool;
 
         public RefreshPowerLineBattleHudUiSystem(
             UnitConfigService unitConfigService,
@@ -70,9 +80,18 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _unitLevelPool = world.GetPool<UnitLevelComponent>();
             _unitTypePool = world.GetPool<UnitTypeIdComponent>();
             _statsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _manaCostPool = world.GetPool<UnitManaCostComponent>();
             _handFilter = world.Filter<HandCardComponent>().Inc<HandCardOwnerUnitComponent>().End();
             _ownedFilter = world.Filter<OwnedUnitComponent>().End();
+            _unitSpawnedFilter = world.Filter<PowerLineUnitSpawnedEvent>().End();
+            _damageFilter = world.Filter<PowerLineDamageEvent>().End();
+            _plugChangedFilter = world.Filter<PowerLinePlugStateChangedEvent>().End();
+            _laneConnectedFilter = world.Filter<PowerLineLaneConnectedEvent>().End();
+            _unitSpawnedEventPool = world.GetPool<PowerLineUnitSpawnedEvent>();
+            _damageEventPool = world.GetPool<PowerLineDamageEvent>();
+            _plugChangedEventPool = world.GetPool<PowerLinePlugStateChangedEvent>();
+            _laneConnectedEventPool = world.GetPool<PowerLineLaneConnectedEvent>();
         }
 
         public void Run(IEcsSystems systems)
@@ -136,7 +155,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 DeckUnits = BuildDeckUnits(),
                 Lanes = BuildLanes(state),
                 PlayerUnits = BuildUnits(state.PlayerUnits, state.LaneLength),
-                EnemyUnits = BuildUnits(state.EnemyUnits, state.LaneLength)
+                EnemyUnits = BuildUnits(state.EnemyUnits, state.LaneLength),
+                UnitSpawnEvents = BuildUnitSpawnEvents(state.LaneLength),
+                DamageEvents = BuildDamageEvents(state.LaneLength),
+                PlugEvents = BuildPlugEvents(state.LaneLength),
+                LaneConnectedEvents = BuildLaneConnectedEvents()
             };
 
             _uiCompositionRoot.RefreshPowerLineBattleHud(viewData);
@@ -163,7 +186,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     UnitTypeId = _unitTypePool.Get(ownedEntity).Value,
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,
+                    MaxHealth = _statsPool.Get(ownedEntity).Health,
                     ManaCost = _manaCostPool.Get(ownedEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
                     BattleAnimations = unitType != null ? unitType.BattleAnimations : null
                 });
@@ -185,7 +212,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     DisplayName = _displayNamePool.Get(ownedEntity).Value,
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,
+                    MaxHealth = _statsPool.Get(ownedEntity).Health,
                     ManaCost = _manaCostPool.Get(ownedEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
                     BattleAnimations = unitType != null ? unitType.BattleAnimations : null
                 });
@@ -242,7 +273,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     DisplayName = unit.DisplayName,
                     Attack = unit.Attack,
                     Health = unit.Health,
+                    MaxHealth = unit.MaxHealth,
                     ManaCost = unit.ManaCost,
+                    MoveSpeed = unit.MoveSpeed,
+                    AttackRange = unit.AttackRange,
+                    AttackSpeed = unit.AttackSpeed,
                     LaneIndex = (int)unit.Lane,
                     NormalizedPosition = laneLength > 0f ? unit.Position / laneLength : 0f,
                     IsEnemy = unit.IsEnemy,
@@ -257,6 +292,77 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 var laneCompare = left.LaneIndex.CompareTo(right.LaneIndex);
                 return laneCompare != 0 ? laneCompare : left.NormalizedPosition.CompareTo(right.NormalizedPosition);
             });
+            return result;
+        }
+
+        private List<PowerLineUnitSpawnedEventViewData> BuildUnitSpawnEvents(float laneLength)
+        {
+            var result = new List<PowerLineUnitSpawnedEventViewData>();
+            foreach (var entity in _unitSpawnedFilter)
+            {
+                var evt = _unitSpawnedEventPool.Get(entity);
+                result.Add(new PowerLineUnitSpawnedEventViewData
+                {
+                    RuntimeId = evt.RuntimeId,
+                    IsEnemy = evt.IsEnemy,
+                    LaneIndex = (int)evt.Lane,
+                    NormalizedPosition = laneLength > 0f ? evt.Position / laneLength : 0f
+                });
+            }
+
+            return result;
+        }
+
+        private List<PowerLineDamageEventViewData> BuildDamageEvents(float laneLength)
+        {
+            var result = new List<PowerLineDamageEventViewData>();
+            foreach (var entity in _damageFilter)
+            {
+                var evt = _damageEventPool.Get(entity);
+                result.Add(new PowerLineDamageEventViewData
+                {
+                    TargetRuntimeId = evt.TargetRuntimeId,
+                    TargetIsEnemy = evt.TargetIsEnemy,
+                    TargetIsBase = evt.TargetIsBase,
+                    LaneIndex = (int)evt.Lane,
+                    NormalizedPosition = laneLength > 0f ? evt.Position / laneLength : 0f,
+                    Amount = evt.Amount
+                });
+            }
+
+            return result;
+        }
+
+        private List<PowerLinePlugEventViewData> BuildPlugEvents(float laneLength)
+        {
+            var result = new List<PowerLinePlugEventViewData>();
+            foreach (var entity in _plugChangedFilter)
+            {
+                var evt = _plugChangedEventPool.Get(entity);
+                result.Add(new PowerLinePlugEventViewData
+                {
+                    LaneIndex = (int)evt.Lane,
+                    Status = evt.Status,
+                    NormalizedPosition = laneLength > 0f ? evt.Position / laneLength : 0f,
+                    CarrierRuntimeId = evt.CarrierRuntimeId
+                });
+            }
+
+            return result;
+        }
+
+        private List<PowerLineLaneConnectedEventViewData> BuildLaneConnectedEvents()
+        {
+            var result = new List<PowerLineLaneConnectedEventViewData>();
+            foreach (var entity in _laneConnectedFilter)
+            {
+                var evt = _laneConnectedEventPool.Get(entity);
+                result.Add(new PowerLineLaneConnectedEventViewData
+                {
+                    LaneIndex = (int)evt.Lane
+                });
+            }
+
             return result;
         }
 

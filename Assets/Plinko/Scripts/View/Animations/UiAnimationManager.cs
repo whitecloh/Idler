@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine.UI;
 using UnityEngine;
+using CanvasGroup = UnityEngine.CanvasGroup;
 
 namespace Plinko.Scripts.View.Animations
 {
@@ -103,6 +104,29 @@ namespace Plinko.Scripts.View.Animations
             ReplaceTween(target, FeedbackScaleChannel, tween);
         }
 
+        public void PlayTransformPunch(Transform target)
+        {
+            var initialScale = target.localScale;
+            var tween = target
+                .DOPunchScale(Vector3.one * punchScale, punchDuration, 10, 0.8f)
+                .OnKill(() =>
+                {
+                    if (target != null)
+                    {
+                        target.localScale = initialScale;
+                    }
+                })
+                .OnComplete(() =>
+                {
+                    if (target != null)
+                    {
+                        target.localScale = initialScale;
+                    }
+                });
+
+            ReplaceTween(target, FeedbackScaleChannel, tween);
+        }
+
         public void PlayShake(RectTransform target)
         {
             var initialRotation = target.localEulerAngles;
@@ -169,8 +193,42 @@ namespace Plinko.Scripts.View.Animations
             ReplaceTween(target, channel, sequence);
         }
 
+        public void PlayWorldMoveAndScale(
+            Transform target,
+            string channel,
+            Vector3 endPosition,
+            Vector3 endScale,
+            float duration,
+            Ease moveEase,
+            Ease scaleEase,
+            Action onComplete = null)
+        {
+            var sequence = DOTween.Sequence()
+                .Append(target.DOMove(endPosition, duration).SetEase(moveEase))
+                .Join(target.DOScale(endScale, duration).SetEase(scaleEase))
+                .OnComplete(() => onComplete?.Invoke());
+
+            ReplaceTween(target, channel, sequence);
+        }
+
         public void PlayScaleTo(
             RectTransform target,
+            string channel,
+            Vector3 endScale,
+            float duration,
+            Ease ease,
+            Action onComplete = null)
+        {
+            var tween = target
+                .DOScale(endScale, duration)
+                .SetEase(ease)
+                .OnComplete(() => onComplete?.Invoke());
+
+            ReplaceTween(target, channel, tween);
+        }
+
+        public void PlayWorldScaleTo(
+            Transform target,
             string channel,
             Vector3 endScale,
             float duration,
@@ -207,6 +265,22 @@ namespace Plinko.Scripts.View.Animations
                 });
 
             ReplaceTween(target, channel, sequence);
+        }
+
+        public void PlaySpriteFade(
+            SpriteRenderer target,
+            string channel,
+            float endAlpha,
+            float duration,
+            Ease ease,
+            Action onComplete = null)
+        {
+            var tween = target
+                .DOFade(endAlpha, duration)
+                .SetEase(ease)
+                .OnComplete(() => onComplete?.Invoke());
+
+            ReplaceTween(target, channel, tween);
         }
 
         public void PlayFloatAndFade(

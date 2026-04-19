@@ -10,6 +10,8 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private Image baseImage;
         [SerializeField] private TMP_Text healthText;
 
+        public RectTransform RectTransform => baseImage.rectTransform;
+
         public void Refresh(BattleBaseViewData baseViewData)
         {
             baseImage.sprite = baseViewData.Sprite;

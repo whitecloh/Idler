@@ -14,7 +14,11 @@ namespace Plinko.Scripts.Models.ViewData
         public string UnitTypeId;
         public int Attack;
         public int Health;
+        public int MaxHealth;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public bool IsDeployed;
         public Sprite PortraitSprite;
         public CharacterAnimationSetData BattleAnimations;

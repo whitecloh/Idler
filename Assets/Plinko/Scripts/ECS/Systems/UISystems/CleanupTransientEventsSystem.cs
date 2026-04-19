@@ -31,6 +31,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsFilter _unitDeployedFilter;
         private EcsFilter _manaChangedFilter;
         private EcsFilter _enemyWaveSelectedFilter;
+        private EcsFilter _powerLineUnitSpawnedFilter;
+        private EcsFilter _powerLineDamageFilter;
+        private EcsFilter _powerLineUnitDiedFilter;
+        private EcsFilter _powerLinePlugStateChangedFilter;
+        private EcsFilter _powerLineLaneConnectedFilter;
         private EcsFilter _battleResolvedFilter;
         private EcsFilter _battlePlaybackStartedFilter;
         private EcsFilter _battlePlaybackCompletedFilter;
@@ -68,6 +73,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _unitDeployedFilter = world.Filter<UnitDeployedEvent>().End();
             _manaChangedFilter = world.Filter<ManaChangedEvent>().End();
             _enemyWaveSelectedFilter = world.Filter<EnemyWaveSelectedEvent>().End();
+            _powerLineUnitSpawnedFilter = world.Filter<PowerLineUnitSpawnedEvent>().End();
+            _powerLineDamageFilter = world.Filter<PowerLineDamageEvent>().End();
+            _powerLineUnitDiedFilter = world.Filter<PowerLineUnitDiedEvent>().End();
+            _powerLinePlugStateChangedFilter = world.Filter<PowerLinePlugStateChangedEvent>().End();
+            _powerLineLaneConnectedFilter = world.Filter<PowerLineLaneConnectedEvent>().End();
             _battleResolvedFilter = world.Filter<BattleResolvedEvent>().End();
             _battlePlaybackStartedFilter = world.Filter<BattlePlaybackStartedEvent>().End();
             _battlePlaybackCompletedFilter = world.Filter<BattlePlaybackCompletedEvent>().End();
@@ -106,6 +116,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             DeleteFilter(world, _unitDeployedFilter);
             DeleteFilter(world, _manaChangedFilter);
             DeleteFilter(world, _enemyWaveSelectedFilter);
+            DeleteFilter(world, _powerLineUnitSpawnedFilter);
+            DeleteFilter(world, _powerLineDamageFilter);
+            DeleteFilter(world, _powerLineUnitDiedFilter);
+            DeleteFilter(world, _powerLinePlugStateChangedFilter);
+            DeleteFilter(world, _powerLineLaneConnectedFilter);
             DeleteFilter(world, _battleResolvedFilter);
             DeleteFilter(world, _battlePlaybackStartedFilter);
             DeleteFilter(world, _battlePlaybackCompletedFilter);

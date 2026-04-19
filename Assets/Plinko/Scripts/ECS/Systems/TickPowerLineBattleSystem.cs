@@ -35,6 +35,11 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<RunCompletedEvent> _runCompletedEventPool;
         private EcsPool<RunFailedEvent> _runFailedEventPool;
         private EcsPool<SaveRunRequest> _saveRunRequestPool;
+        private EcsPool<PowerLineUnitSpawnedEvent> _powerLineUnitSpawnedEventPool;
+        private EcsPool<PowerLineDamageEvent> _powerLineDamageEventPool;
+        private EcsPool<PowerLineUnitDiedEvent> _powerLineUnitDiedEventPool;
+        private EcsPool<PowerLinePlugStateChangedEvent> _powerLinePlugStateChangedEventPool;
+        private EcsPool<PowerLineLaneConnectedEvent> _powerLineLaneConnectedEventPool;
 
         public TickPowerLineBattleSystem(
             GameSettingsService gameSettingsService,
@@ -69,6 +74,11 @@ namespace Plinko.Scripts.ECS.Systems
             _runCompletedEventPool = world.GetPool<RunCompletedEvent>();
             _runFailedEventPool = world.GetPool<RunFailedEvent>();
             _saveRunRequestPool = world.GetPool<SaveRunRequest>();
+            _powerLineUnitSpawnedEventPool = world.GetPool<PowerLineUnitSpawnedEvent>();
+            _powerLineDamageEventPool = world.GetPool<PowerLineDamageEvent>();
+            _powerLineUnitDiedEventPool = world.GetPool<PowerLineUnitDiedEvent>();
+            _powerLinePlugStateChangedEventPool = world.GetPool<PowerLinePlugStateChangedEvent>();
+            _powerLineLaneConnectedEventPool = world.GetPool<PowerLineLaneConnectedEvent>();
         }
 
         public void Run(IEcsSystems systems)
@@ -118,9 +128,9 @@ namespace Plinko.Scripts.ECS.Systems
                 }
             }
 
-            SpawnDueEnemies(state);
-            SimulateAllLanes(runEntity, state, tickDuration);
-            ResolveDeathsAndDroppedPlugs(runEntity, state);
+            SpawnDueEnemies(world, state);
+            SimulateAllLanes(world, runEntity, state, tickDuration);
+            ResolveDeathsAndDroppedPlugs(world, runEntity, state);
 
             if (_playerBasePool.Get(runEntity).Value <= 0)
             {
@@ -134,7 +144,7 @@ namespace Plinko.Scripts.ECS.Systems
             }
         }
 
-        private void SpawnDueEnemies(PowerLineBattleStateModel state)
+        private void SpawnDueEnemies(EcsWorld world, PowerLineBattleStateModel state)
         {
             while (state.PendingSpawns.Count > 0 && state.PendingSpawns[0].TimeTick <= state.CurrentTick)
             {
@@ -146,11 +156,19 @@ namespace Plinko.Scripts.ECS.Systems
                     continue;
                 }
 
-                state.EnemyUnits.Add(PowerLineBattleUtility.CreateEnemyUnit(state, spawn));
+                var unit = PowerLineBattleUtility.CreateEnemyUnit(state, spawn);
+                state.EnemyUnits.Add(unit);
+                _powerLineUnitSpawnedEventPool.Add(world.NewEntity()) = new PowerLineUnitSpawnedEvent
+                {
+                    RuntimeId = unit.RuntimeId,
+                    IsEnemy = true,
+                    Lane = unit.Lane,
+                    Position = unit.Position
+                };
             }
         }
 
-        private void SimulateAllLanes(int runEntity, PowerLineBattleStateModel state, float tickDuration)
+        private void SimulateAllLanes(EcsWorld world, int runEntity, PowerLineBattleStateModel state, float tickDuration)
         {
             for (var laneIndex = 0; laneIndex < state.Lanes.Count; laneIndex++)
             {
@@ -160,17 +178,17 @@ namespace Plinko.Scripts.ECS.Systems
                     continue;
                 }
 
-                SimulatePlayersOnLane(runEntity, state, laneState, tickDuration);
+                SimulatePlayersOnLane(world, runEntity, state, laneState, tickDuration);
                 if (laneState.IsConnected)
                 {
                     continue;
                 }
 
-                SimulateEnemiesOnLane(state, laneState, tickDuration);
+                SimulateEnemiesOnLane(world, state, laneState, tickDuration);
             }
         }
 
-        private void SimulatePlayersOnLane(int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
+        private void SimulatePlayersOnLane(EcsWorld world, int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
         {
             var lane = laneState.Lane;
             var units = new List<PowerLineUnitStateModel>();
@@ -198,14 +216,24 @@ namespace Plinko.Scripts.ECS.Systems
                     var distance = target.Position - unit.Position;
                     if (distance <= unit.AttackRange)
                     {
-                        TickAttack(unit, target, tickDuration);
+                        TickAttack(world, unit, target, tickDuration);
                         continue;
                     }
                 }
 
                 unit.AttackAccumulator = 0f;
                 unit.Position = Mathf.Clamp(unit.Position + unit.MoveSpeed * tickDuration, 0f, state.LaneLength);
-                TryPickupPlug(laneState, unit);
+                if (TryPickupPlug(laneState, unit))
+                {
+                    _powerLinePlugStateChangedEventPool.Add(world.NewEntity()) = new PowerLinePlugStateChangedEvent
+                    {
+                        Lane = laneState.Lane,
+                        Status = laneState.Plug.Status,
+                        Position = laneState.Plug.Position,
+                        CarrierRuntimeId = laneState.Plug.CarrierRuntimeId
+                    };
+                }
+
                 if (unit.IsCarryingPlug)
                 {
                     laneState.Plug.Position = unit.Position;
@@ -214,12 +242,12 @@ namespace Plinko.Scripts.ECS.Systems
 
                 if (unit.IsCarryingPlug && unit.Position >= state.LaneLength)
                 {
-                    ConnectLane(runEntity, state, laneState);
+                    ConnectLane(world, runEntity, state, laneState);
                 }
             }
         }
 
-        private void SimulateEnemiesOnLane(PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
+        private void SimulateEnemiesOnLane(EcsWorld world, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
         {
             var lane = laneState.Lane;
             var units = new List<PowerLineUnitStateModel>();
@@ -247,14 +275,14 @@ namespace Plinko.Scripts.ECS.Systems
                     var distance = unit.Position - target.Position;
                     if (distance <= unit.AttackRange)
                     {
-                        TickAttack(unit, target, tickDuration);
+                        TickAttack(world, unit, target, tickDuration);
                         continue;
                     }
                 }
 
                 if (unit.Position <= unit.AttackRange)
                 {
-                    TickBaseAttack(unit, tickDuration);
+                    TickBaseAttack(world, unit, tickDuration);
                     continue;
                 }
 
@@ -263,7 +291,7 @@ namespace Plinko.Scripts.ECS.Systems
             }
         }
 
-        private void ResolveDeathsAndDroppedPlugs(int runEntity, PowerLineBattleStateModel state)
+        private void ResolveDeathsAndDroppedPlugs(EcsWorld world, int runEntity, PowerLineBattleStateModel state)
         {
             for (var index = state.PlayerUnits.Count - 1; index >= 0; index--)
             {
@@ -281,9 +309,24 @@ namespace Plinko.Scripts.ECS.Systems
                         laneState.Plug.Status = PowerLinePlugStatus.Dropped;
                         laneState.Plug.CarrierRuntimeId = 0;
                         laneState.Plug.Position = unit.Position;
+                        _powerLinePlugStateChangedEventPool.Add(world.NewEntity()) = new PowerLinePlugStateChangedEvent
+                        {
+                            Lane = laneState.Lane,
+                            Status = laneState.Plug.Status,
+                            Position = laneState.Plug.Position,
+                            CarrierRuntimeId = 0
+                        };
                     }
                 }
 
+                _powerLineUnitDiedEventPool.Add(world.NewEntity()) = new PowerLineUnitDiedEvent
+                {
+                    RuntimeId = unit.RuntimeId,
+                    IsEnemy = false,
+                    Lane = unit.Lane,
+                    Position = unit.Position,
+                    WasCarryingPlug = unit.IsCarryingPlug
+                };
                 state.PlayerUnits.RemoveAt(index);
             }
 
@@ -296,6 +339,14 @@ namespace Plinko.Scripts.ECS.Systems
                 }
 
                 _battlePool.Get(runEntity).TotalEnemyKills++;
+                _powerLineUnitDiedEventPool.Add(world.NewEntity()) = new PowerLineUnitDiedEvent
+                {
+                    RuntimeId = unit.RuntimeId,
+                    IsEnemy = true,
+                    Lane = unit.Lane,
+                    Position = unit.Position,
+                    WasCarryingPlug = false
+                };
                 state.EnemyUnits.RemoveAt(index);
             }
         }
@@ -346,7 +397,7 @@ namespace Plinko.Scripts.ECS.Systems
             return nearest;
         }
 
-        private void TickAttack(PowerLineUnitStateModel attacker, PowerLineUnitStateModel target, float tickDuration)
+        private void TickAttack(EcsWorld world, PowerLineUnitStateModel attacker, PowerLineUnitStateModel target, float tickDuration)
         {
             var attacksPerSecond = attacker.AttackSpeed > 0.001f ? attacker.AttackSpeed : 1f;
             var attackInterval = 1f / attacksPerSecond;
@@ -355,10 +406,19 @@ namespace Plinko.Scripts.ECS.Systems
             {
                 attacker.AttackAccumulator -= attackInterval;
                 target.Health -= attacker.Attack;
+                _powerLineDamageEventPool.Add(world.NewEntity()) = new PowerLineDamageEvent
+                {
+                    TargetRuntimeId = target.RuntimeId,
+                    TargetIsEnemy = target.IsEnemy,
+                    TargetIsBase = false,
+                    Lane = target.Lane,
+                    Position = target.Position,
+                    Amount = attacker.Attack
+                };
             }
         }
 
-        private void TickBaseAttack(PowerLineUnitStateModel attacker, float tickDuration)
+        private void TickBaseAttack(EcsWorld world, PowerLineUnitStateModel attacker, float tickDuration)
         {
             var attacksPerSecond = attacker.AttackSpeed > 0.001f ? attacker.AttackSpeed : 1f;
             var attackInterval = 1f / attacksPerSecond;
@@ -371,45 +431,71 @@ namespace Plinko.Scripts.ECS.Systems
                     ref var playerBase = ref _playerBasePool.Get(runEntity);
                     playerBase.Value = Mathf.Max(0, playerBase.Value - attacker.Attack);
                     _battlePool.Get(runEntity).TotalDamageToPlayerBase += attacker.Attack;
+                    _powerLineDamageEventPool.Add(world.NewEntity()) = new PowerLineDamageEvent
+                    {
+                        TargetRuntimeId = 0,
+                        TargetIsEnemy = false,
+                        TargetIsBase = true,
+                        Lane = attacker.Lane,
+                        Position = 0f,
+                        Amount = attacker.Attack
+                    };
                 }
             }
         }
 
-        private static void TryPickupPlug(PowerLineLaneStateModel laneState, PowerLineUnitStateModel unit)
+        private static bool TryPickupPlug(PowerLineLaneStateModel laneState, PowerLineUnitStateModel unit)
         {
             if (laneState == null || laneState.IsConnected || unit == null || unit.IsEnemy || unit.IsCarryingPlug)
             {
-                return;
+                return false;
             }
 
             if (laneState.Plug.Status != PowerLinePlugStatus.AtSpawn &&
                 laneState.Plug.Status != PowerLinePlugStatus.Dropped)
             {
-                return;
+                return false;
             }
 
             if (unit.Position < laneState.Plug.Position)
             {
-                return;
+                return false;
             }
 
             unit.IsCarryingPlug = true;
             laneState.Plug.Status = PowerLinePlugStatus.Carried;
             laneState.Plug.CarrierRuntimeId = unit.RuntimeId;
             laneState.Plug.Position = unit.Position;
+            return true;
         }
 
-        private void ConnectLane(int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState)
+        private void ConnectLane(EcsWorld world, int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState)
         {
             laneState.IsConnected = true;
             laneState.Plug.Status = PowerLinePlugStatus.Connected;
             laneState.Plug.CarrierRuntimeId = 0;
             laneState.Plug.Position = state.LaneLength;
+            _powerLineLaneConnectedEventPool.Add(world.NewEntity()).Lane = laneState.Lane;
+            _powerLinePlugStateChangedEventPool.Add(world.NewEntity()) = new PowerLinePlugStateChangedEvent
+            {
+                Lane = laneState.Lane,
+                Status = laneState.Plug.Status,
+                Position = laneState.Plug.Position,
+                CarrierRuntimeId = 0
+            };
 
             for (var index = state.PlayerUnits.Count - 1; index >= 0; index--)
             {
                 if (state.PlayerUnits[index].Lane == laneState.Lane)
                 {
+                    _powerLineUnitDiedEventPool.Add(world.NewEntity()) = new PowerLineUnitDiedEvent
+                    {
+                        RuntimeId = state.PlayerUnits[index].RuntimeId,
+                        IsEnemy = false,
+                        Lane = state.PlayerUnits[index].Lane,
+                        Position = state.PlayerUnits[index].Position,
+                        WasCarryingPlug = state.PlayerUnits[index].IsCarryingPlug
+                    };
                     state.PlayerUnits.RemoveAt(index);
                 }
             }
@@ -419,6 +505,14 @@ namespace Plinko.Scripts.ECS.Systems
                 if (state.EnemyUnits[index].Lane == laneState.Lane)
                 {
                     _battlePool.Get(runEntity).TotalEnemyKills++;
+                    _powerLineUnitDiedEventPool.Add(world.NewEntity()) = new PowerLineUnitDiedEvent
+                    {
+                        RuntimeId = state.EnemyUnits[index].RuntimeId,
+                        IsEnemy = true,
+                        Lane = state.EnemyUnits[index].Lane,
+                        Position = state.EnemyUnits[index].Position,
+                        WasCarryingPlug = false
+                    };
                     state.EnemyUnits.RemoveAt(index);
                 }
             }

@@ -12,11 +12,22 @@ namespace Plinko.Scripts.View.Animations
         [SerializeField] private float duration = 0.6f;
         [SerializeField] private Vector3 endScale = Vector3.one * 0.92f;
 
+        private RectTransform _worldViewportRect;
+        private Camera _worldProjectionCamera;
+
+        public void ConfigureWorldViewport(RectTransform viewportRect, Camera projectionCamera)
+        {
+            _worldViewportRect = viewportRect;
+            _worldProjectionCamera = projectionCamera;
+        }
+
         public void SpawnAtWorldPosition(string textValue, Color textColor, Vector3 worldPosition)
         {
             var view = Instantiate(floatingTextPrefab, root);
             view.Show(textValue, textColor);
-            view.RectTransform.anchoredPosition = UiRectTransformUtility.WorldToAnchoredPosition(root, uiCamera, worldPosition);
+            view.RectTransform.anchoredPosition = _worldViewportRect != null && _worldProjectionCamera != null
+                ? UiRectTransformUtility.WorldToAnchoredPositionInViewport(root, _worldViewportRect, _worldProjectionCamera, worldPosition)
+                : UiRectTransformUtility.WorldToAnchoredPosition(root, uiCamera, worldPosition);
             UiAnimationManager.Instance.PlayFloatAndFade(
                 view.RectTransform,
                 view.CanvasGroup,

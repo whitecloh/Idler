@@ -1,5 +1,6 @@
 
 using Plinko.Scripts.Data.Common;
+using Plinko.Scripts.Models;
 
 namespace Plinko.Scripts.ECS.Events
 {
@@ -31,6 +32,11 @@ namespace Plinko.Scripts.ECS.Events
     public struct ManaChangedEvent { public int Value; }
     public struct EnemyWaveSelectedEvent { public int ThresholdPercent; }
     public struct BaseDefenseTurnStartedEvent { public int TurnIndex; }
+    public struct PowerLineUnitSpawnedEvent { public int RuntimeId; public bool IsEnemy; public Enums.PowerLineLane Lane; public float Position; }
+    public struct PowerLineDamageEvent { public int TargetRuntimeId; public bool TargetIsEnemy; public bool TargetIsBase; public Enums.PowerLineLane Lane; public float Position; public int Amount; }
+    public struct PowerLineUnitDiedEvent { public int RuntimeId; public bool IsEnemy; public Enums.PowerLineLane Lane; public float Position; public bool WasCarryingPlug; }
+    public struct PowerLinePlugStateChangedEvent { public Enums.PowerLineLane Lane; public PowerLinePlugStatus Status; public float Position; public int CarrierRuntimeId; }
+    public struct PowerLineLaneConnectedEvent { public Enums.PowerLineLane Lane; }
     public struct BattleResolvedEvent { }
     public struct BattlePlaybackStartedEvent { }
     public struct BattlePlaybackCompletedEvent { }

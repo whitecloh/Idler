@@ -33,6 +33,8 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<ManaChangedEvent> _manaChangedEventPool;
         private EcsPool<DrawPowerLineHandCardsRequest> _drawHandRequestPool;
         private EcsPool<UnitDeployedEvent> _unitDeployedEventPool;
+        private EcsPool<PowerLineUnitSpawnedEvent> _powerLineUnitSpawnedEventPool;
+        private EcsPool<PowerLinePlugStateChangedEvent> _powerLinePlugStateChangedEventPool;
 
         public DeployPowerLineBattleCardSystem(
             BattleRuntimeService battleRuntimeService,
@@ -66,6 +68,8 @@ namespace Plinko.Scripts.ECS.Systems
             _manaChangedEventPool = world.GetPool<ManaChangedEvent>();
             _drawHandRequestPool = world.GetPool<DrawPowerLineHandCardsRequest>();
             _unitDeployedEventPool = world.GetPool<UnitDeployedEvent>();
+            _powerLineUnitSpawnedEventPool = world.GetPool<PowerLineUnitSpawnedEvent>();
+            _powerLinePlugStateChangedEventPool = world.GetPool<PowerLinePlugStateChangedEvent>();
         }
 
         public void Run(IEcsSystems systems)
@@ -136,7 +140,24 @@ namespace Plinko.Scripts.ECS.Systems
                     unitType != null ? unitType.BattleAnimations : null);
 
                 _battleRuntimeService.CurrentPowerLineState.PlayerUnits.Add(unit);
-                TryPickupPlug(_battleRuntimeService.CurrentPowerLineState, laneState, unit);
+                _powerLineUnitSpawnedEventPool.Add(world.NewEntity()) = new PowerLineUnitSpawnedEvent
+                {
+                    RuntimeId = unit.RuntimeId,
+                    IsEnemy = false,
+                    Lane = lane,
+                    Position = unit.Position
+                };
+
+                if (TryPickupPlug(_battleRuntimeService.CurrentPowerLineState, laneState, unit))
+                {
+                    _powerLinePlugStateChangedEventPool.Add(world.NewEntity()) = new PowerLinePlugStateChangedEvent
+                    {
+                        Lane = lane,
+                        Status = laneState.Plug.Status,
+                        Position = laneState.Plug.Position,
+                        CarrierRuntimeId = laneState.Plug.CarrierRuntimeId
+                    };
+                }
 
                 world.DelEntity(handCardEntity);
                 ref var handState = ref _handStatePool.Get(runEntity);
@@ -163,11 +184,11 @@ namespace Plinko.Scripts.ECS.Systems
             return -1;
         }
 
-        private static void TryPickupPlug(PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, PowerLineUnitStateModel unit)
+        private static bool TryPickupPlug(PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, PowerLineUnitStateModel unit)
         {
             if (laneState == null || unit == null || unit.IsEnemy || laneState.IsConnected)
             {
-                return;
+                return false;
             }
 
             if (laneState.Plug.Status == PowerLinePlugStatus.AtSpawn ||
@@ -175,14 +196,17 @@ namespace Plinko.Scripts.ECS.Systems
             {
                 if (unit.Position < laneState.Plug.Position)
                 {
-                    return;
+                    return false;
                 }
 
                 unit.IsCarryingPlug = true;
                 laneState.Plug.Status = PowerLinePlugStatus.Carried;
                 laneState.Plug.CarrierRuntimeId = unit.RuntimeId;
                 laneState.Plug.Position = unit.Position;
+                return true;
             }
+
+            return false;
         }
     }
 }

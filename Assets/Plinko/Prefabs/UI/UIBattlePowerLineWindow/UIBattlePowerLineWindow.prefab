@@ -168,6 +168,7 @@ MonoBehaviour:
   root: {fileID: 3294082525929177698}
   levelTrackPanel: {fileID: 4124510777469242214}
   boardPanel: {fileID: 7047580741985626014}
+  worldPresenter: {fileID: 0}
   turnPanel: {fileID: 1349955742062202642}
 --- !u!1001 &46185789006054861
 PrefabInstance:
@@ -394,22 +395,15 @@ PrefabInstance:
       propertyPath: m_Name
       value: UIBattleWindowTurnPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 8739047739199763188, guid: 2f4cc43bc38e2c447a543c42060d971b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2f4cc43bc38e2c447a543c42060d971b, type: 3}
---- !u!114 &4153930511015716984 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 185428345307299244, guid: 2f4cc43bc38e2c447a543c42060d971b, type: 3}
-  m_PrefabInstance: {fileID: 4267019713754420692}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e394e4285f884d64e98da27abbfae55d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &9091670419593840080 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4979685695833149444, guid: 2f4cc43bc38e2c447a543c42060d971b, type: 3}
@@ -544,6 +538,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UIBattleWindowDeckPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 1608875903990998401, guid: 8f838ff0ed5b9b940b2267ac1debf42a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8369679648297094129, guid: 8f838ff0ed5b9b940b2267ac1debf42a, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -665,10 +663,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4910096855275292597}
     m_Modifications:
-    - target: {fileID: 2018632544996917633, guid: ebc54a642d758c74dbd1485141d1d0e5, type: 3}
-      propertyPath: titleBannerView
-      value: 
-      objectReference: {fileID: 4153930511015716984}
     - target: {fileID: 4225737808506005340, guid: ebc54a642d758c74dbd1485141d1d0e5, type: 3}
       propertyPath: m_Name
       value: UIBattlePowerLineWindowBoardPanel

@@ -11,6 +11,9 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private Image baseImage;
         [SerializeField] private TMP_Text progressText;
         [SerializeField] private GameObject[] connectedSocketStateRoots;
+        [SerializeField] private bool syncConnectedSocketStatesInOverlay;
+
+        public RectTransform RectTransform => baseImage.rectTransform;
 
         public void Refresh(Sprite sprite, int connectedCount, int requiredCount, IReadOnlyList<PowerLineLaneViewData> lanes)
         {
@@ -21,7 +24,7 @@ namespace Plinko.Scripts.View.Items
                 progressText.text = $"{connectedCount}/{requiredCount}";
             }
 
-            if (connectedSocketStateRoots == null)
+            if (!syncConnectedSocketStatesInOverlay || connectedSocketStateRoots == null)
             {
                 return;
             }
