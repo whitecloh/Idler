@@ -46,7 +46,15 @@ namespace Plinko.Scripts.View.Animations
             gameObject.SetActive(true);
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
-            UiAnimationManager.Instance.PlayCanvasVisibility(canvasGroup, target, true, fadeDuration, hiddenYOffset, hiddenScale);
+            UiAnimationManager.Instance.PlayCanvasVisibility(
+                canvasGroup,
+                target,
+                _shownPosition,
+                _shownScale,
+                true,
+                fadeDuration,
+                hiddenYOffset,
+                hiddenScale);
         }
 
         public void HideAnimated()
@@ -57,6 +65,8 @@ namespace Plinko.Scripts.View.Animations
             UiAnimationManager.Instance.PlayCanvasVisibility(
                 canvasGroup,
                 target,
+                _shownPosition,
+                _shownScale,
                 false,
                 fadeDuration,
                 hiddenYOffset,

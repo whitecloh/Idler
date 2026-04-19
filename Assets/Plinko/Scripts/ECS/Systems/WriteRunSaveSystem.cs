@@ -32,6 +32,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<OwnedUnitComponent> _ownedUnitPool;
         private EcsPool<UnitTypeIdComponent> _unitTypeIdPool;
         private EcsPool<UnitStatsComponent> _unitStatsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _unitManaCostPool;
         private EcsPool<UnitDisplayNameComponent> _displayNamePool;
         private EcsPool<UnitLevelComponent> _unitLevelPool;
@@ -82,6 +83,7 @@ namespace Plinko.Scripts.ECS.Systems
             _ownedUnitPool = world.GetPool<OwnedUnitComponent>();
             _unitTypeIdPool = world.GetPool<UnitTypeIdComponent>();
             _unitStatsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _unitManaCostPool = world.GetPool<UnitManaCostComponent>();
             _displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             _unitLevelPool = world.GetPool<UnitLevelComponent>();
@@ -121,6 +123,8 @@ namespace Plinko.Scripts.ECS.Systems
                     PlayerBaseHealth = _playerBasePool.Get(runEntity).Value,
                     EnemyBaseHealth = _enemyBasePool.Get(runEntity).Value,
                     BattleTurn = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).CurrentTurn : 0,
+                    BaseDefenseCompletedTurnCount = _battleRuntimeService.CurrentBaseDefenseState != null ? _battleRuntimeService.CurrentBaseDefenseState.CompletedTurnCount : 0,
+                    BaseDefenseManaCap = _battleRuntimeService.CurrentBaseDefenseState != null ? _battleRuntimeService.CurrentBaseDefenseState.CurrentManaCap : 0,
                     HandNextRuntimeId = _handStatePool.Has(runEntity) ? _handStatePool.Get(runEntity).NextRuntimeId : 1,
                     NextDeploymentOrder = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).NextDeploymentOrder : 0,
                     BattleEnemyKillsTotal = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).TotalEnemyKills : 0,
@@ -129,6 +133,8 @@ namespace Plinko.Scripts.ECS.Systems
                     PurchaseRerollCount = _purchasePool.Has(runEntity) ? _purchasePool.Get(runEntity).RerollCount : 0,
                     PinRerollCount = _fieldUpgradePool.Has(runEntity) ? _fieldUpgradePool.Get(runEntity).RerollCount : 0,
                     BattleResult = CloneBattleResult(_battleRuntimeService.CurrentResult),
+                    BaseDefensePlayerUnits = new List<BaseDefenseUnitSaveDto>(),
+                    BaseDefenseEnemyUnits = new List<BaseDefenseUnitSaveDto>(),
                     OwnedUnits = new List<OwnedUnitSaveDto>(),
                     HandCards = new List<HandCardSaveDto>(),
                     DeployedUnits = new List<DeployedUnitSaveDto>(),
@@ -144,6 +150,9 @@ namespace Plinko.Scripts.ECS.Systems
                         Attack = _unitStatsPool.Get(ownedUnitEntity).Attack,
                         Health = _unitStatsPool.Get(ownedUnitEntity).Health,
                         ManaCost = _unitManaCostPool.Get(ownedUnitEntity).Value,
+                        MoveSpeed = _unitCombatStatsPool.Get(ownedUnitEntity).MoveSpeed,
+                        AttackRange = _unitCombatStatsPool.Get(ownedUnitEntity).AttackRange,
+                        AttackSpeed = _unitCombatStatsPool.Get(ownedUnitEntity).AttackSpeed,
                         DisplayName = _displayNamePool.Get(ownedUnitEntity).Value,
                         Level = _unitLevelPool.Get(ownedUnitEntity).Value,
                         PassiveAbilityId = _passiveAbilityPool.Get(ownedUnitEntity).Value,
@@ -182,6 +191,27 @@ namespace Plinko.Scripts.ECS.Systems
                         OwnedUnitRuntimeId = _handCardOwnerPool.Get(deployedEntity).OwnedUnitRuntimeId,
                         DeploymentOrder = _deploymentOrderPool.Get(deployedEntity).Value
                     });
+                }
+
+                if (_battleRuntimeService.CurrentBaseDefenseState != null)
+                {
+                    foreach (var playerUnit in _battleRuntimeService.CurrentBaseDefenseState.PlayerUnits)
+                    {
+                        var saveDto = BaseDefenseBattleUtility.ToSaveDto(playerUnit);
+                        if (saveDto != null)
+                        {
+                            dto.BaseDefensePlayerUnits.Add(saveDto);
+                        }
+                    }
+
+                    foreach (var enemyUnit in _battleRuntimeService.CurrentBaseDefenseState.EnemyUnits)
+                    {
+                        var saveDto = BaseDefenseBattleUtility.ToSaveDto(enemyUnit);
+                        if (saveDto != null)
+                        {
+                            dto.BaseDefenseEnemyUnits.Add(saveDto);
+                        }
+                    }
                 }
 
                 _runSaveService.Save(dto);

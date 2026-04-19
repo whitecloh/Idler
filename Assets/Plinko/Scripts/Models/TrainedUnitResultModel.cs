@@ -12,6 +12,9 @@ namespace Plinko.Scripts.Models
         public int FinalAttack;
         public int FinalHealth;
         public int FinalManaCost;
+        public float FinalMoveSpeed;
+        public int FinalAttackRange;
+        public float FinalAttackSpeed;
         public string PassiveAbilityId;
         public int UpgradeCount;
         public string BasketId;

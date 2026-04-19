@@ -15,6 +15,9 @@ namespace Plinko.Scripts.Data.Pins
         [SerializeField] private int attackModifier;
         [SerializeField] private int healthModifier;
         [SerializeField] private int manaModifier;
+        [SerializeField] private float moveSpeedModifier;
+        [SerializeField] private int attackRangeModifier;
+        [SerializeField] private float attackSpeedModifier;
         [SerializeField] private UnlockConditionData unlockCondition;
 
         public string Id => id;
@@ -26,6 +29,9 @@ namespace Plinko.Scripts.Data.Pins
         public int AttackModifier => attackModifier;
         public int HealthModifier => healthModifier;
         public int ManaModifier => manaModifier;
+        public float MoveSpeedModifier => moveSpeedModifier;
+        public int AttackRangeModifier => attackRangeModifier;
+        public float AttackSpeedModifier => attackSpeedModifier;
         public UnlockConditionData UnlockCondition => unlockCondition;
     }
 }

@@ -9,7 +9,24 @@ namespace Plinko.Scripts.View.Bridges
         private EcsWorld _world;
         public void Init(EcsWorld world) => _world = world;
         public void RequestGenerateHand() => _world.GetPool<GenerateHandRequest>().Add(_world.NewEntity());
-        public void RequestDeployCard(int handCardRuntimeId) => _world.GetPool<DeployCardRequest>().Add(_world.NewEntity()).HandCardRuntimeId = handCardRuntimeId;
+        public void RequestDeployCard(int handCardRuntimeId)
+        {
+            ref var request = ref _world.GetPool<DeployCardRequest>().Add(_world.NewEntity());
+            request.HandCardRuntimeId = handCardRuntimeId;
+            request.HasBoardTarget = false;
+            request.TargetLaneIndex = -1;
+            request.TargetCellIndex = -1;
+        }
+
+        public void RequestDeployCard(int handCardRuntimeId, int targetLaneIndex, int targetCellIndex)
+        {
+            ref var request = ref _world.GetPool<DeployCardRequest>().Add(_world.NewEntity());
+            request.HandCardRuntimeId = handCardRuntimeId;
+            request.HasBoardTarget = true;
+            request.TargetLaneIndex = targetLaneIndex;
+            request.TargetCellIndex = targetCellIndex;
+        }
+        public void RequestRerollPowerLineHand() => _world.GetPool<RerollPowerLineHandRequest>().Add(_world.NewEntity());
         public void RequestStartBattle() => _world.GetPool<StartBattleRequest>().Add(_world.NewEntity());
         public void RequestReturnToMenu() => _world.GetPool<ReturnToMenuRequest>().Add(_world.NewEntity());
     }

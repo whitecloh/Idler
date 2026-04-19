@@ -20,6 +20,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<CurrentLocationComponent> _locationPool;
         private EcsPool<CurrentLevelComponent> _levelPool;
+        private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
         private EcsPool<CurrentGoldComponent> _goldPool;
         private EcsPool<RunStatusComponent> _statusPool;
         private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
@@ -49,6 +50,7 @@ namespace Plinko.Scripts.ECS.Systems
             _phasePool = world.GetPool<CurrentPhaseComponent>();
             _locationPool = world.GetPool<CurrentLocationComponent>();
             _levelPool = world.GetPool<CurrentLevelComponent>();
+            _levelTypePool = world.GetPool<CurrentLevelTypeComponent>();
             _goldPool = world.GetPool<CurrentGoldComponent>();
             _statusPool = world.GetPool<RunStatusComponent>();
             _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
@@ -139,8 +141,11 @@ namespace Plinko.Scripts.ECS.Systems
 
             var turnsPenalty = result.TurnsSpent > 1 ? (result.TurnsSpent - 1) * 2 : 0;
             var enemyKillBonus = result.EnemyKillsTotal * 3;
-            var enemyBaseDamageBonus = result.DamageToEnemyBaseTotal / 5;
             var playerBaseDamagePenalty = result.DamageToPlayerBaseTotal / 4;
+            var enemyBaseDamageBonus = _levelTypePool.Has(runEntity) &&
+                                       _levelTypePool.Get(runEntity).Value == Enums.LevelType.StandardBattle
+                ? result.DamageToEnemyBaseTotal / 5
+                : 0;
             var reward = UnityEngine.Mathf.Max(
                 0,
                 levelData.VictoryReward +

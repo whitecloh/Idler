@@ -1,366 +1,627 @@
-# ARCHITECTURE_GUIDE.md
+# Architecture Guide
+
+## Current Superseding Update
+
+This section overrides older battle-related wording below if there is any conflict.
+
+- Supported authored `LevelType` values are now:
+  - `Purchase`
+  - `Retraining`
+  - `FieldUpgrade`
+  - `StandardBattle`
+  - `DefenceBattle`
+  - `PowerLineBattle`
+- Battle is not an implicit second half of other levels.
+- `BattleMode` is not used as an architectural concept anymore.
+- Each battle-style level is a separate authored level type with:
+  - separate runtime contract
+  - separate save/load behavior
+  - separate UI payload
+  - separate primary window
+  - separate ECS systems where the gameplay rules materially differ
+
+### Current battle types
+
+- `StandardBattle`
+  - classic base-vs-base battle
+  - turn-based deployment flow
+  - enemy base HP exists
+- `DefenceBattle`
+  - grid/lane defence flow
+  - player survives configured waves
+  - enemy base does not exist
+- `PowerLineBattle`
+  - real-time lane escort/combat level
+  - player goal is to connect 4 plugs to enemy base sockets
+  - no turns, no start-battle button, no mid-level save
+  - mana regenerates continuously by ticks
+  - reroll costs mana
+  - hand size is constant and a single card is drawn after each successful deploy
+
+### PowerLineBattle runtime contract
+
+- This mode is a separate `LevelType.PowerLineBattle`.
+- Save policy:
+  - save at level start
+  - save at level completion
+  - no mid-level save
+  - `Continue` restarts this level from the beginning
+- Lanes:
+  - 4 named lanes: `Red`, `Yellow`, `Blue`, `Green`
+  - units and enemies move only on their lane
+  - multiple allies and multiple enemies may coexist on the same lane
+  - allies do not block allies, enemies do not block enemies
+- Plug state per lane:
+  - `AtSpawn`
+  - `Carried`
+  - `Dropped`
+  - `Connected`
+- When a carrier dies, the plug drops on that lane.
+- When another allied unit reaches the dropped plug, it picks it up.
+- When a plug reaches the enemy base:
+  - the lane becomes connected
+  - all units on that lane are removed
+  - future enemy spawns on that lane are cancelled
+  - player can no longer spawn units on that lane
+- Victory:
+  - all 4 lanes connected
+- Defeat:
+  - player base HP <= 0
+
+### Shared unit/enemy stats
+
+Unit/enemy authored data is shared across all battle level types. Shared combat fields now include:
+
+- `Attack`
+- `Health`
+- `MoveSpeed`
+- `AttackRange`
+- `AttackSpeed`
+
+Pins and training are allowed to affect these shared stats.
 
 ## 1. Назначение документа
 
-Этот документ фиксирует текущую архитектурную базу проекта Session Game.
+Этот документ фиксирует актуальную архитектуру `Assets/Plinko` и все ключевые продуктовые решения, которые уже приняты.
 
-Цель документа:
-- быть единым source of truth для архитектурных решений;
-- не допускать смешивания старой и новой логики;
-- помогать человеку и агентам писать код в одном стиле;
-- задавать границы между gameplay, runtime, save, UI и visual layers.
+Его цель:
+- быть единым source of truth для архитектуры и runtime-контрактов;
+- синхронизировать человека и любую другую модель, которая будет писать код в проект;
+- не допускать возврата к старым решениям, которые уже были отброшены в ходе разработки.
 
 ---
 
 ## 2. Технологический baseline
 
 Проект разрабатывается как:
-- **Unity project**
-- **LeoECSLite** как основной gameplay runtime layer
-- **Gameplay-first pipeline**
-- **UI later / visuals later**
+- Unity-проект;
+- 2D игра;
+- PC-first;
+- gameplay runtime на `LeoECSLite`;
+- UI на `uGUI + Canvas`;
+- анимации на `DOTween`.
 
-Главное правило:
-- сначала реализуется и стабилизируется системная логика;
-- потом runtime/UI sync;
-- потом визуализация и анимации.
+Главный приоритет разработки:
+1. runtime-логика;
+2. save/load и meta progression;
+3. UI sync;
+4. production UI;
+5. визуализация и polish.
 
 ---
 
-## 3. Основной архитектурный принцип
+## 3. Источник истины
 
-### 3.1 Источник правды
-Основной источник правды для игрового состояния — **ECS runtime state**.
+### 3.1 Что является authoritative state
 
-Это означает:
-- актуальное состояние run хранится в ECS-компонентах;
-- игровые фазы хранятся в ECS;
-- owned units, shop offers, installed pins, phase state, battle state — всё это runtime ECS data;
-- UI не хранит authoritative-state.
+Единственный authoritative state для игры:
+- `ECS runtime state` для активного run;
+- `ScriptableObject` для authored data;
+- `Save DTO` только для persistence;
+- `Meta save` только для мета-прогресса между сессиями.
 
-### 3.2 Слои проекта
+UI не является authoritative state.
+
+### 3.2 Что UI делать не должен
+
+UI не должен:
+- хранить gameplay-состояние;
+- вычислять цену, статы, победу/поражение, progression;
+- дублировать runtime-пайплайны;
+- становиться источником истины вместо ECS.
+
+UI может:
+- показывать уже подготовленный view data;
+- отправлять requests через bridge;
+- проигрывать анимации и presentation-only feedback.
+
+---
+
+## 4. Архитектурные слои
+
 Проект делится на следующие слои:
 
-1. **Data layer**
-   - ScriptableObject-конфиги
-   - авторские данные
-   - pools, weights, unlocks, level content, plinko field config
+1. `Data`
+- ScriptableObject-конфиги;
+- authored контент;
+- локации, уровни, юниты, пины, враги, поля, unlock-условия.
 
-2. **Runtime model layer**
-   - DTO и runtime models
-   - save data
-   - plinko results
-   - battle timeline
+2. `Models`
+- runtime model;
+- save DTO;
+- battle timeline/result;
+- view data.
 
-3. **Services layer**
-   - config services
-   - save services
-   - runtime helper services
-   - deterministic/shared logic around config/runtime composition
+3. `Services`
+- конфиг-сервисы;
+- save/meta сервисы;
+- runtime helper-сервисы;
+- общие deterministic utility-алгоритмы.
 
-4. **ECS runtime layer**
-   - components
-   - requests/events
-   - indexes
-   - systems
+4. `ECS`
+- components;
+- requests/events;
+- systems;
+- indexes;
+- composition root.
 
-5. **UI layer**
-   - bridges
-   - controllers
-   - screen refresh
-   - только чтение runtime state и отправка requests
-
-6. **Visual layer**
-   - анимации
-   - plinko playback visualization
-   - battle playback visualization
-   - полировка
+5. `View`
+- bridges;
+- screen/panel controllers;
+- item views;
+- animation helpers.
 
 ---
 
-## 4. Правила по ECS
+## 5. Правила по authored data
 
-### 4.1 ECS — основной слой gameplay logic
-Вся gameplay-логика должна жить в ECS systems.
+### 5.1 Visual data в assets
 
-Сюда относится:
-- run start / continue
-- level routing
-- shop generation
-- buying
-- training
-- retraining
-- hand generation
-- deployment
-- battle resolution
-- battle outcome routing
-- save requests / save writes
+Визуальные данные в authored assets хранятся как sprite-based данные, а не как готовые gameplay-префабы.
 
-### 4.2 Systems должны быть phase-aware
-Каждая фаза должна иметь свою зону ответственности:
-- `PurchasePhase`
-- `RetrainingPhase`
-- `FieldUpgradePhase`
-- `BattlePreparation`
-- `Battle`
-- `BattlePlayback`
-- `Result`
+Принятый подход:
+- в data лежат `Sprite`, `Sprite[]`, animation sets и другие простые визуальные ссылки;
+- UI/view layer сам использует scene-authored/view-authored префабы и инициализирует их данными.
 
-Система не должна выполнять логику вне своей валидной фазы.
+Это уже закреплено для:
+- `PinTypeData`;
+- `BasketTypeData`;
+- `UnitTypeData`;
+- `EnemyUnitSpawnData`;
+- `LevelData`;
+- `LocationData`.
 
-### 4.3 Runtime state не должен уходить в UI
-Нельзя:
-- хранить gameplay state в MonoBehaviour view;
-- считать ману, статы, офферы, результаты battle внутри UI;
-- использовать UI как источник truth.
+### 5.2 Runtime entity != type config
 
-UI только:
-- читает уже рассчитанный state;
-- отображает его;
-- отправляет requests через bridge.
+Нужно жёстко различать:
+- `UnitTypeData` как authored template;
+- `owned unit` как конкретную runtime-сущность игрока;
+- `pin type` как authored template;
+- `installed board pin` как конкретный runtime pin на поле.
 
-Технические debug tools допустимы как вспомогательный слой проверки, если:
-- они не становятся authoritative-state;
-- они не содержат gameplay logic;
-- они только читают runtime state и/или отправляют requests для тестового запуска flow.
-
-### 4.4 Requests и Events
-Используем чёткое разделение:
-
-- **Request** — сигнал “нужно выполнить действие”
-- **Event** — сигнал “действие уже произошло”
-
-Примеры:
-- `BuyUnitRequest` — запрос на покупку
-- `UnitPurchasedEvent` — покупка уже выполнена
-
-### 4.5 Одноразовые события
-Все одноразовые events должны очищаться отдельным cleanup-system.
-
-То есть:
-- event не должен жить дольше одного прохода, если он одноразовый;
-- нельзя полагаться на lingering events.
+Особенно важно это для:
+- retraining;
+- hand generation;
+- save/load;
+- battle deploy.
 
 ---
 
-## 5. Data model rules
+## 6. Архитектура run и progression
 
-### 5.1 ScriptableObject data — авторские данные
-Data assets описывают:
-- unit types
-- pin types
-- baskets
-- levels
-- locations
-- unlock conditions
-- game settings
-- names pools
+### 6.1 Меню и локации
 
-### 5.2 Runtime-сущность != type config
-Важно различать:
+Игра стартует в меню.
 
-- **Unit type** — шаблон из data
-- **Owned unit** — уже обученная runtime-сущность игрока
+Игрок может:
+- начать новый run через выбор локации;
+- продолжить незавершённый run;
+- выйти из игры.
 
-То же относится к:
-- pin types vs installed board pins
-- authored field layout vs runtime board state
+Выбор локации:
+- является popup внутри меню;
+- использует meta progression;
+- позволяет выбрать только открытую или уже пройденную локацию;
+- по умолчанию выбирает последнюю доступную открытую локацию.
 
-### 5.3 Save DTO отдельно от ECS runtime
-Сохранение и загрузка не должны смешиваться с runtime ECS state напрямую.
+### 6.2 Meta progression
 
-Правильно:
-- ECS state -> Save DTO
-- Save DTO -> ECS restore flow
+`Meta save` хранит:
+- завершённые локации;
+- прогресс анлоков;
+- состояние, нужное для открытия следующих локаций.
 
-Неправильно:
-- считать Save DTO основным runtime форматом
-- использовать save classes как runtime storage
+`Run save` хранит:
+- только текущую незавершённую игровую сессию.
+
+### 6.3 Уровни в локации
+
+Локация состоит из последовательности authored уровней.
+
+Каждый уровень имеет свой `LevelType`:
+- `Purchase`;
+- `Retraining`;
+- `FieldUpgrade`;
+- `StandardBattle`.
+- `DefenceBattle`.
+
+Battle больше не является implicit-частью других уровней. Это отдельный authored тип уровня.
 
 ---
 
-## 6. Gameplay-specific architecture rules
+## 7. Battle Level Types
 
-### 6.1 Purchase phase
-Purchase phase отвечает только за:
-- unit shop generation
-- reroll
-- buy
-- immediate training start
-- blocking battle start while training is active
+Боевые уровни больше не используют вложенный `BattleMode`.
 
-### 6.2 Retraining phase
-Retraining phase отвечает только за:
-- building a retraining shop batch from owned unit pool
-- rerolling the batch while eligible owned units remain outside the shown batch
-- buying the whole current batch for total batch price
-- sending the whole bought batch into retraining
-- excluding units already upgraded on this level from future retraining shop generation
-- replacing owned units after retraining completes
+Поддерживаемые authored level types:
+- `LevelType.StandardBattle`;
+- `LevelType.DefenceBattle`.
 
-Правила retraining phase:
-- batch строится из **owned units**, а не из unit types;
-- каждый owned unit — отдельный кандидат, даже если тип совпадает;
-- размер batch равен `M`, где `M` берётся из settings или level override;
-- если eligible owned units меньше `M`, показывается только доступное количество;
-- цена покупки batch равна сумме `UnitTypeData.ShopPrice` всех юнитов в batch;
-- reroll не гарантирует новый состав, если eligible pool больше batch size;
-- reroll недоступен, если текущий batch уже содержит все eligible units;
-- юниты, уже upgraded на этом retraining level, больше не попадают в generation этого уровня;
+Каждый боевой тип уровня:
+- задаётся напрямую в `LevelData`;
+- имеет свой runtime contract;
+- имеет свой save/load contract;
+- имеет свой UI payload;
+- имеет свой resolver и свои victory/defeat conditions.
+
+Не допускается попытка впихнуть оба боевых типа в один oversized resolver или один oversized battle screen с большим числом случайных `if`-веток. Разделение по type-level является частью архитектурного контракта проекта.
+
+---
+
+## 8. Phase model
+
+Текущие gameplay-фазы:
+- `MainMenu`;
+- `PurchasePhase`;
+- `RetrainingPhase`;
+- `FieldUpgradePhase`;
+- `BattlePreparation`;
+- `StandardBattle`;
+- `DefenceBattle`;
+- `BattlePlayback`;
+- `Result`.
+
+Каждая ECS-система должна быть phase-aware и работать только внутри корректной фазы.
+
+---
+
+## 9. Окна и popups
+
+### 9.1 Primary windows
+
+В игре одновременно должно быть открыто только одно primary window:
+- `MainMenu`;
+- `Purchase`;
+- `Retraining`;
+- `FieldUpgrade`;
+- `StandardBattle`;
+- `DefenceBattle`;
+- `BattleResult`.
+
+Этим управляет `UiWindowManager`.
+
+### 9.2 Popups
+
+Popup не являются primary windows.
+
+На текущий момент:
+- `LocationSelection` является popup поверх меню;
+- popup может быть открыт поверх своего родительского окна;
+- popup не должен сам ломать контракт `one primary window at a time`.
+
+---
+
+## 10. Scene-authored UI policy
+
+### 10.1 Что делать с UI
+
+UI собирается вручную в сценах и префабах.
+
+Код со стороны модели/агента должен:
+- писать только scripts;
+- работать через `SerializeField`;
+- предполагать, что layout собирается руками;
+- не создавать иерархию UI на лету.
+
+### 10.2 Что запрещено
+
+Запрещено:
+- runtime UI factory как основной подход;
+- автоматическое создание недостающих окон или контроллеров;
+- `GetComponent` в view-слое;
+- кастомный validation-layer для UI ради “мягких” ошибок;
+- defensive UI-код, который тихо скрывает отсутствие критичных ссылок.
+
+Принятая модель:
+- если обязательная ссылка не прокинута, это ошибка сборки сцены/префаба;
+- Unity сам покажет проблему стандартной ошибкой;
+- кастомный validator для этого не нужен.
+
+### 10.3 Разделение view-слоя
+
+View-слой организуется так:
+- `ScreenController` управляет окном;
+- `PanelController` управляет частью окна;
+- `ItemView` висит на prefab-элементе;
+- layout и префабы собираются вручную в редакторе.
+
+---
+
+## 11. Animation policy
+
+### 11.1 Централизация
+
+Все UI-анимации должны идти через общий animation manager.
+
+Текущий approved путь:
+- `UiAnimationManager` является общим местом запуска UI-анимаций;
+- отдельные view/item-классы не должны самостоятельно создавать произвольные DOTween-пайплайны, если это можно делегировать в manager.
+
+### 11.2 Безопасность
+
+Анимационный слой должен учитывать:
+- объекты могут удаляться в середине анимации;
+- анимация не должна ломать runtime flow;
+- presentation не должен становиться gameplay logic.
+
+---
+
+## 12. Purchase phase
+
+### 12.1 Что делает phase
+
+`PurchasePhase` отвечает за:
+- генерацию магазина юнитов;
+- reroll магазина;
+- покупку юнита;
+- старт training для купленного юнита;
+- блокировку перехода дальше, пока training активен.
+
+### 12.2 Training contract
+
+Покупка юнита запускает общий plinko training pipeline:
+1. рассчитывается результат;
+2. создаётся playback runtime;
+3. playback проигрывается;
+4. результат финализируется;
+5. юнит попадает в owned pool.
+
+---
+
+## 13. Retraining phase
+
+### 13.1 Принятая модель
+
+Retraining больше не работает как ручной выбор юнитов.
+
+Текущая модель:
+- при входе в retraining phase строится batch-shop;
+- batch состоит из `M` owned units;
+- `M` берётся из level override или game settings;
+- если eligible units меньше `M`, показывается только доступное количество;
+- batch строится из owned entities, а не из unit types;
+- цена batch = сумма `UnitTypeData.ShopPrice` всех юнитов batch;
+- reroll выбирает новый batch из eligible pool;
+- reroll не гарантирует новый состав;
+- если текущий batch уже показывает все eligible units, reroll недоступен;
+- юниты, уже upgraded на этом уровне, больше не участвуют в генерации batch на этом уровне;
 - переход на следующий уровень доступен, если нет активного training.
 
-### 6.3 Field upgrade phase
-Field upgrade phase отвечает только за:
-- pin shop generation
-- reroll
-- pin buy
-- pending pin placement
-- replacing selected board pin
-- persisting board state
+### 13.2 Training contract
 
-### 6.4 Архитектура уровней
-Каждый уровень теперь является **самостоятельным level type**.
+Retraining использует тот же plinko training pipeline, что и purchase.
 
-Допустимые типы:
-- `Purchase`
-- `Retraining`
-- `FieldUpgrade`
-- `Battle`
-
-Это означает:
-- battle больше не является автоматической второй половиной purchase/retraining/field upgrade уровня;
-- последовательность уровней полностью задаётся data assets;
-- допустимы любые комбинации, включая `Battle -> Battle` без промежуточных фаз;
-- переход на следующий уровень выполняется отдельным route/progression flow.
-
-### 6.4 Shared plinko training pipeline
-Purchase и retraining обязаны использовать **один и тот же training pipeline**:
-
-1. генерируется результат
-2. создаётся playback runtime
-3. playback завершается
-4. результат финализируется
-
-Нельзя делать:
-- один pipeline для purchase;
-- второй независимый pipeline для retraining.
-
-### 6.5 Hand generation
-Рука игрока генерируется:
-- из **owned unit pool**;
-- каждый слот генерируется независимо;
-- дубликаты допустимы.
-
-### 6.6 Battle
-Battle должен быть:
-- tick-based;
-- автоматическим;
-- определённым phase logic;
-- сохранять результат в runtime models.
-
-### 6.7 Meta progression
-Meta progression хранится отдельно от активного run save.
-
-Разделение такое:
-- `run save` хранит только текущую незавершённую сессию;
-- `meta save` хранит завершённые локации и прогресс анлоков;
-- unit/pin/location unlocks читают именно meta progression, а не active run.
+Дублировать отдельный retraining pipeline запрещено.
 
 ---
 
-## 7. Naming и структура кода
+## 14. FieldUpgrade phase
 
-### 7.1 Имена должны быть прямыми и однозначными
-Используем понятные имена:
-- `GenerateUnitShopOffersSystem`
-- `CompletePurchasedTrainingSystem`
-- `ReplaceBoardPinSystem`
-- `ResolveBattleSystem`
+`FieldUpgradePhase` отвечает за:
+- генерацию магазина пинов;
+- reroll;
+- покупку пина;
+- создание pending pin;
+- выбор board slot;
+- замену установленного пина;
+- сохранение board state.
 
-Избегаем:
-- расплывчатых имён;
-- временных “Temp”, “Helper2”, “ManagerX”.
-
-### 7.2 Один system — одна понятная ответственность
-Если system делает слишком много — он должен быть разделён.
-
-### 7.3 Composition root обязателен
-Любая новая система должна быть подключена в `EcsCompositionRoot`.
-
-Нельзя считать реализацию завершённой, если:
-- system написан,
-- но не подключён в композицию.
+Логика выбора и замены пина живёт в runtime, а UI только показывает:
+- доступные пины;
+- выбранный пин;
+- pending pin;
+- состояние блокировки интерфейса на время выбора.
 
 ---
 
-## 8. Запреты
+## 15. Shared plinko training pipeline
 
-Нельзя:
-- смешивать старую архитектуру и новый baseline;
-- возвращать старые phase names и старые flow;
-- писать gameplay logic в UI;
-- реализовывать визуал до завершения core systems;
-- дублировать purchase/retraining pipeline;
-- делать большой несогласованный рефакторинг вне текущего шага roadmap;
-- менять runtime contracts без явной необходимости.
+Purchase и Retraining обязаны использовать один и тот же pipeline.
+
+Запрещено:
+- иметь два независимых куска логики для расчёта training;
+- иметь разные правила прохождения пинов для purchase и retraining.
 
 ---
 
-## 9. Порядок реализации
+## 16. Save / Load policy
 
-Строгий порядок реализации:
+### 16.1 Checkpoints
 
-1. Purchase phase
-2. Retraining phase
-3. Field upgrade phase
-4. Shared Plinko pipeline stabilization
-5. Hand generation and deployment
-6. Enemy wave selection
-7. Battle resolution
-8. Battle outcome routing
-9. Save/load stabilization
-10. UI sync
-11. Visuals / animations
+Текущая политика сохранений:
+- автосейв на старте уровня;
+- автосейв на старте хода игрока в battle после подготовки состояния хода;
+- `meta save` хранится отдельно от `run save`.
 
-Если есть сомнение — ориентируемся на roadmap.
+### 16.2 Повреждённый save
 
----
+Если `run save` повреждён или неполон:
+- игра не пытается продолжать run в неконсистентном виде;
+- текущая локация перезапускается заново;
+- создаётся новый корректный run save.
 
-## 10. Что считать завершённой фичей
+### 16.3 Что не нужно делать
 
-Фича считается завершённой, если:
-- реализованы все системы её блока;
-- учтены phase guards;
-- корректно используются requests/events;
-- нет дублирующего pipeline;
-- код подключён в composition root;
-- runtime flow можно объяснить по шагам;
-- для неё есть понятный сценарий готовности.
+Не нужно:
+- использовать UI как промежуточный источник восстановления состояния;
+- допускать “почти рабочий” broken resume;
+- сохранять mid-animation presentation state как authoritative gameplay state.
 
 ---
 
-## 11. Практическое правило для человека и агента
+## 17. Standard Battle
 
-Перед любой новой реализацией нужно ответить на 5 вопросов:
+### 17.1 Назначение
 
-1. К какой фазе относится логика?
-2. Где должен лежать authoritative state?
-3. Это request или event?
-4. Нет ли уже общего pipeline, который нужно переиспользовать?
-5. Подключён ли этот новый блок в composition root?
+`LevelType.StandardBattle` — классический режим “база игрока против базы врага”.
 
-Если на эти вопросы нет ясного ответа — нельзя начинать кодить.
+### 17.2 Базовые правила
+
+Принятые правила:
+- у обеих сторон есть база;
+- рука генерируется в начале хода;
+- мана восстанавливается в начале хода;
+- игрок deploy-ит юнитов в порядке, который влияет на стартовую линию;
+- бой стартует только по кнопке;
+- после боя либо начинается следующий ход, либо показывается `Result`.
+
+### 17.3 Текущий статус
+
+Runtime и часть UI для Standard уже существуют, но это больше не главный приоритет разработки.
+
+Текущий основной боевой фокус проекта — `BaseDefense`.
 
 ---
 
-## 12. Итог
+## 18. BaseDefense Battle
 
-Архитектура Session Game строится как:
-- ECS-centric
-- gameplay-first
-- phase-driven
-- runtime-authoritative
-- UI-passive
-- visuals-last
+### 18.1 Назначение
 
-Этот документ нужно использовать как жёсткую архитектурную опору при работе человека, Codex и любых других агентов.
+`LevelType.DefenceBattle` — отдельный режим уровня, ближе по принципу к `Plants vs Zombies`.
+
+### 18.2 Победа и поражение
+
+Условия:
+- у врага нет базы;
+- у игрока есть база с HP и progress meter;
+- победа = пережить все authored волны;
+- поражение = HP базы игрока `<= 0`;
+- заполнение progress meter равно числу пережитых волн/ходов;
+- required turns равны количеству configured waves.
+
+### 18.3 Поле
+
+Поле:
+- клеточное;
+- по умолчанию `4 x 6`;
+- разделено на сторону игрока и сторону врага;
+- дополнительно есть preview-клетки для следующей волны.
+
+Допустимая occupancy:
+- `player + player` в одной клетке нельзя;
+- `enemy + enemy` можно;
+- `enemy + player` можно.
+
+### 18.4 Игрок
+
+Игрок:
+- получает руку как обычно;
+- тратит mana на deploy;
+- ставит юнитов в клетки своей половины поля;
+- после размещения юниты игрока стоят на месте;
+- в начале каждого хода mana растёт от `StartingMana` до `MaxMana`.
+
+### 18.5 Враги
+
+Враги:
+- спавнятся authored волнами по ходам;
+- прикреплены к своим линиям, если у них нет разрешения менять линию;
+- идут к базе игрока;
+- если достигли клетки у базы и живы, бьют базу каждый ход;
+- если игрок поставил юнита в клетку с таким врагом, враг на следующей проверке таргетинга может сменить цель.
+
+### 18.6 Боевая логика
+
+Принятые правила:
+- player units статичны;
+- enemy units ищут ближайшую валидную цель;
+- если цель в range, атакуют;
+- если цель вне range, двигаются к ней;
+- `attackRange = 1` означает соседнюю клетку;
+- `attackRange = 0` означает ту же клетку;
+- cross-line attack использует Manhattan distance;
+- `CanAttackOtherLines` и `CanMoveBetweenLines` — разные флаги;
+- если юнит может атаковать другую линию, но не может менять линию, он атакует cross-line цель только если она уже в range из текущей линии;
+- если враг может менять линию, то за ход всё равно двигается только на одну клетку.
+
+### 18.7 Текущий статус
+
+Для BaseDefense уже реализованы:
+- authored data contract;
+- runtime state;
+- отдельный resolver;
+- save/load;
+- battle HUD payload;
+- scene-authored UI shell для экрана, панели хода и панели поля.
+
+Ещё не завершены:
+- production-quality playback;
+- полноценное presentation окна результата;
+- финальный polish анимаций.
+
+---
+
+## 19. Правила по ECS
+
+### 19.1 Gameplay logic только в ECS
+
+Gameplay logic живёт в ECS systems.
+
+Сюда входят:
+- run start / continue;
+- level routing;
+- shops;
+- purchases;
+- training;
+- field upgrade;
+- battle turn loop;
+- battle resolution;
+- save/load.
+
+### 19.2 Requests и Events
+
+Использовать строго:
+- `Request` = нужно выполнить действие;
+- `Event` = действие уже произошло.
+
+### 19.3 Composition root обязателен
+
+Любая новая система считается незавершённой, если она не подключена в `EcsCompositionRoot`.
+
+---
+
+## 20. Что запрещено
+
+Запрещено:
+- переносить gameplay logic в UI;
+- делать runtime UI generation как основной способ сборки интерфейса;
+- использовать `GetComponent` во view-слое;
+- вводить кастомный validator layer ради UI;
+- silently hide broken dependencies через defensive UI code;
+- плодить дублирующие пайплайны;
+- делать большие несогласованные рефакторинги вне текущей задачи;
+- добавлять presentation-полировку до согласования gameplay-контракта.
+
+---
+
+## 21. Практическое правило перед новой реализацией
+
+Перед добавлением новой функциональности нужно ответить на вопросы:
+1. В каком слое должна жить логика?
+2. Кто authoritative state?
+3. Это новый runtime contract или расширение существующего?
+4. Уже есть общий pipeline, который надо переиспользовать?
+5. Не нарушает ли изменение scene-authored UI policy?
+6. Не ломает ли изменение save/load?
+
+Если на любой вопрос нет чёткого ответа, сначала нужно зафиксировать решение в документах, и только потом писать код.

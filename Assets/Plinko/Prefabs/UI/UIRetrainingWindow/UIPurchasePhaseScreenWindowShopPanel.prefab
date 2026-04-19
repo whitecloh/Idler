@@ -755,7 +755,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8185131498463980015}
   m_Layer: 5
-  m_Name: Price_Container
+  m_Name: Gold_Container
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -970,6 +970,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65916d3c181e64447a36799627aa9cfc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  goldText: {fileID: 9114934928555804051}
   offersRoot: {fileID: 5933512543422463335}
   offerCardPrefab: {fileID: 8186850539153300935, guid: 59b8bb50facfad4499fe1c83ef3807fc, type: 3}
   buyButton: {fileID: 3710277142299923539}

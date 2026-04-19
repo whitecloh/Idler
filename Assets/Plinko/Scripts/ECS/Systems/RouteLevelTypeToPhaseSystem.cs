@@ -29,6 +29,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<RetrainingPhaseEnteredEvent> _retrainingPhaseEnteredEventPool;
         private EcsPool<FieldUpgradePhaseEnteredEvent> _fieldUpgradePhaseEnteredEventPool;
         private EcsPool<BeginBattleTurnRequest> _beginBattleTurnRequestPool;
+        private EcsPool<InitializePowerLineBattleRequest> _initializePowerLineBattleRequestPool;
         private EcsPool<SaveRunRequest> _saveRunRequestPool;
 
         public RouteLevelTypeToPhaseSystem(LevelConfigService levelConfigService, GameSettingsService gameSettingsService, RunEntityIndex runEntityIndex)
@@ -56,6 +57,7 @@ namespace Plinko.Scripts.ECS.Systems
             _retrainingPhaseEnteredEventPool = world.GetPool<RetrainingPhaseEnteredEvent>();
             _fieldUpgradePhaseEnteredEventPool = world.GetPool<FieldUpgradePhaseEnteredEvent>();
             _beginBattleTurnRequestPool = world.GetPool<BeginBattleTurnRequest>();
+            _initializePowerLineBattleRequestPool = world.GetPool<InitializePowerLineBattleRequest>();
             _saveRunRequestPool = world.GetPool<SaveRunRequest>();
         }
         
@@ -90,8 +92,12 @@ namespace Plinko.Scripts.ECS.Systems
                     case Enums.LevelType.FieldUpgrade:
                         nextPhase = Enums.PhaseType.FieldUpgradePhase;
                         break;
-                    case Enums.LevelType.Battle:
+                    case Enums.LevelType.StandardBattle:
+                    case Enums.LevelType.DefenceBattle:
                         nextPhase = Enums.PhaseType.BattlePreparation;
+                        break;
+                    case Enums.LevelType.PowerLineBattle:
+                        nextPhase = Enums.PhaseType.Battle;
                         break;
                 }
 
@@ -135,6 +141,12 @@ namespace Plinko.Scripts.ECS.Systems
                         break;
                     case Enums.PhaseType.BattlePreparation:
                         _beginBattleTurnRequestPool.Add(world.NewEntity());
+                        break;
+                    case Enums.PhaseType.Battle:
+                        if (levelData.LevelType == Enums.LevelType.PowerLineBattle)
+                        {
+                            _initializePowerLineBattleRequestPool.Add(world.NewEntity());
+                        }
                         break;
                 }
 

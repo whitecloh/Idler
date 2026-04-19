@@ -19,6 +19,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private readonly UiCompositionRoot _uiCompositionRoot;
 
         private EcsPool<CurrentPhaseComponent> _phasePool;
+        private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
 
         public RefreshMenuLocationUiSystem(
             RunSaveService runSaveService,
@@ -37,6 +38,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         public void Init(IEcsSystems systems)
         {
             _phasePool = systems.GetWorld().GetPool<CurrentPhaseComponent>();
+            _levelTypePool = systems.GetWorld().GetPool<CurrentLevelTypeComponent>();
         }
 
         public void Run(IEcsSystems systems)
@@ -50,10 +52,13 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             var phase = hasRunEntity && _phasePool.Has(runEntity)
                 ? _phasePool.Get(runEntity).Value
                 : Enums.PhaseType.MainMenu;
+            var levelType = hasRunEntity && _levelTypePool.Has(runEntity)
+                ? _levelTypePool.Get(runEntity).Value
+                : Enums.LevelType.None;
 
             _uiCompositionRoot.RefreshMainMenu(BuildMainMenuViewData(hasRunEntity));
             _uiCompositionRoot.RefreshLocationSelection(BuildLocationSelectionViewData());
-            _uiCompositionRoot.SyncScreenVisibility(hasRunEntity, phase);
+            _uiCompositionRoot.SyncScreenVisibility(hasRunEntity, phase, levelType);
         }
 
         private MainMenuViewData BuildMainMenuViewData(bool hasRunEntity)

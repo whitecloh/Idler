@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: LevelData_Battle_01
   m_EditorClassIdentifier: 
   id: level_battle_01
-  levelType: 3
+  displayName: Power Line Test
+  levelType: 6
   progressSprite: {fileID: 0}
   gridSprite: {fileID: 0}
   playerBaseSprite: {fileID: 0}
@@ -25,3 +26,36 @@ MonoBehaviour:
   hpThresholdWaves:
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939101, type: 2}
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939102, type: 2}
+  baseDefenseBattle:
+    startingMana: 1
+    maxMana: 10
+    laneCount: 4
+    cellsPerLane: 6
+    playerSideCellCount: 3
+    waves:
+    - turnIndex: 1
+      spawns:
+      - enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9102, type: 2}
+        laneIndex: 1
+        enemySideCellIndex: 0
+  powerLineBattle:
+    laneLength: 12
+    spawns:
+    - timeTick: 4
+      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
+      lane: 0
+    - timeTick: 8
+      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9102, type: 2}
+      lane: 1
+    - timeTick: 12
+      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
+      lane: 2
+    - timeTick: 16
+      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9103, type: 2}
+      lane: 3
+    - timeTick: 24
+      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
+      lane: 0
+    - timeTick: 28
+      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9102, type: 2}
+      lane: 2

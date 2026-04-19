@@ -24,6 +24,11 @@ namespace Plinko.Scripts.Services
         public int GetRetrainingShopRerollPrice() => _settings != null ? _settings.RetrainingShopRerollPrice : 1;
         public int GetDefaultRetrainingSelectionLimit() => _settings != null ? _settings.DefaultRetrainingSelectionLimit : 3;
         public float GetBattleTickDuration() => _settings != null ? _settings.BattleTickDuration : 0.2f;
+        public int GetPowerLineStartingMana() => _settings != null ? _settings.PowerLineStartingMana : 0;
+        public int GetPowerLineMaxMana() => _settings != null ? _settings.PowerLineMaxMana : 10;
+        public int GetPowerLineManaPerTick() => _settings != null ? _settings.PowerLineManaPerTick : 1;
+        public int GetPowerLineManaTickInterval() => _settings != null ? _settings.PowerLineManaTickInterval : 5;
+        public int GetPowerLineRerollManaCost() => _settings != null ? _settings.PowerLineRerollManaCost : 1;
         public PlinkoFieldSettingsData GetFallbackPlinkoField() => _settings != null ? _settings.FallbackPlinkoField : null;
     }
 }

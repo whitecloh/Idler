@@ -492,7 +492,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             for (var index = currentLevelIndex + 1; index < locationData.Levels.Count; index++)
             {
                 var level = locationData.Levels[index];
-                if (level != null && level.LevelType == Enums.LevelType.Battle)
+                if (level != null && IsBattleLevel(level.LevelType))
                 {
                     return level;
                 }
@@ -540,6 +540,13 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             }
 
             return builder.ToString();
+        }
+
+        private static bool IsBattleLevel(Enums.LevelType levelType)
+        {
+            return levelType == Enums.LevelType.StandardBattle ||
+                   levelType == Enums.LevelType.DefenceBattle ||
+                   levelType == Enums.LevelType.PowerLineBattle;
         }
 
         private sealed class StagedSnapshot

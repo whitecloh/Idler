@@ -1,6 +1,6 @@
 using System.Collections;
-using Plinko.Scripts.View.Controllers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Plinko.Scripts.View
 {
@@ -13,39 +13,32 @@ namespace Plinko.Scripts.View
             Purchase = 2,
             Retraining = 3,
             FieldUpgrade = 4,
-            Battle = 5,
-            BattleResult = 6
+            StandardBattle = 5,
+            DefenceBattle = 6,
+            PowerLineBattle = 7,
+            BattleResult = 8
         }
 
         [SerializeField] private UiLoadingWindow loadingWindow;
-        [SerializeField] private float transitionDuration = 1f;
+        [FormerlySerializedAs("transitionDuration")]
+        [SerializeField] private float loadingMinShowDuration = 1f;
 
-        private MainMenuScreenController mainMenuWindow;
-        private PurchasePhaseScreenController purchaseWindow;
-        private RetrainingPhaseScreenController retrainingWindow;
-        private FieldUpgradePhaseScreenController fieldUpgradeWindow;
-        private BattleScreenController battleWindow;
-        private BattleResultScreenController battleResultWindow;
+        private readonly System.Collections.Generic.Dictionary<WindowId, IUiWindow> _windows = new();
         private WindowId currentWindow = WindowId.None;
+        private WindowId pendingWindow = WindowId.None;
         private Coroutine transitionRoutine;
 
-        public void Configure(
-            MainMenuScreenController mainMenu,
-            PurchasePhaseScreenController purchase,
-            RetrainingPhaseScreenController retraining,
-            FieldUpgradePhaseScreenController fieldUpgrade,
-            BattleScreenController battle,
-            BattleResultScreenController battleResult)
+        public void ClearRegistrations()
         {
-            mainMenuWindow = mainMenu;
-            purchaseWindow = purchase;
-            retrainingWindow = retraining;
-            fieldUpgradeWindow = fieldUpgrade;
-            battleWindow = battle;
-            battleResultWindow = battleResult;
+            _windows.Clear();
         }
 
-        public void ShowImmediate(WindowId targetWindow)
+        public void Register(WindowId id, IUiWindow window)
+        {
+            _windows[id] = window;
+        }
+
+        public void OpenImmediate(WindowId targetWindow)
         {
             if (transitionRoutine != null)
             {
@@ -58,13 +51,19 @@ namespace Plinko.Scripts.View
                 loadingWindow.HideImmediate();
             }
 
+            pendingWindow = WindowId.None;
             currentWindow = targetWindow;
-            ApplyWindowState(targetWindow, true);
+            ApplyPrimaryWindow(targetWindow, true);
         }
 
-        public void Show(WindowId targetWindow)
+        public void Open(WindowId targetWindow)
         {
-            if (currentWindow == targetWindow)
+            if (currentWindow == targetWindow && transitionRoutine == null)
+            {
+                return;
+            }
+
+            if (transitionRoutine != null && pendingWindow == targetWindow)
             {
                 return;
             }
@@ -73,132 +72,116 @@ namespace Plinko.Scripts.View
             {
                 StopCoroutine(transitionRoutine);
                 transitionRoutine = null;
+                pendingWindow = WindowId.None;
             }
 
             if (!isActiveAndEnabled || loadingWindow == null || currentWindow == WindowId.None)
             {
+                pendingWindow = WindowId.None;
                 currentWindow = targetWindow;
-                ApplyWindowState(targetWindow, false);
+                ApplyPrimaryWindow(targetWindow, false);
                 return;
             }
 
+            pendingWindow = targetWindow;
             transitionRoutine = StartCoroutine(PlayTransition(targetWindow));
+        }
+
+        public void Close(WindowId targetWindow, bool immediate = false)
+        {
+            if (!_windows.ContainsKey(targetWindow))
+            {
+                throw new System.InvalidOperationException($"Window '{targetWindow}' is not registered.");
+            }
+
+            if (transitionRoutine != null && pendingWindow == targetWindow)
+            {
+                StopCoroutine(transitionRoutine);
+                transitionRoutine = null;
+                pendingWindow = WindowId.None;
+                if (loadingWindow != null)
+                {
+                    if (immediate)
+                    {
+                        loadingWindow.HideImmediate();
+                    }
+                    else
+                    {
+                        loadingWindow.Hide();
+                    }
+                }
+            }
+
+            SetVisible(_windows[targetWindow], false, immediate);
+            if (currentWindow == targetWindow)
+            {
+                currentWindow = WindowId.None;
+            }
+        }
+
+        public void CloseAll(bool immediate = false)
+        {
+            if (transitionRoutine != null)
+            {
+                StopCoroutine(transitionRoutine);
+                transitionRoutine = null;
+                pendingWindow = WindowId.None;
+            }
+
+            if (loadingWindow != null)
+            {
+                if (immediate)
+                {
+                    loadingWindow.HideImmediate();
+                }
+                else
+                {
+                    loadingWindow.Hide();
+                }
+            }
+
+            foreach (var window in _windows.Values)
+            {
+                SetVisible(window, false, immediate);
+            }
+
+            currentWindow = WindowId.None;
         }
 
         private IEnumerator PlayTransition(WindowId targetWindow)
         {
             loadingWindow.Show();
+            yield return null;
+            yield return new WaitForSecondsRealtime(loadingMinShowDuration);
             currentWindow = targetWindow;
-            ApplyWindowState(targetWindow, false);
-            yield return new WaitForSecondsRealtime(transitionDuration);
+            ApplyPrimaryWindow(targetWindow, false);
             loadingWindow.Hide();
+            pendingWindow = WindowId.None;
             transitionRoutine = null;
         }
 
-        private void ApplyWindowState(WindowId targetWindow, bool immediate)
+        private void ApplyPrimaryWindow(WindowId targetWindow, bool immediate)
         {
-            SetVisible(mainMenuWindow, targetWindow == WindowId.MainMenu, immediate);
-            SetVisible(purchaseWindow, targetWindow == WindowId.Purchase, immediate);
-            SetVisible(retrainingWindow, targetWindow == WindowId.Retraining, immediate);
-            SetVisible(fieldUpgradeWindow, targetWindow == WindowId.FieldUpgrade, immediate);
-            SetVisible(battleWindow, targetWindow == WindowId.Battle, immediate);
-            SetVisible(battleResultWindow, targetWindow == WindowId.BattleResult, immediate);
+            if (targetWindow != WindowId.None && !_windows.ContainsKey(targetWindow))
+            {
+                throw new System.InvalidOperationException($"Window '{targetWindow}' is not registered.");
+            }
+
+            foreach (var window in _windows)
+            {
+                SetVisible(window.Value, window.Key == targetWindow, immediate);
+            }
         }
 
-        private static void SetVisible(MainMenuScreenController controller, bool isVisible, bool immediate)
+        private static void SetVisible(IUiWindow window, bool isVisible, bool immediate)
         {
-            if (controller == null)
-            {
-                return;
-            }
-
             if (immediate)
             {
-                controller.SetVisibleImmediate(isVisible);
+                window.SetVisibleImmediate(isVisible);
                 return;
             }
 
-            controller.Show(isVisible);
-        }
-
-        private static void SetVisible(PurchasePhaseScreenController controller, bool isVisible, bool immediate)
-        {
-            if (controller == null)
-            {
-                return;
-            }
-
-            if (immediate)
-            {
-                controller.SetVisibleImmediate(isVisible);
-                return;
-            }
-
-            controller.Show(isVisible);
-        }
-
-        private static void SetVisible(RetrainingPhaseScreenController controller, bool isVisible, bool immediate)
-        {
-            if (controller == null)
-            {
-                return;
-            }
-
-            if (immediate)
-            {
-                controller.SetVisibleImmediate(isVisible);
-                return;
-            }
-
-            controller.Show(isVisible);
-        }
-
-        private static void SetVisible(FieldUpgradePhaseScreenController controller, bool isVisible, bool immediate)
-        {
-            if (controller == null)
-            {
-                return;
-            }
-
-            if (immediate)
-            {
-                controller.SetVisibleImmediate(isVisible);
-                return;
-            }
-
-            controller.Show(isVisible);
-        }
-
-        private static void SetVisible(BattleScreenController controller, bool isVisible, bool immediate)
-        {
-            if (controller == null)
-            {
-                return;
-            }
-
-            if (immediate)
-            {
-                controller.SetVisibleImmediate(isVisible);
-                return;
-            }
-
-            controller.Show(isVisible);
-        }
-
-        private static void SetVisible(BattleResultScreenController controller, bool isVisible, bool immediate)
-        {
-            if (controller == null)
-            {
-                return;
-            }
-
-            if (immediate)
-            {
-                controller.SetVisibleImmediate(isVisible);
-                return;
-            }
-
-            controller.Show(isVisible);
+            window.Show(isVisible);
         }
     }
 }

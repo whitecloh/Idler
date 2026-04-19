@@ -13,7 +13,10 @@ namespace Plinko.Scripts.Models.ViewData
         public int Health;
         public int ManaCost;
         public int BoardIndex;
+        public int LaneIndex;
+        public int CellIndex;
         public bool IsEnemy;
+        public bool IsPreview;
         public Sprite PortraitSprite;
         public CharacterAnimationSetData BattleAnimations;
     }

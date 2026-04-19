@@ -8,7 +8,17 @@ namespace Plinko.Scripts.Data.Common
             Purchase = 1,
             Retraining = 2,
             FieldUpgrade = 3,
-            Battle = 4
+            StandardBattle = 4,
+            DefenceBattle = 5,
+            PowerLineBattle = 6
+        }
+
+        public enum PowerLineLane
+        {
+            Red = 0,
+            Yellow = 1,
+            Blue = 2,
+            Green = 3
         }
 
         public enum PhaseType

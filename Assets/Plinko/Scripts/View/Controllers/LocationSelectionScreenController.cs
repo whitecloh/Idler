@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class LocationSelectionScreenController : MonoBehaviour
+    public sealed class LocationSelectionScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
         [SerializeField] private UiCanvasGroupVisibility visibility;

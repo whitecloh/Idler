@@ -48,6 +48,7 @@ namespace Plinko.Scripts.ECS.Utils
             EcsPool<UnitTypeIdComponent> unitTypeIdPool,
             EcsPool<UnitDisplayNameComponent> displayNamePool,
             EcsPool<UnitStatsComponent> statsPool,
+            EcsPool<UnitCombatStatsComponent> combatStatsPool,
             EcsPool<UnitManaCostComponent> manaCostPool,
             EcsPool<PassiveAbilityIdComponent> passiveAbilityPool,
             EcsPool<UnitLevelComponent> levelPool,
@@ -80,6 +81,7 @@ namespace Plinko.Scripts.ECS.Utils
                 unitTypeIdPool.Add(offerEntity).Value = unitTypeId;
                 displayNamePool.Add(offerEntity).Value = displayNamePool.Get(ownedEntity).Value;
                 statsPool.Add(offerEntity) = statsPool.Get(ownedEntity);
+                combatStatsPool.Add(offerEntity) = combatStatsPool.Get(ownedEntity);
                 manaCostPool.Add(offerEntity).Value = manaCostPool.Get(ownedEntity).Value;
                 passiveAbilityPool.Add(offerEntity).Value = passiveAbilityPool.Get(ownedEntity).Value;
                 levelPool.Add(offerEntity).Value = levelPool.Get(ownedEntity).Value;

@@ -1,6 +1,6 @@
 using DG.Tweening;
-using TMPro;
 using Plinko.Scripts.View.Animations;
+using TMPro;
 using UnityEngine;
 
 namespace Plinko.Scripts.View.Items
@@ -22,10 +22,19 @@ namespace Plinko.Scripts.View.Items
 
         public void ShowTurn(int turnIndex)
         {
-            valueText.text = $"Ход {turnIndex}";
+            ShowText($"Ход {turnIndex}");
+        }
+
+        public void ShowText(string textValue)
+        {
+            root.gameObject.SetActive(true);
+            valueText.text = textValue;
             root.anchoredPosition = _basePosition;
             root.localScale = Vector3.one;
             canvasGroup.alpha = 1f;
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+
             UiAnimationManager.Instance.PlayFloatAndFade(
                 root,
                 canvasGroup,
@@ -41,8 +50,11 @@ namespace Plinko.Scripts.View.Items
         public void HideImmediate()
         {
             canvasGroup.alpha = 0f;
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
             root.anchoredPosition = _basePosition;
             root.localScale = Vector3.one;
+            root.gameObject.SetActive(false);
         }
     }
 }

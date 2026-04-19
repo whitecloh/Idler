@@ -20,6 +20,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<CurrentLocationComponent> _locationPool;
         private EcsPool<CurrentLevelComponent> _levelPool;
+        private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
         private EcsPool<RunStatusComponent> _statusPool;
         private EcsPool<BattleStateComponent> _battleStatePool;
         private EcsPool<PlayerBaseHealthComponent> _playerBasePool;
@@ -43,6 +44,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _phasePool = world.GetPool<CurrentPhaseComponent>();
             _locationPool = world.GetPool<CurrentLocationComponent>();
             _levelPool = world.GetPool<CurrentLevelComponent>();
+            _levelTypePool = world.GetPool<CurrentLevelTypeComponent>();
             _statusPool = world.GetPool<RunStatusComponent>();
             _battleStatePool = world.GetPool<BattleStateComponent>();
             _playerBasePool = world.GetPool<PlayerBaseHealthComponent>();
@@ -75,6 +77,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             var isDefeat = status == Enums.RunStatus.Defeat || (result != null && result.IsDefeat);
             var isVictory = !isDefeat && (result == null || result.IsVictory);
             var isRunCompleted = status == Enums.RunStatus.Victory || (isVictory && !hasNextLevel);
+            var levelType = _levelTypePool.Has(runEntity) ? _levelTypePool.Get(runEntity).Value : Enums.LevelType.None;
 
             var viewData = new BattleResultViewData
             {
@@ -90,30 +93,46 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             if (isDefeat)
             {
                 viewData.Title = "Defeat";
-                viewData.Description = $"Your base was destroyed on turn {Mathf.Max(1, result != null ? result.TurnsSpent : 1)}.";
+                viewData.Description = levelType == Enums.LevelType.PowerLineBattle
+                    ? $"Your generator was destroyed at tick {Mathf.Max(1, result != null ? result.TurnsSpent : 1)}."
+                    : $"Your base was destroyed on turn {Mathf.Max(1, result != null ? result.TurnsSpent : 1)}.";
                 viewData.PrimaryActionLabel = "Return to Menu";
                 viewData.RewardText = "Reward: +0 gold";
                 if (result != null)
                 {
-                    viewData.RewardBreakdownText =
-                        $"Enemy kills {result.EnemyKillsTotal}, enemy base damage {result.DamageToEnemyBaseTotal}, base loss {result.DamageToPlayerBaseTotal}.";
+                    viewData.RewardBreakdownText = levelType == Enums.LevelType.PowerLineBattle
+                        ? $"Enemy kills {result.EnemyKillsTotal}, base loss {result.DamageToPlayerBaseTotal}, tick cost {Mathf.Max(0, result.TurnsSpent / 10)}."
+                        : $"Enemy kills {result.EnemyKillsTotal}, enemy base damage {result.DamageToEnemyBaseTotal}, base loss {result.DamageToPlayerBaseTotal}.";
                 }
 
                 return viewData;
             }
 
             viewData.Title = isRunCompleted ? "Location Complete" : "Victory";
-            viewData.Description = isRunCompleted
-                ? $"All levels in this location are cleared. Total turns: {Mathf.Max(1, result != null ? result.TurnsSpent : 1)}."
-                : $"Battle level cleared in {Mathf.Max(1, result != null ? result.TurnsSpent : 1)} turn(s).";
+            viewData.Description = levelType == Enums.LevelType.PowerLineBattle
+                ? (isRunCompleted
+                    ? $"All lines are connected. Location cleared in {Mathf.Max(1, result != null ? result.TurnsSpent : 1)} tick(s)."
+                    : $"Power restored in {Mathf.Max(1, result != null ? result.TurnsSpent : 1)} tick(s).")
+                : (isRunCompleted
+                    ? $"All levels in this location are cleared. Total turns: {Mathf.Max(1, result != null ? result.TurnsSpent : 1)}."
+                    : $"Battle level cleared in {Mathf.Max(1, result != null ? result.TurnsSpent : 1)} turn(s).");
             viewData.PrimaryActionLabel = isRunCompleted ? "Return to Menu" : "Next Level";
             viewData.RewardText = $"Reward: +{Mathf.Max(0, result != null ? result.RewardGranted : 0)} gold";
 
             if (result != null)
             {
-                var turnsPenalty = result.TurnsSpent > 1 ? (result.TurnsSpent - 1) * 2 : 0;
-                viewData.RewardBreakdownText =
-                    $"Base {result.BaseReward} + kills {result.EnemyKillsTotal}x3 + enemy base {result.DamageToEnemyBaseTotal}/5 - base loss {result.DamageToPlayerBaseTotal}/4 - turns {turnsPenalty}.";
+                if (levelType == Enums.LevelType.PowerLineBattle)
+                {
+                    var tickPenalty = Mathf.Max(0, result.TurnsSpent / 10);
+                    viewData.RewardBreakdownText =
+                        $"Base {result.BaseReward} + kills {result.EnemyKillsTotal}x3 - base loss {result.DamageToPlayerBaseTotal}/4 - ticks {tickPenalty}.";
+                }
+                else
+                {
+                    var turnsPenalty = result.TurnsSpent > 1 ? (result.TurnsSpent - 1) * 2 : 0;
+                    viewData.RewardBreakdownText =
+                        $"Base {result.BaseReward} + kills {result.EnemyKillsTotal}x3 + enemy base {result.DamageToEnemyBaseTotal}/5 - base loss {result.DamageToPlayerBaseTotal}/4 - turns {turnsPenalty}.";
+                }
             }
 
             return viewData;
@@ -145,7 +164,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 TurnsSpent = turnsSpent,
                 BaseReward = 0,
                 RewardGranted = 0,
-                IsVictory = enemyBaseAfter <= 0,
+                IsVictory = (_levelTypePool.Has(runEntity) && _levelTypePool.Get(runEntity).Value == Enums.LevelType.PowerLineBattle)
+                    ? _statusPool.Get(runEntity).Value != Enums.RunStatus.Defeat
+                    : enemyBaseAfter <= 0,
                 IsDefeat = playerBaseAfter <= 0
             };
         }

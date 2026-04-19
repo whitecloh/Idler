@@ -17,6 +17,7 @@ namespace Plinko.Scripts.ECS.Systems
         private readonly RunSaveService _runSaveService;
         private readonly LocationConfigService _locationConfigService;
         private readonly LevelConfigService _levelConfigService;
+        private readonly UnitConfigService _unitConfigService;
         private readonly GameSettingsService _gameSettingsService;
         private readonly PlinkoRuntimeService _plinkoRuntimeService;
         private readonly BattleRuntimeService _battleRuntimeService;
@@ -55,11 +56,13 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
         private EcsPool<RunStartedEvent> _runStartedEventPool;
         private EcsPool<StartLevelRequest> _startLevelRequestPool;
+        private EcsPool<InitializePowerLineBattleRequest> _initializePowerLineBattleRequestPool;
 
         public ContinueRunSystem(
             RunSaveService runSaveService,
             LocationConfigService locationConfigService,
             LevelConfigService levelConfigService,
+            UnitConfigService unitConfigService,
             GameSettingsService gameSettingsService,
             PlinkoRuntimeService plinkoRuntimeService,
             BattleRuntimeService battleRuntimeService,
@@ -72,6 +75,7 @@ namespace Plinko.Scripts.ECS.Systems
             _runSaveService = runSaveService;
             _locationConfigService = locationConfigService;
             _levelConfigService = levelConfigService;
+            _unitConfigService = unitConfigService;
             _gameSettingsService = gameSettingsService;
             _plinkoRuntimeService = plinkoRuntimeService;
             _battleRuntimeService = battleRuntimeService;
@@ -114,6 +118,7 @@ namespace Plinko.Scripts.ECS.Systems
             _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
             _runStartedEventPool = world.GetPool<RunStartedEvent>();
             _startLevelRequestPool = world.GetPool<StartLevelRequest>();
+            _initializePowerLineBattleRequestPool = world.GetPool<InitializePowerLineBattleRequest>();
         }
         
         public void Run(IEcsSystems systems)
@@ -176,7 +181,10 @@ namespace Plinko.Scripts.ECS.Systems
                 var retrainingOfferCount = levelData != null && levelData.PreBattlePhase != null && levelData.PreBattlePhase.OverrideRetrainingOfferCount > 0
                     ? levelData.PreBattlePhase.OverrideRetrainingOfferCount
                     : _gameSettingsService.GetDefaultRetrainingOfferCount();
-                var enemyBaseMaxHealth = levelData.EnemyBaseMaxHealth > 0 ? levelData.EnemyBaseMaxHealth : dto.EnemyBaseHealth;
+                var enemyBaseMaxHealth = levelData.LevelType == Enums.LevelType.DefenceBattle ||
+                                         levelData.LevelType == Enums.LevelType.PowerLineBattle
+                    ? 0
+                    : (levelData.EnemyBaseMaxHealth > 0 ? levelData.EnemyBaseMaxHealth : dto.EnemyBaseHealth);
 
                 var runEntity = world.NewEntity();
                 _runPool.Add(runEntity);
@@ -224,15 +232,34 @@ namespace Plinko.Scripts.ECS.Systems
 
                 _runEntityIndex.SetRunEntity(runEntity);
                 _battleRuntimeService.CurrentResult = CloneBattleResult(battleRestore.RestoredResult);
+                _battleRuntimeService.CurrentBaseDefenseState = levelData.LevelType == Enums.LevelType.DefenceBattle
+                    ? BuildBaseDefenseState(dto, levelData, ownedUnits, battleRestore.CurrentTurn)
+                    : null;
+                _battleRuntimeService.CurrentPowerLineState = null;
+                if (levelData.LevelType == Enums.LevelType.DefenceBattle && _battleRuntimeService.CurrentBaseDefenseState == null)
+                {
+                    RuntimeEntityCleanup.ClearForNewRun(world, _runEntityIndex, _ownedUnitIndex, _shopOfferIndex, _pinShopOfferIndex, _installedPinIndex);
+                    _battleRuntimeService.Clear();
+                    RestartLocationFromCorruptedSave(world, dto.LocationId);
+                    world.DelEntity(requestEntity);
+                    continue;
+                }
 
                 _restoreOwnedUnitsRequestPool.Add(world.NewEntity()).OwnedUnits = ownedUnits;
                 _restoreBoardRequestPool.Add(world.NewEntity()).Board = dto.Board ?? new PlinkoBoardSaveDto();
-                RestoreHandCards(world, battleRestore.HandCards);
-                RestoreDeployedUnits(world, battleRestore.DeployedUnits);
+                if (levelData.LevelType != Enums.LevelType.PowerLineBattle)
+                {
+                    RestoreHandCards(world, battleRestore.HandCards);
+                    RestoreDeployedUnits(world, battleRestore.DeployedUnits);
+                }
                 _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
                 _manaChangedEventPool.Add(world.NewEntity()).Value = _manaPool.Get(runEntity).Value;
                 _phaseChangedEventPool.Add(world.NewEntity()).Value = normalizedPhase;
-                if (battleRestore.ShouldGenerateHand)
+                if (levelData.LevelType == Enums.LevelType.PowerLineBattle && normalizedPhase == Enums.PhaseType.Battle)
+                {
+                    _initializePowerLineBattleRequestPool.Add(world.NewEntity());
+                }
+                else if (battleRestore.ShouldGenerateHand)
                 {
                     _generateHandRequestPool.Add(world.NewEntity());
                 }
@@ -290,6 +317,8 @@ namespace Plinko.Scripts.ECS.Systems
             };
 
             _runEntityIndex.SetRunEntity(runEntity);
+            _battleRuntimeService.CurrentBaseDefenseState = null;
+            _battleRuntimeService.CurrentPowerLineState = null;
 
             _runStartedEventPool.Add(world.NewEntity());
             _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
@@ -303,13 +332,37 @@ namespace Plinko.Scripts.ECS.Systems
             Enums.PhaseType normalizedPhase)
         {
             var manaPerTurn = _gameSettingsService.GetManaPerTurn();
+            if (levelData.LevelType == Enums.LevelType.DefenceBattle && levelData.BaseDefenseBattle != null)
+            {
+                var baseDefenseData = levelData.BaseDefenseBattle;
+                var currentTurn = IsBattleLevel(levelData.LevelType) ? Mathf.Max(1, dto.BattleTurn) : 0;
+                var manaCap = dto.BaseDefenseManaCap > 0
+                    ? Mathf.Clamp(dto.BaseDefenseManaCap, 0, Mathf.Max(baseDefenseData.StartingMana, baseDefenseData.MaxMana))
+                    : Mathf.Min(baseDefenseData.MaxMana, baseDefenseData.StartingMana + Mathf.Max(0, currentTurn - 1));
+
+                return new BattleRestoreState
+                {
+                    CurrentTurn = currentTurn,
+                    CurrentMana = Mathf.Clamp(dto.CurrentMana > 0 ? dto.CurrentMana : manaCap, 0, manaCap),
+                    NextHandRuntimeId = Mathf.Max(1, dto.HandNextRuntimeId),
+                    NextDeploymentOrder = 0,
+                    IsPlayerTurnActive = IsBattleLevel(levelData.LevelType) && normalizedPhase == Enums.PhaseType.BattlePreparation,
+                    HasGeneratedHandThisTurn = false,
+                    ShouldGenerateHand = false,
+                    TotalEnemyKills = Mathf.Max(0, dto.BattleEnemyKillsTotal),
+                    TotalDamageToEnemyBase = 0,
+                    TotalDamageToPlayerBase = Mathf.Max(0, dto.BattleDamageToPlayerBaseTotal),
+                    RestoredResult = normalizedPhase == Enums.PhaseType.Result ? BuildSavedOrFallbackBattleResult(dto, null, currentTurn, 0, Mathf.Max(0, dto.BattleDamageToPlayerBaseTotal)) : null
+                };
+            }
+
             var restoreState = new BattleRestoreState
             {
-                CurrentTurn = levelData.LevelType == Enums.LevelType.Battle ? Mathf.Max(1, dto.BattleTurn) : 0,
+                CurrentTurn = IsBattleLevel(levelData.LevelType) ? Mathf.Max(1, dto.BattleTurn) : 0,
                 CurrentMana = Mathf.Clamp(dto.CurrentMana > 0 ? dto.CurrentMana : manaPerTurn, 0, manaPerTurn),
                 NextHandRuntimeId = Mathf.Max(1, dto.HandNextRuntimeId),
                 NextDeploymentOrder = Mathf.Max(0, dto.NextDeploymentOrder),
-                IsPlayerTurnActive = levelData.LevelType == Enums.LevelType.Battle && normalizedPhase == Enums.PhaseType.BattlePreparation,
+                IsPlayerTurnActive = IsBattleLevel(levelData.LevelType) && normalizedPhase == Enums.PhaseType.BattlePreparation,
                 HasGeneratedHandThisTurn = false,
                 ShouldGenerateHand = false,
                 TotalEnemyKills = Mathf.Max(0, dto.BattleEnemyKillsTotal),
@@ -317,11 +370,32 @@ namespace Plinko.Scripts.ECS.Systems
                 TotalDamageToPlayerBase = Mathf.Max(0, dto.BattleDamageToPlayerBaseTotal)
             };
 
-            if (levelData.LevelType != Enums.LevelType.Battle || normalizedPhase != Enums.PhaseType.BattlePreparation)
+            if (levelData.LevelType == Enums.LevelType.PowerLineBattle)
+            {
+                restoreState.CurrentTurn = 0;
+                restoreState.CurrentMana = 0;
+                restoreState.NextDeploymentOrder = 0;
+                restoreState.HasGeneratedHandThisTurn = false;
+                restoreState.ShouldGenerateHand = false;
+                restoreState.HandCards.Clear();
+                restoreState.DeployedUnits.Clear();
+                restoreState.TotalEnemyKills = 0;
+                restoreState.TotalDamageToEnemyBase = 0;
+                restoreState.TotalDamageToPlayerBase = 0;
+
+                if (normalizedPhase == Enums.PhaseType.Result)
+                {
+                    restoreState.RestoredResult = BuildSavedOrFallbackBattleResult(dto, restoreState, 0, 0, 0);
+                }
+
+                return restoreState;
+            }
+
+            if (!IsBattleLevel(levelData.LevelType) || normalizedPhase != Enums.PhaseType.BattlePreparation)
             {
                 if (normalizedPhase == Enums.PhaseType.Result)
                 {
-                    restoreState.RestoredResult = BuildSavedOrFallbackBattleResult(dto, restoreState);
+                    restoreState.RestoredResult = BuildSavedOrFallbackBattleResult(dto, restoreState, restoreState.CurrentTurn, restoreState.TotalDamageToEnemyBase, restoreState.TotalDamageToPlayerBase);
                 }
 
                 return restoreState;
@@ -446,7 +520,12 @@ namespace Plinko.Scripts.ECS.Systems
             }
         }
 
-        private static BattleResultModel BuildSavedOrFallbackBattleResult(RunSaveDto dto, BattleRestoreState restoreState)
+        private static BattleResultModel BuildSavedOrFallbackBattleResult(
+            RunSaveDto dto,
+            BattleRestoreState restoreState,
+            int currentTurn,
+            int damageToEnemyBaseTotal,
+            int damageToPlayerBaseTotal)
         {
             var savedResult = CloneBattleResult(dto.BattleResult);
             if (savedResult != null)
@@ -456,22 +535,163 @@ namespace Plinko.Scripts.ECS.Systems
 
             return new BattleResultModel
             {
-                PlayerBaseHealthBefore = dto.PlayerBaseHealth + restoreState.TotalDamageToPlayerBase,
+                PlayerBaseHealthBefore = dto.PlayerBaseHealth + damageToPlayerBaseTotal,
                 PlayerBaseHealthAfter = dto.PlayerBaseHealth,
-                EnemyBaseHealthBefore = dto.EnemyBaseHealth + restoreState.TotalDamageToEnemyBase,
+                EnemyBaseHealthBefore = dto.EnemyBaseHealth + damageToEnemyBaseTotal,
                 EnemyBaseHealthAfter = dto.EnemyBaseHealth,
                 EnemyKillsThisTurn = 0,
-                EnemyKillsTotal = restoreState.TotalEnemyKills,
+                EnemyKillsTotal = restoreState != null ? restoreState.TotalEnemyKills : Mathf.Max(0, dto.BattleEnemyKillsTotal),
                 DamageToEnemyBaseThisTurn = 0,
-                DamageToEnemyBaseTotal = restoreState.TotalDamageToEnemyBase,
+                DamageToEnemyBaseTotal = damageToEnemyBaseTotal,
                 DamageToPlayerBaseThisTurn = 0,
-                DamageToPlayerBaseTotal = restoreState.TotalDamageToPlayerBase,
-                TurnsSpent = Mathf.Max(1, restoreState.CurrentTurn),
+                DamageToPlayerBaseTotal = damageToPlayerBaseTotal,
+                TurnsSpent = Mathf.Max(1, currentTurn),
                 BaseReward = 0,
                 RewardGranted = 0,
                 IsVictory = dto.RunStatus == Enums.RunStatus.Victory || dto.RunStatus == Enums.RunStatus.InProgress,
                 IsDefeat = dto.RunStatus == Enums.RunStatus.Defeat
             };
+        }
+
+        private BaseDefenseBattleStateModel BuildBaseDefenseState(
+            RunSaveDto dto,
+            LevelData levelData,
+            IReadOnlyList<OwnedUnitSaveDto> ownedUnits,
+            int currentTurn)
+        {
+            var state = BaseDefenseBattleUtility.CreateState(levelData);
+            if (state == null)
+            {
+                return null;
+            }
+
+            state.CompletedTurnCount = Mathf.Clamp(dto.BaseDefenseCompletedTurnCount, 0, state.RequiredTurnCount);
+            state.CurrentManaCap = dto.BaseDefenseManaCap > 0
+                ? Mathf.Clamp(dto.BaseDefenseManaCap, 0, Mathf.Max(state.StartingMana, state.MaxMana))
+                : Mathf.Min(state.MaxMana, state.StartingMana + Mathf.Max(0, currentTurn - 1));
+            state.PreviewWaveUnits = BaseDefenseBattleUtility.BuildPreviewWaveUnits(levelData, Mathf.Max(1, currentTurn));
+
+            var ownedUnitsByRuntimeId = new Dictionary<int, OwnedUnitSaveDto>();
+            foreach (var ownedUnit in ownedUnits)
+            {
+                if (ownedUnit != null)
+                {
+                    ownedUnitsByRuntimeId[ownedUnit.RuntimeId] = ownedUnit;
+                }
+            }
+
+            var occupiedPlayerCells = new HashSet<string>();
+            var maxRuntimeId = 0;
+
+            if (dto.BaseDefensePlayerUnits != null)
+            {
+                foreach (var savedUnit in dto.BaseDefensePlayerUnits)
+                {
+                    if (savedUnit == null ||
+                        savedUnit.IsEnemy ||
+                        !ownedUnitsByRuntimeId.TryGetValue(savedUnit.SourceOwnedUnitRuntimeId, out var ownedUnit) ||
+                        savedUnit.LaneIndex < 0 || savedUnit.LaneIndex >= state.LaneCount ||
+                        savedUnit.CellIndex < 0 || savedUnit.CellIndex >= state.PlayerSideCellCount)
+                    {
+                        return null;
+                    }
+
+                    var occupancyKey = $"{savedUnit.LaneIndex}:{savedUnit.CellIndex}";
+                    if (!occupiedPlayerCells.Add(occupancyKey))
+                    {
+                        return null;
+                    }
+
+                    var unitType = _unitConfigService.GetUnit(ownedUnit.UnitTypeId);
+                    state.PlayerUnits.Add(new BaseDefenseUnitStateModel
+                    {
+                        RuntimeId = savedUnit.RuntimeId,
+                        SourceOwnedUnitRuntimeId = savedUnit.SourceOwnedUnitRuntimeId,
+                        DisplayName = savedUnit.DisplayName,
+                        Attack = savedUnit.Attack,
+                        Health = savedUnit.Health,
+                        ManaCost = savedUnit.ManaCost,
+                        MoveRange = 0,
+                        AttackRange = savedUnit.AttackRange,
+                        MoveSpeed = savedUnit.MoveSpeed,
+                        AttackSpeed = savedUnit.AttackSpeed,
+                        CanAttackOtherLines = savedUnit.CanAttackOtherLines,
+                        CanMoveBetweenLines = false,
+                        LaneIndex = savedUnit.LaneIndex,
+                        CellIndex = savedUnit.CellIndex,
+                        IsEnemy = false,
+                        PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
+                        BattleAnimations = unitType != null ? unitType.BattleAnimations : null
+                    });
+                    maxRuntimeId = Mathf.Max(maxRuntimeId, savedUnit.RuntimeId);
+                }
+            }
+
+            if (dto.BaseDefenseEnemyUnits != null)
+            {
+                foreach (var savedUnit in dto.BaseDefenseEnemyUnits)
+                {
+                    if (savedUnit == null ||
+                        !savedUnit.IsEnemy ||
+                        savedUnit.LaneIndex < 0 || savedUnit.LaneIndex >= state.LaneCount ||
+                        savedUnit.CellIndex < 0 || savedUnit.CellIndex >= state.CellsPerLane)
+                    {
+                        return null;
+                    }
+
+                    var enemyData = FindEnemySpawn(levelData, savedUnit.SpawnId);
+                    state.EnemyUnits.Add(new BaseDefenseUnitStateModel
+                    {
+                        RuntimeId = savedUnit.RuntimeId,
+                        SpawnId = savedUnit.SpawnId,
+                        DisplayName = savedUnit.DisplayName,
+                        Attack = savedUnit.Attack,
+                        Health = savedUnit.Health,
+                        ManaCost = 0,
+                        MoveRange = savedUnit.MoveRange,
+                        AttackRange = savedUnit.AttackRange,
+                        MoveSpeed = savedUnit.MoveSpeed,
+                        AttackSpeed = savedUnit.AttackSpeed,
+                        CanAttackOtherLines = savedUnit.CanAttackOtherLines,
+                        CanMoveBetweenLines = savedUnit.CanMoveBetweenLines,
+                        LaneIndex = savedUnit.LaneIndex,
+                        CellIndex = savedUnit.CellIndex,
+                        IsEnemy = true,
+                        PortraitSprite = enemyData != null ? enemyData.PortraitSprite : null,
+                        BattleAnimations = enemyData != null ? enemyData.BattleAnimations : null
+                    });
+                    maxRuntimeId = Mathf.Max(maxRuntimeId, savedUnit.RuntimeId);
+                }
+            }
+
+            state.NextRuntimeId = Mathf.Max(1, maxRuntimeId + 1);
+            return state;
+        }
+
+        private static Plinko.Scripts.Data.Enemies.EnemyUnitSpawnData FindEnemySpawn(LevelData levelData, string spawnId)
+        {
+            if (levelData?.BaseDefenseBattle?.Waves == null || string.IsNullOrWhiteSpace(spawnId))
+            {
+                return null;
+            }
+
+            foreach (var wave in levelData.BaseDefenseBattle.Waves)
+            {
+                if (wave?.Spawns == null)
+                {
+                    continue;
+                }
+
+                foreach (var spawn in wave.Spawns)
+                {
+                    if (spawn?.Enemy != null && spawn.Enemy.Id == spawnId)
+                    {
+                        return spawn.Enemy;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static BattleResultModel CloneBattleResult(BattleResultModel source)
@@ -527,6 +747,8 @@ namespace Plinko.Scripts.ECS.Systems
                    dto.BattleDamageToPlayerBaseTotal >= 0 &&
                    dto.PurchaseRerollCount >= 0 &&
                    dto.PinRerollCount >= 0 &&
+                   dto.BaseDefenseCompletedTurnCount >= 0 &&
+                   dto.BaseDefenseManaCap >= 0 &&
                    dto.HandNextRuntimeId >= 0 &&
                    dto.NextDeploymentOrder >= 0;
         }
@@ -547,7 +769,8 @@ namespace Plinko.Scripts.ECS.Systems
                     return savedPhase == Enums.PhaseType.FieldUpgradePhase || savedPhase == Enums.PhaseType.Result
                         ? savedPhase
                         : Enums.PhaseType.None;
-                case Enums.LevelType.Battle:
+                case Enums.LevelType.StandardBattle:
+                case Enums.LevelType.DefenceBattle:
                     if (savedPhase == Enums.PhaseType.Result)
                     {
                         return Enums.PhaseType.Result;
@@ -558,6 +781,18 @@ namespace Plinko.Scripts.ECS.Systems
                         savedPhase == Enums.PhaseType.BattlePlayback)
                     {
                         return Enums.PhaseType.BattlePreparation;
+                    }
+
+                    return Enums.PhaseType.None;
+                case Enums.LevelType.PowerLineBattle:
+                    if (savedPhase == Enums.PhaseType.Result)
+                    {
+                        return Enums.PhaseType.Result;
+                    }
+
+                    if (savedPhase == Enums.PhaseType.Battle)
+                    {
+                        return Enums.PhaseType.Battle;
                     }
 
                     return Enums.PhaseType.None;
@@ -581,6 +816,13 @@ namespace Plinko.Scripts.ECS.Systems
             public BattleResultModel RestoredResult;
             public List<HandCardSaveDto> HandCards = new();
             public List<DeployedUnitSaveDto> DeployedUnits = new();
+        }
+
+        private static bool IsBattleLevel(Enums.LevelType levelType)
+        {
+            return levelType == Enums.LevelType.StandardBattle ||
+                   levelType == Enums.LevelType.DefenceBattle ||
+                   levelType == Enums.LevelType.PowerLineBattle;
         }
     }
 }

@@ -12,7 +12,7 @@ using UnityEditor;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class MainMenuScreenController : MonoBehaviour
+    public sealed class MainMenuScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [Header("Root")]
         [SerializeField] private GameObject root;

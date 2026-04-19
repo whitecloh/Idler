@@ -11,5 +11,8 @@ namespace Plinko.Scripts.Models
         public int AttackDelta;
         public int HealthDelta;
         public int ManaDelta;
+        public float MoveSpeedDelta;
+        public int AttackRangeDelta;
+        public float AttackSpeedDelta;
     }
 }

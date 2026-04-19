@@ -30,6 +30,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<UnitTypeIdComponent> _unitTypeIdPool;
         private EcsPool<UnitDisplayNameComponent> _displayNamePool;
         private EcsPool<UnitStatsComponent> _unitStatsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _unitManaCostPool;
         private EcsPool<PassiveAbilityIdComponent> _passiveAbilityPool;
         private EcsPool<UnitLevelComponent> _unitLevelPool;
@@ -68,6 +69,7 @@ namespace Plinko.Scripts.ECS.Systems
             _unitTypeIdPool = world.GetPool<UnitTypeIdComponent>();
             _displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             _unitStatsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _unitManaCostPool = world.GetPool<UnitManaCostComponent>();
             _passiveAbilityPool = world.GetPool<PassiveAbilityIdComponent>();
             _unitLevelPool = world.GetPool<UnitLevelComponent>();
@@ -121,6 +123,9 @@ namespace Plinko.Scripts.ECS.Systems
                         _unitStatsPool.Get(offerEntity).Attack,
                         _unitStatsPool.Get(offerEntity).Health,
                         _unitManaCostPool.Get(offerEntity).Value,
+                        _unitCombatStatsPool.Get(offerEntity).MoveSpeed,
+                        _unitCombatStatsPool.Get(offerEntity).AttackRange,
+                        _unitCombatStatsPool.Get(offerEntity).AttackSpeed,
                         _passiveAbilityPool.Get(offerEntity).Value,
                         _unitLevelPool.Get(offerEntity).Value,
                         _upgradeCountPool.Get(offerEntity).Value,
@@ -174,6 +179,7 @@ namespace Plinko.Scripts.ECS.Systems
                     _unitTypeIdPool,
                     _displayNamePool,
                     _unitStatsPool,
+                    world.GetPool<UnitCombatStatsComponent>(),
                     _unitManaCostPool,
                     _passiveAbilityPool,
                     _unitLevelPool,

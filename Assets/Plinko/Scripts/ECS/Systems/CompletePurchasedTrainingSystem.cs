@@ -75,6 +75,9 @@ namespace Plinko.Scripts.ECS.Systems
                     registerRequest.Attack = result.Result.FinalAttack;
                     registerRequest.Health = result.Result.FinalHealth;
                     registerRequest.ManaCost = result.Result.FinalManaCost;
+                    registerRequest.MoveSpeed = result.Result.FinalMoveSpeed;
+                    registerRequest.AttackRange = result.Result.FinalAttackRange;
+                    registerRequest.AttackSpeed = result.Result.FinalAttackSpeed;
                     registerRequest.PassiveAbilityId = result.Result.PassiveAbilityId;
                     registerRequest.UpgradeCount = result.Result.UpgradeCount;
 

@@ -18,6 +18,12 @@ namespace Plinko.Scripts.Data.Units
         [SerializeField] private int baseAttack;
         [SerializeField] private int baseHealth;
         [SerializeField] private int defaultManaCost;
+        [SerializeField] private float baseMoveSpeed = 0.4f;
+        [SerializeField] private int battleMoveRange = 1;
+        [SerializeField] private int battleAttackRange = 1;
+        [SerializeField] private float baseAttackSpeed = 0.5f;
+        [SerializeField] private bool canAttackOtherLines;
+        [SerializeField] private bool canMoveBetweenLines;
         [SerializeField] private int shopPrice;
         [SerializeField] private int generationWeight = 1;
         [SerializeField] private PassiveAbilityData passiveAbility;
@@ -33,6 +39,12 @@ namespace Plinko.Scripts.Data.Units
         public int BaseAttack => baseAttack;
         public int BaseHealth => baseHealth;
         public int DefaultManaCost => defaultManaCost;
+        public float BaseMoveSpeed => baseMoveSpeed;
+        public int BattleMoveRange => battleMoveRange;
+        public int BattleAttackRange => battleAttackRange;
+        public float BaseAttackSpeed => baseAttackSpeed;
+        public bool CanAttackOtherLines => canAttackOtherLines;
+        public bool CanMoveBetweenLines => canMoveBetweenLines;
         public int ShopPrice => shopPrice;
         public int GenerationWeight => generationWeight;
         public PassiveAbilityData PassiveAbility => passiveAbility;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class PurchasePhaseScreenController : MonoBehaviour
+    public sealed class PurchasePhaseScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
         [SerializeField] private PurchasePlinkoFieldPanelController plinkoFieldPanel;

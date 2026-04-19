@@ -74,6 +74,9 @@ namespace Plinko.Scripts.ECS.Systems
                     replaceRequest.Attack = result.Result.FinalAttack;
                     replaceRequest.Health = result.Result.FinalHealth;
                     replaceRequest.ManaCost = result.Result.FinalManaCost;
+                    replaceRequest.MoveSpeed = result.Result.FinalMoveSpeed;
+                    replaceRequest.AttackRange = result.Result.FinalAttackRange;
+                    replaceRequest.AttackSpeed = result.Result.FinalAttackSpeed;
                     replaceRequest.PassiveAbilityId = result.Result.PassiveAbilityId;
                     replaceRequest.UpgradeCount = result.Result.UpgradeCount;
                     _plinkoRuntimeService.RemoveResult(runtimeId);

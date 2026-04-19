@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Items
 {
-    public sealed class BattleHandCardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public sealed class BattleHandCardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         [SerializeField] private RectTransform root;
         [SerializeField] private CanvasGroup canvasGroup;
@@ -17,12 +17,14 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private TMP_Text attackText;
         [SerializeField] private TMP_Text healthText;
         [SerializeField] private TMP_Text manaText;
+        [SerializeField] private GameObject selectedStateRoot;
 
         private Action<BattleHandCardView> _pointerEntered;
         private Action<BattleHandCardView> _pointerExited;
         private Action<BattleHandCardView, PointerEventData> _beginDrag;
         private Action<BattleHandCardView, PointerEventData> _drag;
         private Action<BattleHandCardView, PointerEventData> _endDrag;
+        private Action<BattleHandCardView> _clicked;
 
         public RectTransform RectTransform => root;
         public CanvasGroup CanvasGroup => canvasGroup;
@@ -34,13 +36,15 @@ namespace Plinko.Scripts.View.Items
             Action<BattleHandCardView> pointerExited,
             Action<BattleHandCardView, PointerEventData> beginDrag,
             Action<BattleHandCardView, PointerEventData> drag,
-            Action<BattleHandCardView, PointerEventData> endDrag)
+            Action<BattleHandCardView, PointerEventData> endDrag,
+            Action<BattleHandCardView> clicked = null)
         {
             _pointerEntered = pointerEntered;
             _pointerExited = pointerExited;
             _beginDrag = beginDrag;
             _drag = drag;
             _endDrag = endDrag;
+            _clicked = clicked;
         }
 
         public void Refresh(HandCardViewData viewData)
@@ -52,6 +56,25 @@ namespace Plinko.Scripts.View.Items
             attackText.text = viewData.Attack.ToString();
             healthText.text = viewData.Health.ToString();
             manaText.text = viewData.ManaCost.ToString();
+            SetSelected(false);
+        }
+
+        public void SetSelected(bool isSelected)
+        {
+            if (selectedStateRoot != null)
+            {
+                selectedStateRoot.SetActive(isSelected);
+            }
+        }
+
+        public void SetDimmed(bool isDimmed)
+        {
+            if (canvasGroup == null)
+            {
+                return;
+            }
+
+            canvasGroup.alpha = isDimmed ? 0.55f : 1f;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -77,6 +100,11 @@ namespace Plinko.Scripts.View.Items
         public void OnEndDrag(PointerEventData eventData)
         {
             _endDrag?.Invoke(this, eventData);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            _clicked?.Invoke(this);
         }
     }
 }

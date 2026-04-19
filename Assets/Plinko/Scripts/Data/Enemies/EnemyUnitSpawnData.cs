@@ -14,6 +14,10 @@ namespace Plinko.Scripts.Data.Enemies
         [SerializeField] private int boardY;
         [SerializeField] private int moveRange = 1;
         [SerializeField] private int attackRange = 1;
+        [SerializeField] private float moveSpeed = 0.4f;
+        [SerializeField] private float attackSpeed = 0.5f;
+        [SerializeField] private bool canAttackOtherLines;
+        [SerializeField] private bool canMoveBetweenLines;
         [SerializeField] private Sprite portraitSprite;
         [SerializeField] private CharacterAnimationSetData battleAnimations = new();
         [SerializeField] private Sprite trainingFieldSprite;
@@ -26,6 +30,10 @@ namespace Plinko.Scripts.Data.Enemies
         public int BoardY => boardY;
         public int MoveRange => moveRange;
         public int AttackRange => attackRange;
+        public float MoveSpeed => moveSpeed;
+        public float AttackSpeed => attackSpeed;
+        public bool CanAttackOtherLines => canAttackOtherLines;
+        public bool CanMoveBetweenLines => canMoveBetweenLines;
         public Sprite PortraitSprite => portraitSprite;
         public CharacterAnimationSetData BattleAnimations => battleAnimations;
         public Sprite TrainingFieldSprite => trainingFieldSprite;

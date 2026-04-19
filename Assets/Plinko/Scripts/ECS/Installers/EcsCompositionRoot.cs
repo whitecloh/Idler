@@ -35,6 +35,7 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.RunSaveService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
+                    _services.UnitConfigService,
                     _services.GameSettingsService,
                     _services.PlinkoRuntimeService,
                     _services.BattleRuntimeService,
@@ -132,15 +133,20 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new ReplaceBoardPinSystem(
                     _services.RunEntityIndex,
                     _services.InstalledPinIndex))
-                .Add(new SelectEnemyWaveSystem(
+                .Add(new SelectStandardEnemyWaveSystem(
                     _services.EnemyWaveSelectionService,
                     _services.LevelConfigService,
                     _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new StartDefenceBattleSystem(
                     _services.RunEntityIndex))
                 .Add(new ResolveBattleSystem(
                     _services.BattleRuntimeService,
                     _services.GameSettingsService,
                     _services.OwnedUnitIndex,
+                    _services.RunEntityIndex))
+                .Add(new ResolveBaseDefenseBattleSystem(
+                    _services.BattleRuntimeService,
                     _services.RunEntityIndex))
                 .Add(new StartBattlePlaybackSystem(
                     _services.BattleRuntimeService,
@@ -150,7 +156,22 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.LevelConfigService,
                     _services.LocationConfigService,
                     _services.RunEntityIndex))
-                .Add(new BeginBattleTurnSystem(
+                .Add(new BeginStandardBattleTurnSystem(
+                    _services.GameSettingsService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new BeginDefenceBattleTurnSystem(
+                    _services.LevelConfigService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new InitializePowerLineBattleSystem(
+                    _services.GameSettingsService,
+                    _services.LevelConfigService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new DrawPowerLineHandCardsSystem(
+                    _services.RunEntityIndex))
+                .Add(new RerollPowerLineHandSystem(
                     _services.GameSettingsService,
                     _services.BattleRuntimeService,
                     _services.RunEntityIndex))
@@ -158,9 +179,25 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.GameSettingsService,
                     _services.RunEntityIndex))
                 .Add(new ClearHandSystem(_services.RunEntityIndex))
-                .Add(new DeployCardSystem(
+                .Add(new DeployStandardBattleCardSystem(
                     _services.RunEntityIndex,
                     _services.OwnedUnitIndex))
+                .Add(new DeployDefenceBattleCardSystem(
+                    _services.RunEntityIndex,
+                    _services.OwnedUnitIndex,
+                    _services.BattleRuntimeService,
+                    _services.UnitConfigService))
+                .Add(new DeployPowerLineBattleCardSystem(
+                    _services.BattleRuntimeService,
+                    _services.UnitConfigService,
+                    _services.RunEntityIndex,
+                    _services.OwnedUnitIndex))
+                .Add(new TickPowerLineBattleSystem(
+                    _services.GameSettingsService,
+                    _services.LevelConfigService,
+                    _services.LocationConfigService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
                 .Add(new AdvanceToNextLevelSystem(
                     _services.BattleRuntimeService,
                     _services.LevelConfigService,
@@ -222,7 +259,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new RefreshOwnedUnitsUiSystem(
                     _services.RunEntityIndex,
                     _uiCompositionRoot))
-                .Add(new RefreshBattleHudUiSystem(
+                .Add(new RefreshStandardBattleHudUiSystem(
                     _services.GameSettingsService,
                     _services.UnitConfigService,
                     _services.LocationConfigService,
@@ -230,6 +267,20 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.EnemyWaveSelectionService,
                     _services.BattleRuntimeService,
                     _services.OwnedUnitIndex,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshDefenceBattleHudUiSystem(
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshPowerLineBattleHudUiSystem(
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.BattleRuntimeService,
                     _services.RunEntityIndex,
                     _uiCompositionRoot))
                 .Add(new RefreshBattleResultUiSystem(

@@ -29,6 +29,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<UnitTypeIdComponent> _unitTypeIdPool;
         private EcsPool<UnitDisplayNameComponent> _displayNamePool;
         private EcsPool<UnitStatsComponent> _statsPool;
+        private EcsPool<UnitCombatStatsComponent> _combatStatsPool;
         private EcsPool<UnitManaCostComponent> _manaCostPool;
         private EcsPool<PassiveAbilityIdComponent> _passiveAbilityPool;
         private EcsPool<UnitLevelComponent> _levelPool;
@@ -63,6 +64,7 @@ namespace Plinko.Scripts.ECS.Systems
             _unitTypeIdPool = world.GetPool<UnitTypeIdComponent>();
             _displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             _statsPool = world.GetPool<UnitStatsComponent>();
+            _combatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _manaCostPool = world.GetPool<UnitManaCostComponent>();
             _passiveAbilityPool = world.GetPool<PassiveAbilityIdComponent>();
             _levelPool = world.GetPool<UnitLevelComponent>();
@@ -123,6 +125,7 @@ namespace Plinko.Scripts.ECS.Systems
                     _unitTypeIdPool,
                     _displayNamePool,
                     _statsPool,
+                    _combatStatsPool,
                     _manaCostPool,
                     _passiveAbilityPool,
                     _levelPool,

@@ -39,7 +39,7 @@ namespace Plinko.Scripts.View.Controllers
             turnBannerView.HideImmediate();
         }
 
-        public void Refresh(BattleHudViewData viewData)
+        public void Refresh(StandardBattleHudViewData viewData)
         {
             backgroundImage.sprite = viewData.BackgroundSprite;
             backgroundImage.enabled = viewData.BackgroundSprite != null;
@@ -68,9 +68,9 @@ namespace Plinko.Scripts.View.Controllers
             }
         }
 
-        public bool IsScreenPointOverDropArea(Vector2 screenPoint)
+        public bool IsScreenPointOverDropArea(Vector2 screenPoint, Camera eventCamera)
         {
-            return RectTransformUtility.RectangleContainsScreenPoint(dropArea, screenPoint, uiCamera);
+            return RectTransformUtility.RectangleContainsScreenPoint(dropArea, screenPoint, eventCamera);
         }
 
         private void SyncUnits(

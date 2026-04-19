@@ -32,6 +32,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<HandCardOwnerUnitComponent> _handCardOwnerPool;
         private EcsPool<DeploymentOrderComponent> _deploymentOrderPool;
         private EcsPool<UnitStatsComponent> _unitStatsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitDisplayNameComponent> _displayNamePool;
         private EcsPool<BattleStateComponent> _battleStatePool;
         private EcsPool<BattleResolvedEvent> _battleResolvedEventPool;
@@ -66,6 +67,7 @@ namespace Plinko.Scripts.ECS.Systems
             _handCardOwnerPool = world.GetPool<HandCardOwnerUnitComponent>();
             _deploymentOrderPool = world.GetPool<DeploymentOrderComponent>();
             _unitStatsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             _battleStatePool = world.GetPool<BattleStateComponent>();
             _battleResolvedEventPool = world.GetPool<BattleResolvedEvent>();
@@ -152,7 +154,7 @@ namespace Plinko.Scripts.ECS.Systems
                     Attack = Mathf.Max(0, _unitStatsPool.Get(ownedUnitEntity).Attack),
                     Health = Mathf.Max(0, _unitStatsPool.Get(ownedUnitEntity).Health),
                     MoveRange = 1,
-                    AttackRange = 1
+                    AttackRange = Mathf.Max(1, _unitCombatStatsPool.Get(ownedUnitEntity).AttackRange)
                 });
             }
 

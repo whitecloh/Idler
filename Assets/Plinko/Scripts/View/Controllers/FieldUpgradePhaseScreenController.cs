@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class FieldUpgradePhaseScreenController : MonoBehaviour
+    public sealed class FieldUpgradePhaseScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
         [SerializeField] private UiCanvasGroupVisibility selectionOverlayVisibility;

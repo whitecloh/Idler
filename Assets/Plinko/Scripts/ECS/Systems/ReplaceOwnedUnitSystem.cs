@@ -14,6 +14,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<ReplaceOwnedUnitRequest> _requestPool;
         private EcsPool<UnitTypeIdComponent> _unitTypeIdPool;
         private EcsPool<UnitStatsComponent> _unitStatsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _unitManaCostPool;
         private EcsPool<UnitDisplayNameComponent> _displayNamePool;
         private EcsPool<UnitLevelComponent> _unitLevelPool;
@@ -34,6 +35,7 @@ namespace Plinko.Scripts.ECS.Systems
             _requestPool = world.GetPool<ReplaceOwnedUnitRequest>();
             _unitTypeIdPool = world.GetPool<UnitTypeIdComponent>();
             _unitStatsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _unitManaCostPool = world.GetPool<UnitManaCostComponent>();
             _displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             _unitLevelPool = world.GetPool<UnitLevelComponent>();
@@ -53,6 +55,12 @@ namespace Plinko.Scripts.ECS.Systems
                 {
                     _unitTypeIdPool.Get(entity).Value = request.UnitTypeId;
                     _unitStatsPool.Get(entity) = new UnitStatsComponent { Attack = request.Attack, Health = request.Health };
+                    _unitCombatStatsPool.Get(entity) = new UnitCombatStatsComponent
+                    {
+                        MoveSpeed = request.MoveSpeed,
+                        AttackRange = request.AttackRange,
+                        AttackSpeed = request.AttackSpeed
+                    };
                     _unitManaCostPool.Get(entity).Value = request.ManaCost;
                     _displayNamePool.Get(entity).Value = request.DisplayName;
                     _unitLevelPool.Get(entity).Value = request.Level;

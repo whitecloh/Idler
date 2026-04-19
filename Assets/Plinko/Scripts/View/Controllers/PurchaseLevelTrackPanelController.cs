@@ -70,7 +70,35 @@ namespace Plinko.Scripts.View.Controllers
             CenterCurrentItem(viewData.Levels);
         }
 
-        public void Refresh(BattleHudViewData viewData)
+        public void Refresh(StandardBattleHudViewData viewData)
+        {
+            locationTitleText.text = viewData.LocationDisplayName;
+
+            if (_levelKey != viewData.LevelKey)
+            {
+                _levelKey = viewData.LevelKey;
+                Rebuild(viewData.Levels);
+            }
+
+            Apply(viewData.Levels);
+            CenterCurrentItem(viewData.Levels);
+        }
+
+        public void Refresh(DefenceBattleHudViewData viewData)
+        {
+            locationTitleText.text = viewData.LocationDisplayName;
+
+            if (_levelKey != viewData.LevelKey)
+            {
+                _levelKey = viewData.LevelKey;
+                Rebuild(viewData.Levels);
+            }
+
+            Apply(viewData.Levels);
+            CenterCurrentItem(viewData.Levels);
+        }
+
+        public void Refresh(PowerLineBattleHudViewData viewData)
         {
             locationTitleText.text = viewData.LocationDisplayName;
 

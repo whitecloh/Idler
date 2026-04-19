@@ -12,6 +12,9 @@ namespace Plinko.Scripts.Models
         public int Attack;
         public int Health;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public string PassiveAbilityId;
         public int UpgradeCount;
     }

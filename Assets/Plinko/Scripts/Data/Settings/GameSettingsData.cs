@@ -19,6 +19,11 @@ namespace Plinko.Scripts.Data.Settings
         [SerializeField] private int defaultRetrainingOfferCount = 3;
         [SerializeField] private int retrainingShopRerollPrice = 1;
         [SerializeField] private float battleTickDuration = 0.2f;
+        [SerializeField] private int powerLineStartingMana;
+        [SerializeField] private int powerLineMaxMana = 10;
+        [SerializeField] private int powerLineManaPerTick = 1;
+        [SerializeField] private int powerLineManaTickInterval = 5;
+        [SerializeField] private int powerLineRerollManaCost = 1;
         [SerializeField] private PlinkoFieldSettingsData fallbackPlinkoField;
 
         public int StartingGold => startingGold;
@@ -33,6 +38,11 @@ namespace Plinko.Scripts.Data.Settings
         public int RetrainingShopRerollPrice => retrainingShopRerollPrice;
         public int DefaultRetrainingSelectionLimit => defaultRetrainingOfferCount;
         public float BattleTickDuration => battleTickDuration;
+        public int PowerLineStartingMana => powerLineStartingMana;
+        public int PowerLineMaxMana => powerLineMaxMana;
+        public int PowerLineManaPerTick => powerLineManaPerTick;
+        public int PowerLineManaTickInterval => powerLineManaTickInterval;
+        public int PowerLineRerollManaCost => powerLineRerollManaCost;
         public PlinkoFieldSettingsData FallbackPlinkoField => fallbackPlinkoField;
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class BattleResultScreenController : MonoBehaviour
+    public sealed class BattleResultScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
 

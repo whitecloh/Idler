@@ -23,6 +23,9 @@ namespace Plinko.Scripts.Services
                 unitType.BaseAttack,
                 unitType.BaseHealth,
                 unitType.DefaultManaCost,
+                unitType.BaseMoveSpeed,
+                unitType.BattleAttackRange,
+                unitType.BaseAttackSpeed,
                 unitType.PassiveAbility != null ? unitType.PassiveAbility.Id : string.Empty,
                 1,
                 0,
@@ -37,13 +40,16 @@ namespace Plinko.Scripts.Services
             int attack,
             int health,
             int manaCost,
+            float moveSpeed,
+            int attackRange,
+            float attackSpeed,
             string passiveAbilityId,
             int level,
             int upgradeCount,
             PlinkoFieldSettingsData field,
             IReadOnlyDictionary<int, PinTypeData> installedPins)
         {
-            return GenerateResult(runtimeId, unitTypeId, displayName, attack, health, manaCost, passiveAbilityId, level, upgradeCount, field, installedPins);
+            return GenerateResult(runtimeId, unitTypeId, displayName, attack, health, manaCost, moveSpeed, attackRange, attackSpeed, passiveAbilityId, level, upgradeCount, field, installedPins);
         }
 
         private PlinkoPathResultModel GenerateResult(
@@ -53,6 +59,9 @@ namespace Plinko.Scripts.Services
             int baseAttack,
             int baseHealth,
             int baseManaCost,
+            float baseMoveSpeed,
+            int baseAttackRange,
+            float baseAttackSpeed,
             string passiveAbilityId,
             int level,
             int upgradeCount,
@@ -69,6 +78,9 @@ namespace Plinko.Scripts.Services
             var currentAttack = baseAttack;
             var currentHealth = baseHealth;
             var currentManaModifier = 0;
+            var currentMoveSpeed = baseMoveSpeed;
+            var currentAttackRange = baseAttackRange;
+            var currentAttackSpeed = baseAttackSpeed;
             var slotIndex = 0;
 
             if (field != null && field.Rows != null)
@@ -102,12 +114,18 @@ namespace Plinko.Scripts.Services
                         PinTypeId = authoredPin != null ? authoredPin.Id : string.Empty,
                         AttackDelta = authoredPin != null ? authoredPin.AttackModifier : 0,
                         HealthDelta = authoredPin != null ? authoredPin.HealthModifier : 0,
-                        ManaDelta = authoredPin != null ? authoredPin.ManaModifier : 0
+                        ManaDelta = authoredPin != null ? authoredPin.ManaModifier : 0,
+                        MoveSpeedDelta = authoredPin != null ? authoredPin.MoveSpeedModifier : 0f,
+                        AttackRangeDelta = authoredPin != null ? authoredPin.AttackRangeModifier : 0,
+                        AttackSpeedDelta = authoredPin != null ? authoredPin.AttackSpeedModifier : 0f
                     };
 
                     currentAttack += node.AttackDelta;
                     currentHealth += node.HealthDelta;
                     currentManaModifier += node.ManaDelta;
+                    currentMoveSpeed += node.MoveSpeedDelta;
+                    currentAttackRange += node.AttackRangeDelta;
+                    currentAttackSpeed += node.AttackSpeedDelta;
                     result.Nodes.Add(node);
                     slotIndex += rowCount;
                 }
@@ -139,6 +157,9 @@ namespace Plinko.Scripts.Services
                 FinalAttack = currentAttack,
                 FinalHealth = currentHealth,
                 FinalManaCost = finalMana,
+                FinalMoveSpeed = Mathf.Max(0f, currentMoveSpeed),
+                FinalAttackRange = Mathf.Max(0, currentAttackRange),
+                FinalAttackSpeed = Mathf.Max(0f, currentAttackSpeed),
                 PassiveAbilityId = passiveAbilityId,
                 UpgradeCount = upgradeCount,
                 BasketId = finalBasketId

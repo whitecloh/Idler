@@ -22,5 +22,18 @@ namespace Plinko.Scripts.View.Animations
         {
             return rectTransform.TransformPoint(rectTransform.rect.center);
         }
+
+        public static Vector2 ScreenToAnchoredPosition(
+            RectTransform targetSpace,
+            Vector2 screenPosition,
+            Camera eventCamera)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                targetSpace,
+                screenPosition,
+                eventCamera,
+                out var localPoint);
+            return localPoint;
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace Plinko.Scripts.View.Controllers
         private readonly Dictionary<int, int> _dragSiblingByRuntimeId = new();
         private BattleBridge _battleBridge;
         private BattleBoardPanelController _boardPanel;
-        private BattleHudViewData _viewData = new();
+        private StandardBattleHudViewData _viewData = new();
         private BattleHandCardView _draggedView;
         private string _presentedTurnKey = string.Empty;
         private Coroutine _dealRoutine;
@@ -72,7 +72,7 @@ namespace Plinko.Scripts.View.Controllers
             _dragSiblingByRuntimeId.Clear();
         }
 
-        public void Refresh(BattleHudViewData viewData)
+        public void Refresh(StandardBattleHudViewData viewData)
         {
             _viewData = viewData;
             manaText.text = $"{viewData.CurrentMana}/{viewData.MaxMana}";
@@ -241,7 +241,7 @@ namespace Plinko.Scripts.View.Controllers
             view.LayoutElement.ignoreLayout = true;
             view.CanvasGroup.blocksRaycasts = false;
             view.RectTransform.SetParent(animationLayerRoot, false);
-            UpdateDraggedViewPosition(eventData.position);
+            UpdateDraggedViewPosition(eventData.position, eventData.pressEventCamera);
         }
 
         private void HandleDrag(BattleHandCardView view, PointerEventData eventData)
@@ -251,7 +251,7 @@ namespace Plinko.Scripts.View.Controllers
                 return;
             }
 
-            UpdateDraggedViewPosition(eventData.position);
+            UpdateDraggedViewPosition(eventData.position, eventData.pressEventCamera);
         }
 
         private void HandleEndDrag(BattleHandCardView view, PointerEventData eventData)
@@ -262,7 +262,8 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             _draggedView = null;
-            if (_boardPanel.IsScreenPointOverDropArea(eventData.position) &&
+            var eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
+            if (_boardPanel.IsScreenPointOverDropArea(eventData.position, eventCamera) &&
                 _viewData.CanDeploy &&
                 _viewData.CurrentMana >= view.ViewData.ManaCost)
             {
@@ -281,10 +282,12 @@ namespace Plinko.Scripts.View.Controllers
             ReturnCardToHand(view, siblingIndex);
         }
 
-        private void UpdateDraggedViewPosition(Vector2 screenPosition)
+        private void UpdateDraggedViewPosition(Vector2 screenPosition, Camera eventCamera)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(animationLayerRoot, screenPosition, uiCamera, out var localPoint);
-            _draggedView.RectTransform.anchoredPosition = localPoint;
+            _draggedView.RectTransform.anchoredPosition = UiRectTransformUtility.ScreenToAnchoredPosition(
+                animationLayerRoot,
+                screenPosition,
+                eventCamera);
             _draggedView.RectTransform.localScale = Vector3.one * hoverScale;
         }
 

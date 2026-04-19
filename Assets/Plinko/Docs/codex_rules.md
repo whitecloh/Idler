@@ -1,204 +1,230 @@
-# CODEX_RULES.md
+# Codex Rules
 
-## 1. Role
+## Current Superseding Update
 
-You are working on **Session Game**, a Unity project built around **LeoECSLite**.
+If battle rules changed, do not reintroduce a shared oversized battle controller or resolver.
 
-Your role is to implement the project as a **gameplay-first ECS architecture**, not as a UI-first prototype.
+Current expectation:
 
----
+- `StandardBattle`, `DefenceBattle`, and `PowerLineBattle` are separate `LevelType` values.
+- If a new battle-like mode has materially different win conditions, mana flow, save/load behavior, board model, or UI contract, implement it as a new authored level type instead of another switch branch inside an existing battle screen/resolver.
 
-## 2. Core rules
+## 1. Роль
 
-### 2.1 Gameplay first
-Always prioritize:
-1. ECS runtime logic
-2. save / restore consistency
-3. phase-specific gameplay flow
-4. UI sync
-5. visuals / animation
+Ты работаешь в `Assets/Plinko` внутри Unity-проекта.
 
-Do **not** implement visuals or UI-driven work unless explicitly asked and unless the current roadmap step requires it.
-
-### 2.2 Follow the roadmap strictly
-Always follow [session_game_roadmap.md](/U:/UNITY%20PROJECTS/Idler/Assets/Plinko/Docs/session_game_roadmap.md).
-
-Do not jump ahead.
-Do not mix multiple roadmap steps in one task unless explicitly asked.
-
-### 2.3 Follow the architecture guide strictly
-Always follow [architecture_guide.md](/U:/UNITY%20PROJECTS/Idler/Assets/Plinko/Docs/architecture_guide.md).
-
-If a requested change conflicts with it, explain the conflict and propose the architecture-safe solution.
+Проект архитектурно чувствительный. Здесь нельзя писать код как для быстрого прототипа. Любое изменение должно сохранять:
+- runtime consistency;
+- save/load consistency;
+- scene-authored UI contract;
+- принятые продуктовые правила.
 
 ---
 
-## 3. Hard constraints
+## 2. Главный приоритет
 
-You must not:
-- move gameplay logic into UI classes;
-- invent a second runtime pipeline if one already exists;
-- mix old and new architecture versions;
-- rename critical runtime contracts without reason;
-- perform broad refactors outside the current task;
-- add animation/visual layers while gameplay systems are still incomplete;
-- use MonoBehaviour state as the gameplay source of truth;
-- introduce singleton-heavy gameplay architecture for core runtime state.
+Всегда приоритетен следующий порядок:
+1. корректный runtime flow;
+2. корректный save/load;
+3. соответствие документам;
+4. UI sync;
+5. visuals / animation polish.
 
----
-
-## 4. Source of truth
-
-The authoritative state is:
-- **ECS runtime state** for gameplay
-- **Save DTOs** only for persistence
-- **ScriptableObject data** only for authored content
-
-UI is never authoritative.
+Не делай visual-first решения, если они ломают или подменяют runtime.
 
 ---
 
-## 5. ECS rules
+## 3. Обязательные документы
 
-### 5.1 Systems own the gameplay
-Gameplay logic must live in ECS systems.
+Перед изменениями ориентируйся на:
+- `Assets/Plinko/Docs/architecture_guide.md`
+- `Assets/Plinko/Docs/session_game_roadmap.md`
 
-### 5.2 Requests vs Events
-- Request = ask to do something
-- Event = something already happened
-
-Use them consistently.
-
-### 5.3 Phase guards are required
-A system must verify that it is operating inside the correct phase before mutating state.
-
-### 5.4 One-shot events must be cleaned
-If an event is intended to be transient, it must be handled and then cleared by cleanup flow.
-
-### 5.5 New systems must be wired
-Any newly implemented system must be connected in `EcsCompositionRoot`.
-
-A system that exists but is not wired is considered incomplete.
+Если реализация больше не соответствует документам, сначала обнови документы, потом код.
 
 ---
 
-## 6. Shared pipelines
+## 4. Что является source of truth
 
-If a shared gameplay pipeline already exists, reuse it.
+Source of truth:
+- `ECS runtime` для активной игры;
+- `ScriptableObject` для authored контента;
+- `Save DTO` только для persistence;
+- `Meta save` только для мета-прогресса.
 
-Example:
-- purchase training and retraining must use the same Plinko training pipeline.
-
-Do not duplicate logic unless explicitly requested.
-
----
-
-## 7. Scope discipline
-
-For each task:
-- implement only the systems required by that roadmap step;
-- avoid unrelated file changes;
-- avoid “cleanup refactors” outside the requested scope;
-- keep changes targeted and easy to review.
+UI не является source of truth.
 
 ---
 
-## 8. Style of implementation
+## 5. ECS-правила
 
-Prefer:
-- clear class names;
-- single-responsibility systems;
-- compile-oriented code;
-- explicit runtime flow;
-- minimal but correct changes.
+### 5.1 Gameplay logic только в ECS
 
-Avoid:
-- vague helper abstractions;
-- dead temporary code;
-- duplicate parallel flows;
-- hidden side effects.
+Gameplay logic должна жить в systems, services и runtime models, а не в MonoBehaviour view-классе.
 
----
+### 5.2 Requests и Events
 
-## 9. Expected task format
+Используй последовательно:
+- `Request` для команды выполнить действие;
+- `Event` для сообщения, что действие уже произошло.
 
-When given a task, interpret it like this:
+### 5.3 Phase guards
 
-1. identify the roadmap step;
-2. identify the exact systems to implement;
-3. respect current runtime contracts;
-4. avoid touching UI/visuals unless asked;
-5. return concise implementation notes.
+Если система работает только в конкретной фазе, она обязана проверять фазу до мутации состояния.
+
+### 5.4 Wiring обязателен
+
+Новая система не считается реализованной, если она не подключена в `EcsCompositionRoot`.
 
 ---
 
-## 10. Required answer format
+## 6. UI-правила
 
-After making changes, always summarize:
+### 6.1 Scene-authored only
 
-1. what was implemented;
-2. which files were changed;
-3. how the runtime flow works now;
-4. what edge cases were handled;
-5. what remains unfinished inside the current roadmap step.
+UI создаётся в сценах и префабах вручную.
 
----
+Код должен:
+- писать только scripts;
+- работать через `SerializeField`;
+- предполагать, что пользователь сам собирает layout и префабы;
+- не создавать иерархию UI runtime-ом.
 
-## 11. Validation checklist
+### 6.2 Не использовать GetComponent во View
 
-Before considering the task done, verify:
-- the logic is in ECS, not in UI;
-- the correct phase guards exist;
-- events/requests are used correctly;
-- composition root wiring is present;
-- no duplicate gameplay pipeline was introduced;
-- save/runtime contracts were not broken.
+Во view-слое не использовать `GetComponent`.
 
----
+Если ссылка нужна, она должна быть прокинута через `SerializeField`.
 
-## 12. Preferred workflow for this repository
+### 6.3 Не писать validator-layer для UI
 
-Use this working order:
+Не нужно добавлять кастомные валидаторы ради проверки всех UI-ссылок.
 
-1. understand the current roadmap step;
-2. inspect related components, requests, events, services and systems;
-3. implement the smallest correct vertical slice;
-4. wire systems into composition root;
-5. summarize the resulting flow.
+Принятый подход:
+- код пишется чисто и без лишних defensive checks;
+- если обязательная ссылка не прокинута, это обычная Unity-ошибка сборки сцены/префаба.
 
----
+### 6.4 Не создавать UI, если пользователь не просил
 
-## 13. What to do when uncertain
+Не добавляй новые UI-элементы, окна или поля самовольно.
 
-If uncertain:
-- prefer the safer architecture-preserving option;
-- do not invent missing product decisions silently;
-- keep the implementation minimal and aligned with the existing baseline;
-- explicitly note assumptions in the summary.
+Если layout-решение не было согласовано, сначала уточни его.
+
+### 6.5 Primary windows vs popups
+
+У проекта есть правило:
+- одновременно открыт только один primary window;
+- popup живёт отдельно и не ломает это правило.
+
+Следуй `UiWindowManager` и не дублируй отдельную систему показа окон без необходимости.
 
 ---
 
-## 14. Project-specific implementation order
+## 7. Анимации
 
-Current target order:
-1. Purchase phase
-2. Retraining phase
-3. Field upgrade phase
-4. Shared Plinko pipeline stabilization
-5. Hand generation and deployment
-6. Enemy wave selection
-7. Battle resolution
-8. Battle outcome routing
-9. Save/load stabilization
-10. UI sync
-11. Visuals / animations
+### 7.1 Через общий manager
 
-Do not reorder this unless explicitly instructed.
+Для UI-анимаций используй общий `UiAnimationManager`.
+
+Не разбрасывай локальные ad-hoc DOTween-цепочки по item/view-классам без причины.
+
+### 7.2 Presentation не должен становиться gameplay
+
+Анимации не должны:
+- хранить игровой state;
+- решать gameplay outcome;
+- блокировать runtime flow неявным образом.
 
 ---
 
-## 15. Final instruction
+## 8. Данные и визуалы
 
-Treat this repository as an **architecture-sensitive gameplay project**, not as a rapid prototype.
+### 8.1 Sprite-based visuals
 
-Correct flow, runtime consistency and roadmap discipline are more important than speed.
+В authored data хранятся sprite/animation-set ссылки, а не готовые gameplay-prefabs.
+
+### 8.2 Runtime entity != config asset
+
+Не путай:
+- тип юнита;
+- owned unit;
+- тип пина;
+- установленный pin на поле;
+- authored enemy spawn;
+- runtime enemy unit.
+
+Это особенно важно для:
+- retraining;
+- battle deploy;
+- save/load.
+
+---
+
+## 9. Save / Load
+
+Текущая политика:
+- checkpoint на старте уровня;
+- checkpoint на старте хода игрока в battle;
+- broken save => безопасный перезапуск текущей локации.
+
+Не вводи новый save contract локально внутри UI или presentation.
+
+---
+
+## 10. Текущий продуктовый фокус
+
+Текущий активный боевой фокус проекта — `LevelType.DefenceBattle`.
+
+`LevelType.StandardBattle` существует, но не является главным направлением, если пользователь не попросил вернуться к нему явно.
+
+Значит:
+- новые battle-решения в первую очередь должны учитывать `BaseDefense`;
+- не нужно углублять `Standard`, если задача реально относится к `BaseDefense`.
+
+---
+
+## 11. Правила по изменениям
+
+### 11.1 Не делать широкие рефакторинги без причины
+
+Если задача не требует большого рефакторинга, не делай его.
+
+### 11.2 Не дублировать пайплайны
+
+Если pipeline уже существует, переиспользуй его.
+
+Пример:
+- purchase и retraining используют общий plinko training pipeline.
+
+### 11.3 Не придумывать продуктовые решения молча
+
+Если отсутствует продуктовая спецификация, а решение повлияет на runtime contract, сначала зафиксируй assumption или спроси пользователя.
+
+---
+
+## 12. Как писать код в этом проекте
+
+Предпочтительно:
+- небольшие целевые изменения;
+- понятные имена;
+- один класс — одна чёткая ответственность;
+- минимальная магия;
+- прозрачный runtime flow.
+
+Нежелательно:
+- размазанные helper-абстракции;
+- скрытые побочные эффекты;
+- defensive noise вместо ясной логики;
+- несогласованные временные костыли.
+
+---
+
+## 13. Что писать в итоговом сообщении
+
+После выполнения задачи кратко сообщай:
+- что изменилось;
+- что теперь работает по игровому флоу;
+- какие ограничения или хвосты остались.
+
+Если задача касалась UI:
+- отдельно укажи, что нужно прокинуть в инспекторе.

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Plinko.Scripts.Data.Battle;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Data.Enemies;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace Plinko.Scripts.Data.Levels
     public sealed class LevelData : ScriptableObject
     {
         [SerializeField] private string id = string.Empty;
+        [SerializeField] private string displayName = string.Empty;
         [SerializeField] private Enums.LevelType levelType;
         [SerializeField] private Sprite progressSprite;
         [SerializeField] private Sprite gridSprite;
@@ -19,8 +21,11 @@ namespace Plinko.Scripts.Data.Levels
         [SerializeField] private int enemyBaseMaxHealth = 100;
         [SerializeField] private int victoryReward;
         [SerializeField] private List<EnemyWaveThresholdData> hpThresholdWaves = new();
+        [SerializeField] private BaseDefenseBattleData baseDefenseBattle;
+        [SerializeField] private PowerLineBattleData powerLineBattle;
 
         public string Id => id;
+        public string DisplayName => displayName;
         public Enums.LevelType LevelType => levelType;
         public Sprite ProgressSprite => progressSprite;
         public Sprite GridSprite => gridSprite;
@@ -31,5 +36,7 @@ namespace Plinko.Scripts.Data.Levels
         public int EnemyBaseMaxHealth => enemyBaseMaxHealth;
         public int VictoryReward => victoryReward;
         public IReadOnlyList<EnemyWaveThresholdData> HpThresholdWaves => hpThresholdWaves;
+        public BaseDefenseBattleData BaseDefenseBattle => baseDefenseBattle;
+        public PowerLineBattleData PowerLineBattle => powerLineBattle;
     }  
 }

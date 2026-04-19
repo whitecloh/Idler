@@ -1,339 +1,275 @@
-# План дальнейшей разработки Session Game
+# Session Game Roadmap
 
-Этот документ фиксирует порядок заполнения скриптов и общий принцип разработки. Используем его как опорный roadmap и baseline последовательности работ.
+## Current Superseding Update
 
-## Общий принцип разработки
+If older sections below conflict with this block, this block is authoritative.
 
-Текущая продуктовая модель уровней:
-- каждый уровень имеет самостоятельный `LevelType`;
-- `Battle` — отдельный тип уровня;
-- `Purchase`, `Retraining` и `FieldUpgrade` больше не содержат implicit battle внутри себя;
-- порядок уровней полностью определяется списком в `LocationData`.
+Current battle stack:
 
-Текущая модель сохранений:
-- `run save` хранит незавершённый run;
-- `meta save` хранит progression для анлоков и завершённых локаций.
+- `StandardBattle` exists and remains supported, but is not the active product focus.
+- `DefenceBattle` exists and remains supported, but is no longer the sole active battle focus.
+- `PowerLineBattle` is now the active implementation focus.
 
-Текущий приоритет:
+Current priority order:
 
-1. Gameplay state и ECS flow
-2. Сохранение / восстановление
-3. Фазы уровня
-4. Plinko / training
-5. Battle logic
-6. UI sync
-7. Визуал / анимации
+1. Finish `PowerLineBattle` runtime + UI + result flow.
+2. Finish `PowerLineBattle` authored content and scene hookup.
+3. Convert `BattleResult` from temporary IMGUI to scene-authored UI.
+4. Only after that, return to `DefenceBattle` and `StandardBattle` polish if product still needs it.
 
-Правило работы:
-- сначала добиваем корректную работу систем и флоу;
-- UI, анимации и визуальное отображение подключаем в конце;
-- не делаем временные UI-костыли до стабилизации gameplay runtime.
-- технический debug/dev harness допустим как инструмент проверки, если он не хранит gameplay state и не подменяет ECS runtime.
+What is already implemented for `PowerLineBattle`:
 
----
+- separate `LevelType.PowerLineBattle`
+- separate runtime state/service models
+- separate ECS requests for init / draw / reroll / deploy
+- separate real-time tick resolver
+- separate UI payload
+- separate primary window and scene-authored controller layer
 
-## Что уже заполнено
+What still needs to be verified/finalized for `PowerLineBattle`:
 
-### База
-Уже есть рабочий каркас:
-- `GameBootstrapper`
-- `GameServicesInstaller`
-- `EcsCompositionRoot`
-- data/runtime/view models
-- request/event contracts
-- indexes
+- scene hookup in Unity
+- authored level data/assets
+- UX polish for realtime hand/board feedback
+- result popup presentation
+- full gameplay verification on real content
 
-### Уже есть живая логика
-Уже заполнены:
-- `StartNewRunSystem`
-- `ContinueRunSystem`
-- `RestoreRunBoardSystem`
-- `RestoreOwnedUnitsSystem`
-- `LoadLevelSystem`
-- `RouteLevelTypeToPhaseSystem`
-- `InitializeLocationBoardSystem`
-- `RegisterOwnedUnitSystem`
-- `ReplaceOwnedUnitSystem`
-- `WriteRunSaveSystem`
-- `GenerateUnitShopOffersSystem`
-- `RerollUnitShopSystem`
-- `BuyUnitSystem`
-- `BeginPurchasedTrainingSystem`
-- `AdvancePlinkoTrainingPlaybackSystem`
-- `CompletePurchasedTrainingSystem`
-- `CleanupTransientEventsSystem`
+## 1. Назначение документа
+
+Этот документ фиксирует не “идеальный план с нуля”, а актуальный roadmap проекта с учётом уже реализованного кода и всех решений, принятых в ходе работы.
+
+Документ нужен для ответа на три вопроса:
+- что уже сделано;
+- что сделано частично;
+- какой следующий приоритет.
 
 ---
 
-## Чёткий план дальнейшего заполнения скриптов
+## 2. Что уже реализовано
 
-## Шаг 1. Добить purchase phase до полностью корректного gameplay loop
-### Что заполняем
-- проверить и при необходимости доработать:
-  - `GenerateUnitShopOffersSystem`
-  - `RerollUnitShopSystem`
-  - `BuyUnitSystem`
-  - `BeginPurchasedTrainingSystem`
-  - `AdvancePlinkoTrainingPlaybackSystem`
-  - `CompletePurchasedTrainingSystem`
+### 2.1 Базовая архитектура и инфраструктура
 
-### Что должно получиться
-- вход в purchase phase;
-- магазин генерируется корректно;
-- реролл работает;
-- покупка списывает золото;
-- купленный слот сразу заменяется новым оффером;
-- training запускается сразу;
-- после завершения training юнит попадает в owned pool;
-- в бой нельзя перейти, пока есть активные training.
+Реализовано:
+- `GameBootstrapper`;
+- `GameServicesInstaller`;
+- `EcsCompositionRoot`;
+- data/runtime/view data models;
+- requests/events/indexes;
+- meta progression;
+- menu/location shell;
+- primary window manager;
+- общий UI animation manager.
 
-### Критерий готовности
-Сценарий:
-`start run -> open purchase -> buy several units -> дождаться training -> owned pool корректно пополнился`
+### 2.2 Runtime core loop
 
----
+Реализовано:
+- `StartNewRun`;
+- `ContinueRun`;
+- meta unlocks и location progression;
+- `LoadLevel`;
+- `AdvanceToNextLevel`;
+- `ReturnToMenu`;
+- `Result flow`;
+- отдельные `StandardBattle` и `DefenceBattle` level types;
+- `LevelType.StandardBattle`;
+- authored/runtime/saveload/UI контракты для `LevelType.DefenceBattle`.
 
-## Шаг 2. Реализовать retraining phase
-### Что заполняем
-- `GenerateRetrainingShopBatchSystem`
-- `RerollRetrainingShopSystem`
-- `BuyRetrainingBatchSystem`
-- `BeginRetrainingSystem`
-- `CompleteRetrainingSystem`
+### 2.3 Purchase
 
-### Что должно получиться
-- при входе в retraining level генерируется batch из `M` owned units;
-- `M` берётся из settings / level override;
-- если eligible units меньше `M`, показывается только доступное количество;
-- batch строится из owned unit pool, а не из unit types;
-- reroll выбирает новый batch из eligible owned units и может показать тот же состав снова;
-- reroll недоступен, если текущий batch уже показывает всех eligible units;
-- покупка списывает сумму `ShopPrice` всех юнитов batch;
-- после покупки весь batch отправляется на retraining;
-- юниты, уже upgraded на этом уровне, исключаются из следующих batch generation;
-- для них генерируются новые результаты через тот же plinko pipeline;
-- после завершения старые версии юнитов заменяются новыми;
-- owned pool остаётся консистентным;
-- переход на следующий уровень доступен, если нет активного training.
+Реализовано:
+- unit shop generation;
+- reroll;
+- buy;
+- start purchased training;
+- shared plinko playback;
+- complete purchased training;
+- save/load для фазы;
+- scene-authored окно Purchase.
 
-### Критерий готовности
-Сценарий:
-`enter retraining level -> batch M owned units generated -> buy batch or reroll -> bought units go through playback -> stats/mana обновлены -> upgraded units больше не участвуют в batch generation на этом уровне`
+### 2.4 Retraining
 
----
+Реализовано:
+- новая batch-shop модель вместо ручного выбора;
+- batch generation из owned units;
+- batch reroll;
+- batch buy по сумме `ShopPrice`;
+- retraining через общий plinko pipeline;
+- исключение уже upgraded units из текущего retraining level;
+- save/load для runtime;
+- scene-authored окно Retraining.
 
-## Шаг 3. Реализовать pin shop и field upgrade phase
-### Что заполняем
-- `GeneratePinShopOffersSystem`
-- `RerollPinShopSystem`
-- `BuyPinSystem`
-- `SelectBoardSlotSystem`
-- `ReplaceBoardPinSystem`
+### 2.5 Field Upgrade
 
-### Что должно получиться
-- pin shop генерируется случайно по весам;
-- дубликаты допустимы;
-- реролл обновляет весь магазин;
-- покупка пина создаёт pending candidate;
-- игрок выбирает слот на поле;
-- выбранный pin заменяется;
-- board сохраняется в runtime и в save;
-- следующий training использует уже обновлённое поле.
+Реализовано:
+- pin shop generation;
+- reroll;
+- buy pin;
+- pending pin;
+- выбор board pin;
+- replace board pin;
+- save/load board state;
+- scene-authored окно Field Upgrade.
 
-### Критерий готовности
-Сценарий:
-`enter field upgrade -> reroll pin shop -> buy pin -> choose board slot -> board state updated -> save/load keeps board`
+### 2.6 Save / Load
 
----
+Реализовано:
+- checkpoint на старте уровня;
+- checkpoint на старте хода игрока в battle;
+- отдельный `meta save`;
+- восстановление run;
+- fallback при повреждённом save: перезапуск текущей локации.
 
-## Шаг 4. Добить Plinko как единый training pipeline для purchase и retraining
-### Что заполняем / усиливаем
-- `PlinkoPathFactory`
-- `BeginPurchasedTrainingSystem`
-- `BeginRetrainingSystem`
-- `AdvancePlinkoTrainingPlaybackSystem`
-- `CompletePurchasedTrainingSystem`
-- `CompleteRetrainingSystem`
+### 2.7 UI
 
-### Что нужно проверить и закрыть
-- путь идёт только через две ближайшие точки;
-- на каждой линии выбирается только одна точка;
-- пины дают корректные модификаторы stat/mana;
-- корзина выбирается из двух ближайших;
-- mana cost формируется корректно;
-- purchase и retraining используют один и тот же pipeline, а не две разные реализации.
+Реализовано:
+- scene-authored menu;
+- popup выбора локации;
+- scene-authored окна:
+  - `Purchase`;
+  - `Retraining`;
+  - `FieldUpgrade`;
+- `StandardBattle` shell;
+- `DefenceBattle` shell;
+  - `BaseDefense` battle shell.
 
-### Критерий готовности
-Любой training в игре работает одинаково:
-`generate result first -> playback runtime -> finalize result`
+Частично реализовано:
+- `BattleResult` всё ещё остаётся временным IMGUI-окном.
 
 ---
 
-## Шаг 5. Реализовать hand generation и deployment
-### Что заполняем
-- `GenerateHandSystem`
-- `ClearHandSystem`
-- `DeployCardSystem`
+## 3. Что реализовано частично
 
-### Что должно получиться
-- рука генерируется из `owned unit pool`, а не из типов;
-- каждый слот генерируется независимо;
-- возможны дубликаты одного и того же owned unit в руке;
-- сыгранная карта исчезает только из руки;
-- мана тратится корректно;
-- в начале нового хода рука может быть пересобрана заново.
+### 3.1 Standard Battle
 
-### Критерий готовности
-Сценарий:
-`owned pool exists -> generate hand -> deploy cards -> mana decreases -> hand updates correctly`
+`LevelType.StandardBattle` существует и работает как runtime, но сейчас не является активным продуктовым фокусом.
 
----
+Что есть:
+- runtime turn loop;
+- wave selection;
+- battle resolution;
+- result routing;
+- battle HUD payload.
 
-## Шаг 6. Реализовать enemy wave selection
-### Что заполняем
-- `SelectEnemyWaveSystem`
+Что не является текущим приоритетом:
+- полное доведение Standard battle presentation;
+- production polish именно этого режима.
 
-### Что должно получиться
-- у уровня есть набор HP-threshold waves;
-- система выбирает волну по текущему HP enemy base;
-- если HP = 75%, берётся wave на 100%;
-- если HP = 64%, берётся wave на 65%;
-- выбранная волна кладётся в runtime state и используется battle system.
+### 3.2 BaseDefense
 
-### Критерий готовности
-При разных значениях HP enemy base система всегда выбирает правильную волну.
+Для `LevelType.DefenceBattle` уже есть:
+- authored data structures;
+- runtime state;
+- отдельный resolver;
+- save/load;
+- view payload;
+- scene-authored battle shell.
 
----
-
-## Шаг 7. Реализовать battle resolution
-### Что заполняем
-- `ResolveBattleSystem`
-
-### Что должно получиться
-- battle идёт по тикам;
-- юниты ищут ближайшую цель;
-- двигаются;
-- проверяют range;
-- атакуют;
-- при необходимости применяют ability;
-- бой завершается корректно;
-- выжившая сторона наносит урон базе;
-- результат записывается в `BattleTimelineModel` и `BattleResultModel`.
-
-### Критерий готовности
-Сценарий:
-`generate hand -> deploy units -> choose enemy wave -> resolve battle -> получить корректный result`
+Но ещё не завершены:
+- production-level playback;
+- полный result presentation;
+- полный UI polish;
+- дополнительный контент для authored уровней и волн.
 
 ---
 
-## Шаг 8. Реализовать route after battle
-### Что заполняем
-- `StartBattlePlaybackSystem`
-- `RouteBattleOutcomeAfterPlaybackSystem`
-- `AdvanceToNextLevelSystem`
-- `ReturnToMenuSystem`
+## 4. Текущий активный фокус
 
-### Что должно получиться
-- после battle result игра понимает:
-  - победа;
-  - поражение;
-  - переход на следующий уровень;
-  - завершение локации;
-  - проигрыш run;
-- unlock/meta прогресс может обновляться в нужный момент;
-- run state сохраняется корректно.
+Текущий основной фокус проекта:
+1. `BaseDefense`;
+2. production battle UI и presentation для него;
+3. замыкание полного flow уровня `BaseDefense`;
+4. затем возврат к хвостам `Standard Battle` только если это действительно нужно продукту.
 
-### Критерий готовности
-Полный цикл:
-`level start -> prebattle phase -> battle -> result -> next level / fail / complete`
+Если нет прямого указания, не нужно продолжать углублять `Standard Battle` вместо `BaseDefense`.
 
 ---
 
-## Шаг 9. Добить save/load до финального состояния
-### Что проверяем и дополняем
-- `WriteRunSaveSystem`
-- `ContinueRunSystem`
-- `RestoreRunBoardSystem`
-- `RestoreOwnedUnitsSystem`
+## 5. Актуальный порядок следующих работ
 
-### Что должно быть сохранено без дыр
-- `location id`
-- `level index`
-- `level type`
-- `phase type`
-- `gold`
-- `player base HP`
-- `enemy base HP`
-- `reroll counts`
-- `owned units`
-- `board state`
+### Шаг A. Довести BaseDefense до полноценного игрового режима
 
-### Критерий готовности
-После save/load игра продолжает run без потери логики и данных.
+Нужно:
+- довести scene-authored окно `BaseDefense` по фактической сборке сцены;
+- подключить полноценный gameplay feedback;
+- довести deploy flow по клеткам;
+- довести блокировку UI во время autoplay;
+- довести возврат карт в колоду между ходами;
+- довести popup колоды;
+- довести floating texts и mana feedback.
 
----
+### Шаг B. Довести BaseDefense result flow
 
-## Шаг 10. Только после этого подключаем UI sync
-### Что заполняем
-- `RefreshPurchasePhaseUiSystem`
-- `RefreshRetrainingPhaseUiSystem`
-- `RefreshFieldUpgradeUiSystem`
-- `RefreshOwnedUnitsUiSystem`
-- `RefreshBattleHudUiSystem`
-- `RefreshBattleResultUiSystem`
+Нужно:
+- перевести `BattleResult` из временного IMGUI в scene-authored production popup;
+- корректно показывать victory/defeat для `BaseDefense`;
+- связать result popup с progression и переходом на следующий уровень/в меню.
 
-### Что должно получиться
-- UI только читает runtime state;
-- UI не управляет логикой;
-- никаких вычислений gameplay внутри view/controller.
+### Шаг C. Довести BaseDefense visuals/playback
 
----
+Нужно:
+- визуализировать timeline/автобой;
+- анимировать спавн врагов волны;
+- анимировать действия юнитов;
+- анимировать урон, смерть и события хода;
+- довести presentation до читаемого состояния.
 
-## Шаг 11. И только потом визуализация / анимации
-### Что добавляем в самом конце
-- визуальный plinko playback;
-- визуальный battle playback;
-- анимации карт / юнитов / пинов;
-- экранные переходы;
-- polish.
+### Шаг D. Расширить authored content
+
+Нужно:
+- завести реальные authored `BaseDefense` уровни;
+- заполнить battle data, волны, grid content, visuals;
+- проверить progression локаций на реальном контенте.
+
+### Шаг E. Вернуться к хвостам Standard Battle только при необходимости
+
+Если продукт всё ещё требует обычный base-vs-base battle:
+- доделать standard battle presentation;
+- синхронизировать его с текущими UI-правилами;
+- довести его result window и polish.
+
+Если продукт уходит полностью в `BaseDefense`, этот шаг можно отложить.
 
 ---
 
-## Самый правильный порядок работы прямо сейчас
+## 6. Технический backlog
 
-### Блок A — Pre-battle gameplay
-1. Добить `purchase phase`
-2. Сделать `retraining phase`
-3. Сделать `field upgrade phase`
+### Высокий приоритет
 
-### Блок B — Shared runtime
-4. Унифицировать `plinko training pipeline`
-5. Сделать `hand generation + deployment`
-6. Сделать `enemy wave selection`
+- перевести `BattleResultScreenController` на scene-authored UI;
+- убрать оставшиеся временные battle presentation-элементы;
+- довести `BaseDefense` hand/board feedback;
+- проверить save/load на длинных сериях ходов `BaseDefense`.
 
-### Блок C — Core battle
-7. Сделать `battle resolution`
-8. Сделать `battle outcome routing`
+### Средний приоритет
 
-### Блок D — Stabilization
-9. Довести `save/load`
-10. Подключить `UI sync`
-11. Подключить `visuals/animations`
+- довести `BaseDefense` authored content;
+- вычистить неиспользуемые временные battle-ветки;
+- проверить согласованность `UiWindowManager` и popup flow.
+
+### Низкий приоритет
+
+- polishing стандартного battle режима;
+- расширение визуальных эффектов вне текущего gameplay-приоритета;
+- косметическая чистка, не влияющая на flow.
 
 ---
 
-## Как движемся дальше
+## 7. Что считается завершением текущего этапа
 
-Следующий практический шаг:
+Текущий этап считается завершённым, когда выполнено всё ниже:
+- игрок может пройти локацию через menu/location flow;
+- `Purchase`, `Retraining`, `FieldUpgrade` работают через production-style scene-authored окна;
+- `BaseDefense` playable от входа на уровень до result popup;
+- save/load корректно работает на checkpoint-модели;
+- результат уровня корректно ведёт дальше по progression;
+- UI и runtime соответствуют текущим документам.
 
-### Сейчас заполняем `retraining phase`
-Потому что:
-- purchase pipeline уже есть;
-- plinko runtime уже введён;
-- retraining — следующий естественный слой поверх уже реализованного training flow.
+---
 
-Следующие целевые системы:
-- `SelectUnitsForRetrainingSystem`
-- `ConfirmRetrainingSelectionSystem`
-- `BeginRetrainingSystem`
-- `CompleteRetrainingSystem`
+## 8. Правило изменения roadmap
+
+Roadmap можно менять только если изменилось одно из двух:
+- продуктовая модель;
+- архитектурный контракт.
+
+Если решение влияет на phase model, battle mode, save/load или UI contract, сначала нужно обновить документы, и только потом писать код.

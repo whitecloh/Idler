@@ -232,14 +232,14 @@ namespace Plinko.Scripts.View.Animations
         public void PlayCanvasVisibility(
             CanvasGroup canvasGroup,
             RectTransform target,
+            Vector2 shownPosition,
+            Vector3 shownScale,
             bool isVisible,
             float duration,
             float hiddenYOffset,
             float hiddenScale,
             Action onComplete = null)
         {
-            var shownPosition = target.anchoredPosition;
-            var shownScale = target.localScale;
             var hiddenPosition = shownPosition + Vector2.down * hiddenYOffset;
             var hiddenLocalScale = shownScale * hiddenScale;
 
@@ -248,6 +248,12 @@ namespace Plinko.Scripts.View.Animations
                 target.anchoredPosition = hiddenPosition;
                 target.localScale = hiddenLocalScale;
                 canvasGroup.alpha = 0f;
+            }
+            else
+            {
+                target.anchoredPosition = shownPosition;
+                target.localScale = shownScale;
+                canvasGroup.alpha = 1f;
             }
 
             var sequence = DOTween.Sequence()

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class BattleScreenController : MonoBehaviour
+    public sealed class BattleScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
         [SerializeField] private PurchaseLevelTrackPanelController levelTrackPanel;
@@ -12,7 +12,7 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private BattleTurnPanelController turnPanel;
 
         private BattleBridge _battleBridge;
-        private BattleHudViewData _viewData = new();
+        private StandardBattleHudViewData _viewData = new();
         private bool _isVisible;
 
         public void Init(BattleBridge battleBridge)
@@ -26,8 +26,15 @@ namespace Plinko.Scripts.View.Controllers
             _isVisible = isVisible;
             if (!isVisible)
             {
-                turnPanel.ResetState();
-                boardPanel.ResetState();
+                if (turnPanel != null)
+                {
+                    turnPanel.ResetState();
+                }
+
+                if (boardPanel != null)
+                {
+                    boardPanel.ResetState();
+                }
             }
 
             root.SetActive(isVisible);
@@ -43,8 +50,15 @@ namespace Plinko.Scripts.View.Controllers
             _isVisible = isVisible;
             if (!isVisible)
             {
-                turnPanel.ResetState();
-                boardPanel.ResetState();
+                if (turnPanel != null)
+                {
+                    turnPanel.ResetState();
+                }
+
+                if (boardPanel != null)
+                {
+                    boardPanel.ResetState();
+                }
             }
 
             root.SetActive(isVisible);
@@ -54,7 +68,7 @@ namespace Plinko.Scripts.View.Controllers
             }
         }
 
-        public void Refresh(BattleHudViewData viewData)
+        public void Refresh(StandardBattleHudViewData viewData)
         {
             var levelChanged = _viewData.LevelKey != viewData.LevelKey;
             _viewData = viewData;
@@ -78,9 +92,21 @@ namespace Plinko.Scripts.View.Controllers
 
         private void ResetVisualState()
         {
-            levelTrackPanel.ResetState();
-            boardPanel.ResetState();
-            turnPanel.ResetState();
+            if (levelTrackPanel != null)
+            {
+                levelTrackPanel.ResetState();
+            }
+
+            if (boardPanel != null)
+            {
+                boardPanel.ResetState();
+            }
+
+            if (turnPanel != null)
+            {
+                turnPanel.ResetState();
+            }
+
         }
     }
 }

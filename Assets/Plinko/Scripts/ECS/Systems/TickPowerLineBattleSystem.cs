@@ -1,0 +1,503 @@
+using System.Collections.Generic;
+using Leopotam.EcsLite;
+using Plinko.Scripts.Data.Common;
+using Plinko.Scripts.ECS.Components;
+using Plinko.Scripts.ECS.Events;
+using Plinko.Scripts.ECS.Indexes;
+using Plinko.Scripts.ECS.Requests;
+using Plinko.Scripts.Models;
+using Plinko.Scripts.Services;
+using UnityEngine;
+
+namespace Plinko.Scripts.ECS.Systems
+{
+    public sealed class TickPowerLineBattleSystem : IEcsInitSystem, IEcsRunSystem
+    {
+        private readonly GameSettingsService _gameSettingsService;
+        private readonly LevelConfigService _levelConfigService;
+        private readonly LocationConfigService _locationConfigService;
+        private readonly BattleRuntimeService _battleRuntimeService;
+        private readonly RunEntityIndex _runEntityIndex;
+
+        private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
+        private EcsPool<CurrentPhaseComponent> _phasePool;
+        private EcsPool<CurrentLocationComponent> _locationPool;
+        private EcsPool<CurrentLevelComponent> _levelPool;
+        private EcsPool<CurrentManaComponent> _manaPool;
+        private EcsPool<PlayerBaseHealthComponent> _playerBasePool;
+        private EcsPool<CurrentGoldComponent> _goldPool;
+        private EcsPool<RunStatusComponent> _statusPool;
+        private EcsPool<BattleStateComponent> _battlePool;
+        private EcsPool<ManaChangedEvent> _manaChangedEventPool;
+        private EcsPool<GoldChangedEvent> _goldChangedEventPool;
+        private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
+        private EcsPool<LevelCompletedEvent> _levelCompletedEventPool;
+        private EcsPool<RunCompletedEvent> _runCompletedEventPool;
+        private EcsPool<RunFailedEvent> _runFailedEventPool;
+        private EcsPool<SaveRunRequest> _saveRunRequestPool;
+
+        public TickPowerLineBattleSystem(
+            GameSettingsService gameSettingsService,
+            LevelConfigService levelConfigService,
+            LocationConfigService locationConfigService,
+            BattleRuntimeService battleRuntimeService,
+            RunEntityIndex runEntityIndex)
+        {
+            _gameSettingsService = gameSettingsService;
+            _levelConfigService = levelConfigService;
+            _locationConfigService = locationConfigService;
+            _battleRuntimeService = battleRuntimeService;
+            _runEntityIndex = runEntityIndex;
+        }
+
+        public void Init(IEcsSystems systems)
+        {
+            var world = systems.GetWorld();
+            _levelTypePool = world.GetPool<CurrentLevelTypeComponent>();
+            _phasePool = world.GetPool<CurrentPhaseComponent>();
+            _locationPool = world.GetPool<CurrentLocationComponent>();
+            _levelPool = world.GetPool<CurrentLevelComponent>();
+            _manaPool = world.GetPool<CurrentManaComponent>();
+            _playerBasePool = world.GetPool<PlayerBaseHealthComponent>();
+            _goldPool = world.GetPool<CurrentGoldComponent>();
+            _statusPool = world.GetPool<RunStatusComponent>();
+            _battlePool = world.GetPool<BattleStateComponent>();
+            _manaChangedEventPool = world.GetPool<ManaChangedEvent>();
+            _goldChangedEventPool = world.GetPool<GoldChangedEvent>();
+            _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
+            _levelCompletedEventPool = world.GetPool<LevelCompletedEvent>();
+            _runCompletedEventPool = world.GetPool<RunCompletedEvent>();
+            _runFailedEventPool = world.GetPool<RunFailedEvent>();
+            _saveRunRequestPool = world.GetPool<SaveRunRequest>();
+        }
+
+        public void Run(IEcsSystems systems)
+        {
+            var world = systems.GetWorld();
+            if (!_runEntityIndex.TryGetRunEntity(out var runEntity) ||
+                !_levelTypePool.Has(runEntity) ||
+                _levelTypePool.Get(runEntity).Value != Enums.LevelType.PowerLineBattle ||
+                !_phasePool.Has(runEntity) ||
+                _phasePool.Get(runEntity).Value != Enums.PhaseType.Battle)
+            {
+                return;
+            }
+
+            var state = _battleRuntimeService.CurrentPowerLineState;
+            if (state == null)
+            {
+                return;
+            }
+
+            var tickDuration = Mathf.Max(0.01f, _gameSettingsService.GetBattleTickDuration());
+            state.TickAccumulator += Time.deltaTime;
+            while (state.TickAccumulator >= tickDuration)
+            {
+                state.TickAccumulator -= tickDuration;
+                SimulateTick(world, runEntity, state, tickDuration);
+                if (_phasePool.Get(runEntity).Value != Enums.PhaseType.Battle)
+                {
+                    break;
+                }
+            }
+        }
+
+        private void SimulateTick(EcsWorld world, int runEntity, PowerLineBattleStateModel state, float tickDuration)
+        {
+            state.CurrentTick++;
+            _battlePool.Get(runEntity).CurrentTurn = state.CurrentTick;
+
+            if (state.ManaTickInterval > 0 && state.CurrentTick % state.ManaTickInterval == 0)
+            {
+                var oldMana = state.CurrentMana;
+                state.CurrentMana = Mathf.Clamp(state.CurrentMana + state.ManaPerTick, 0, state.MaxMana);
+                if (oldMana != state.CurrentMana)
+                {
+                    _manaPool.Get(runEntity).Value = state.CurrentMana;
+                    _manaChangedEventPool.Add(world.NewEntity()).Value = state.CurrentMana;
+                }
+            }
+
+            SpawnDueEnemies(state);
+            SimulateAllLanes(runEntity, state, tickDuration);
+            ResolveDeathsAndDroppedPlugs(runEntity, state);
+
+            if (_playerBasePool.Get(runEntity).Value <= 0)
+            {
+                FinishLevel(world, runEntity, state, false);
+                return;
+            }
+
+            if (PowerLineBattleUtility.GetConnectedLaneCount(state) >= state.Lanes.Count)
+            {
+                FinishLevel(world, runEntity, state, true);
+            }
+        }
+
+        private void SpawnDueEnemies(PowerLineBattleStateModel state)
+        {
+            while (state.PendingSpawns.Count > 0 && state.PendingSpawns[0].TimeTick <= state.CurrentTick)
+            {
+                var spawn = state.PendingSpawns[0];
+                state.PendingSpawns.RemoveAt(0);
+                var laneState = PowerLineBattleUtility.GetLane(state, spawn.Lane);
+                if (laneState == null || laneState.IsConnected)
+                {
+                    continue;
+                }
+
+                state.EnemyUnits.Add(PowerLineBattleUtility.CreateEnemyUnit(state, spawn));
+            }
+        }
+
+        private void SimulateAllLanes(int runEntity, PowerLineBattleStateModel state, float tickDuration)
+        {
+            for (var laneIndex = 0; laneIndex < state.Lanes.Count; laneIndex++)
+            {
+                var laneState = state.Lanes[laneIndex];
+                if (laneState.IsConnected)
+                {
+                    continue;
+                }
+
+                SimulatePlayersOnLane(runEntity, state, laneState, tickDuration);
+                if (laneState.IsConnected)
+                {
+                    continue;
+                }
+
+                SimulateEnemiesOnLane(state, laneState, tickDuration);
+            }
+        }
+
+        private void SimulatePlayersOnLane(int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
+        {
+            var lane = laneState.Lane;
+            var units = new List<PowerLineUnitStateModel>();
+            for (var index = 0; index < state.PlayerUnits.Count; index++)
+            {
+                if (state.PlayerUnits[index].Lane == lane && state.PlayerUnits[index].Health > 0)
+                {
+                    units.Add(state.PlayerUnits[index]);
+                }
+            }
+
+            units.Sort((left, right) => left.Position.CompareTo(right.Position));
+
+            for (var index = 0; index < units.Count; index++)
+            {
+                var unit = units[index];
+                if (unit.Health <= 0 || laneState.IsConnected)
+                {
+                    continue;
+                }
+
+                var target = FindNearestEnemyAhead(state, unit);
+                if (target != null)
+                {
+                    var distance = target.Position - unit.Position;
+                    if (distance <= unit.AttackRange)
+                    {
+                        TickAttack(unit, target, tickDuration);
+                        continue;
+                    }
+                }
+
+                unit.AttackAccumulator = 0f;
+                unit.Position = Mathf.Clamp(unit.Position + unit.MoveSpeed * tickDuration, 0f, state.LaneLength);
+                TryPickupPlug(laneState, unit);
+                if (unit.IsCarryingPlug)
+                {
+                    laneState.Plug.Position = unit.Position;
+                    laneState.Plug.CarrierRuntimeId = unit.RuntimeId;
+                }
+
+                if (unit.IsCarryingPlug && unit.Position >= state.LaneLength)
+                {
+                    ConnectLane(runEntity, state, laneState);
+                }
+            }
+        }
+
+        private void SimulateEnemiesOnLane(PowerLineBattleStateModel state, PowerLineLaneStateModel laneState, float tickDuration)
+        {
+            var lane = laneState.Lane;
+            var units = new List<PowerLineUnitStateModel>();
+            for (var index = 0; index < state.EnemyUnits.Count; index++)
+            {
+                if (state.EnemyUnits[index].Lane == lane && state.EnemyUnits[index].Health > 0)
+                {
+                    units.Add(state.EnemyUnits[index]);
+                }
+            }
+
+            units.Sort((left, right) => right.Position.CompareTo(left.Position));
+
+            for (var index = 0; index < units.Count; index++)
+            {
+                var unit = units[index];
+                if (unit.Health <= 0 || laneState.IsConnected)
+                {
+                    continue;
+                }
+
+                var target = FindNearestPlayerAhead(state, unit);
+                if (target != null)
+                {
+                    var distance = unit.Position - target.Position;
+                    if (distance <= unit.AttackRange)
+                    {
+                        TickAttack(unit, target, tickDuration);
+                        continue;
+                    }
+                }
+
+                if (unit.Position <= unit.AttackRange)
+                {
+                    TickBaseAttack(unit, tickDuration);
+                    continue;
+                }
+
+                unit.AttackAccumulator = 0f;
+                unit.Position = Mathf.Clamp(unit.Position - unit.MoveSpeed * tickDuration, 0f, state.LaneLength);
+            }
+        }
+
+        private void ResolveDeathsAndDroppedPlugs(int runEntity, PowerLineBattleStateModel state)
+        {
+            for (var index = state.PlayerUnits.Count - 1; index >= 0; index--)
+            {
+                var unit = state.PlayerUnits[index];
+                if (unit.Health > 0)
+                {
+                    continue;
+                }
+
+                if (unit.IsCarryingPlug)
+                {
+                    var laneState = PowerLineBattleUtility.GetLane(state, unit.Lane);
+                    if (laneState != null && !laneState.IsConnected)
+                    {
+                        laneState.Plug.Status = PowerLinePlugStatus.Dropped;
+                        laneState.Plug.CarrierRuntimeId = 0;
+                        laneState.Plug.Position = unit.Position;
+                    }
+                }
+
+                state.PlayerUnits.RemoveAt(index);
+            }
+
+            for (var index = state.EnemyUnits.Count - 1; index >= 0; index--)
+            {
+                var unit = state.EnemyUnits[index];
+                if (unit.Health > 0)
+                {
+                    continue;
+                }
+
+                _battlePool.Get(runEntity).TotalEnemyKills++;
+                state.EnemyUnits.RemoveAt(index);
+            }
+        }
+
+        private PowerLineUnitStateModel FindNearestEnemyAhead(PowerLineBattleStateModel state, PowerLineUnitStateModel unit)
+        {
+            PowerLineUnitStateModel nearest = null;
+            var nearestDistance = float.MaxValue;
+            for (var index = 0; index < state.EnemyUnits.Count; index++)
+            {
+                var candidate = state.EnemyUnits[index];
+                if (candidate.Lane != unit.Lane || candidate.Health <= 0 || candidate.Position < unit.Position)
+                {
+                    continue;
+                }
+
+                var distance = candidate.Position - unit.Position;
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearest = candidate;
+                }
+            }
+
+            return nearest;
+        }
+
+        private PowerLineUnitStateModel FindNearestPlayerAhead(PowerLineBattleStateModel state, PowerLineUnitStateModel unit)
+        {
+            PowerLineUnitStateModel nearest = null;
+            var nearestDistance = float.MaxValue;
+            for (var index = 0; index < state.PlayerUnits.Count; index++)
+            {
+                var candidate = state.PlayerUnits[index];
+                if (candidate.Lane != unit.Lane || candidate.Health <= 0 || candidate.Position > unit.Position)
+                {
+                    continue;
+                }
+
+                var distance = unit.Position - candidate.Position;
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearest = candidate;
+                }
+            }
+
+            return nearest;
+        }
+
+        private void TickAttack(PowerLineUnitStateModel attacker, PowerLineUnitStateModel target, float tickDuration)
+        {
+            var attacksPerSecond = attacker.AttackSpeed > 0.001f ? attacker.AttackSpeed : 1f;
+            var attackInterval = 1f / attacksPerSecond;
+            attacker.AttackAccumulator += tickDuration;
+            while (attacker.AttackAccumulator >= attackInterval && target.Health > 0)
+            {
+                attacker.AttackAccumulator -= attackInterval;
+                target.Health -= attacker.Attack;
+            }
+        }
+
+        private void TickBaseAttack(PowerLineUnitStateModel attacker, float tickDuration)
+        {
+            var attacksPerSecond = attacker.AttackSpeed > 0.001f ? attacker.AttackSpeed : 1f;
+            var attackInterval = 1f / attacksPerSecond;
+            attacker.AttackAccumulator += tickDuration;
+            while (attacker.AttackAccumulator >= attackInterval)
+            {
+                attacker.AttackAccumulator -= attackInterval;
+                if (_runEntityIndex.TryGetRunEntity(out var runEntity))
+                {
+                    ref var playerBase = ref _playerBasePool.Get(runEntity);
+                    playerBase.Value = Mathf.Max(0, playerBase.Value - attacker.Attack);
+                    _battlePool.Get(runEntity).TotalDamageToPlayerBase += attacker.Attack;
+                }
+            }
+        }
+
+        private static void TryPickupPlug(PowerLineLaneStateModel laneState, PowerLineUnitStateModel unit)
+        {
+            if (laneState == null || laneState.IsConnected || unit == null || unit.IsEnemy || unit.IsCarryingPlug)
+            {
+                return;
+            }
+
+            if (laneState.Plug.Status != PowerLinePlugStatus.AtSpawn &&
+                laneState.Plug.Status != PowerLinePlugStatus.Dropped)
+            {
+                return;
+            }
+
+            if (unit.Position < laneState.Plug.Position)
+            {
+                return;
+            }
+
+            unit.IsCarryingPlug = true;
+            laneState.Plug.Status = PowerLinePlugStatus.Carried;
+            laneState.Plug.CarrierRuntimeId = unit.RuntimeId;
+            laneState.Plug.Position = unit.Position;
+        }
+
+        private void ConnectLane(int runEntity, PowerLineBattleStateModel state, PowerLineLaneStateModel laneState)
+        {
+            laneState.IsConnected = true;
+            laneState.Plug.Status = PowerLinePlugStatus.Connected;
+            laneState.Plug.CarrierRuntimeId = 0;
+            laneState.Plug.Position = state.LaneLength;
+
+            for (var index = state.PlayerUnits.Count - 1; index >= 0; index--)
+            {
+                if (state.PlayerUnits[index].Lane == laneState.Lane)
+                {
+                    state.PlayerUnits.RemoveAt(index);
+                }
+            }
+
+            for (var index = state.EnemyUnits.Count - 1; index >= 0; index--)
+            {
+                if (state.EnemyUnits[index].Lane == laneState.Lane)
+                {
+                    _battlePool.Get(runEntity).TotalEnemyKills++;
+                    state.EnemyUnits.RemoveAt(index);
+                }
+            }
+
+            for (var index = state.PendingSpawns.Count - 1; index >= 0; index--)
+            {
+                if (state.PendingSpawns[index].Lane == laneState.Lane)
+                {
+                    state.PendingSpawns.RemoveAt(index);
+                }
+            }
+        }
+
+        private void FinishLevel(EcsWorld world, int runEntity, PowerLineBattleStateModel state, bool isVictory)
+        {
+            var locationId = _locationPool.Get(runEntity).LocationId;
+            var levelIndex = _levelPool.Get(runEntity).LevelIndex;
+            var levelData = _levelConfigService.GetLevel(locationId, levelIndex);
+            var totalEnemyKills = _battlePool.Get(runEntity).TotalEnemyKills;
+            var totalDamageToPlayerBase = _battlePool.Get(runEntity).TotalDamageToPlayerBase;
+            var tickPenalty = Mathf.Max(0, state.CurrentTick / 10);
+            var baseReward = isVictory && levelData != null ? levelData.VictoryReward : 0;
+            var reward = isVictory ? Mathf.Max(0, baseReward + totalEnemyKills * 3 - totalDamageToPlayerBase / 4 - tickPenalty) : 0;
+
+            _battleRuntimeService.CurrentResult = new BattleResultModel
+            {
+                PlayerBaseHealthBefore = _playerBasePool.Get(runEntity).Value + totalDamageToPlayerBase,
+                PlayerBaseHealthAfter = _playerBasePool.Get(runEntity).Value,
+                EnemyBaseHealthBefore = 0,
+                EnemyBaseHealthAfter = 0,
+                EnemyKillsThisTurn = 0,
+                EnemyKillsTotal = totalEnemyKills,
+                DamageToEnemyBaseThisTurn = 0,
+                DamageToEnemyBaseTotal = 0,
+                DamageToPlayerBaseThisTurn = 0,
+                DamageToPlayerBaseTotal = totalDamageToPlayerBase,
+                TurnsSpent = Mathf.Max(1, state.CurrentTick),
+                BaseReward = baseReward,
+                RewardGranted = reward,
+                IsVictory = isVictory,
+                IsDefeat = !isVictory
+            };
+
+            if (isVictory)
+            {
+                if (reward > 0)
+                {
+                    _goldPool.Get(runEntity).Value += reward;
+                    _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
+                }
+
+                _levelCompletedEventPool.Add(world.NewEntity());
+                if (HasNextLevel(runEntity))
+                {
+                    _statusPool.Get(runEntity).Value = Enums.RunStatus.InProgress;
+                }
+                else
+                {
+                    _statusPool.Get(runEntity).Value = Enums.RunStatus.Victory;
+                    _runCompletedEventPool.Add(world.NewEntity());
+                }
+            }
+            else
+            {
+                _statusPool.Get(runEntity).Value = Enums.RunStatus.Defeat;
+                _runFailedEventPool.Add(world.NewEntity());
+            }
+
+            _phasePool.Get(runEntity).Value = Enums.PhaseType.Result;
+            _phaseChangedEventPool.Add(world.NewEntity()).Value = Enums.PhaseType.Result;
+            _saveRunRequestPool.Add(world.NewEntity());
+        }
+
+        private bool HasNextLevel(int runEntity)
+        {
+            var location = _locationConfigService.GetLocation(_locationPool.Get(runEntity).LocationId);
+            return location != null &&
+                   location.Levels != null &&
+                   _levelPool.Get(runEntity).LevelIndex + 1 < location.Levels.Count;
+        }
+    }
+}

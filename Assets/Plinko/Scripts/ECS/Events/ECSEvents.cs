@@ -30,6 +30,7 @@ namespace Plinko.Scripts.ECS.Events
     public struct UnitDeployedEvent { public int OwnedUnitRuntimeId; }
     public struct ManaChangedEvent { public int Value; }
     public struct EnemyWaveSelectedEvent { public int ThresholdPercent; }
+    public struct BaseDefenseTurnStartedEvent { public int TurnIndex; }
     public struct BattleResolvedEvent { }
     public struct BattlePlaybackStartedEvent { }
     public struct BattlePlaybackCompletedEvent { }

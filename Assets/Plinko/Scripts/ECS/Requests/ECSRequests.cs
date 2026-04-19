@@ -25,6 +25,9 @@ namespace Plinko.Scripts.ECS.Requests
         public int Attack;
         public int Health;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public string PassiveAbilityId;
         public int UpgradeCount;
     }
@@ -38,6 +41,9 @@ namespace Plinko.Scripts.ECS.Requests
         public int Attack;
         public int Health;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public string PassiveAbilityId;
         public int UpgradeCount;
     }
@@ -56,8 +62,21 @@ namespace Plinko.Scripts.ECS.Requests
     public struct ReplaceBoardPinRequest { }
     public struct GenerateHandRequest { }
     public struct BeginBattleTurnRequest { }
+    public struct InitializePowerLineBattleRequest { }
     public struct ClearHandRequest { }
-    public struct DeployCardRequest { public int HandCardRuntimeId; }
+    public struct DrawPowerLineHandCardsRequest
+    {
+        public int Count;
+        public bool ClearExisting;
+    }
+    public struct RerollPowerLineHandRequest { }
+    public struct DeployCardRequest
+    {
+        public int HandCardRuntimeId;
+        public bool HasBoardTarget;
+        public int TargetLaneIndex;
+        public int TargetCellIndex;
+    }
     public struct StartBattleRequest { }
     public struct StartBattlePlaybackRequest { }
     public struct ReturnToMenuRequest { }

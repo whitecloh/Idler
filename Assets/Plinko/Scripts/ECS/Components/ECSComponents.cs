@@ -57,6 +57,7 @@ namespace Plinko.Scripts.ECS.Components
     public struct OwnedUnitComponent { public int RuntimeId; }
     public struct UnitTypeIdComponent { public string Value; }
     public struct UnitStatsComponent { public int Attack; public int Health; }
+    public struct UnitCombatStatsComponent { public float MoveSpeed; public int AttackRange; public float AttackSpeed; }
     public struct UnitManaCostComponent { public int Value; }
     public struct UnitDisplayNameComponent { public string Value; }
     public struct UnitLevelComponent { public int Value; }

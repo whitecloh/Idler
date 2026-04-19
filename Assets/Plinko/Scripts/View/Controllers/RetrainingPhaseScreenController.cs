@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class RetrainingPhaseScreenController : MonoBehaviour
+    public sealed class RetrainingPhaseScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
     {
         [SerializeField] private GameObject root;
         [SerializeField] private PurchaseLevelTrackPanelController levelTrackPanel;

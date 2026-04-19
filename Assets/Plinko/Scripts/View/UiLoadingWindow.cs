@@ -10,6 +10,11 @@ namespace Plinko.Scripts.View
 
         public void Show()
         {
+            if (root != null)
+            {
+                root.SetActive(true);
+            }
+
             if (visibility != null)
             {
                 visibility.ShowAnimated();
@@ -27,11 +32,19 @@ namespace Plinko.Scripts.View
                 return;
             }
 
-            root.SetActive(false);
+            if (root != null)
+            {
+                root.SetActive(false);
+            }
         }
 
         public void ShowImmediate()
         {
+            if (root != null)
+            {
+                root.SetActive(true);
+            }
+
             if (visibility != null)
             {
                 visibility.ShowImmediate();
@@ -49,7 +62,10 @@ namespace Plinko.Scripts.View
                 return;
             }
 
-            root.SetActive(false);
+            if (root != null)
+            {
+                root.SetActive(false);
+            }
         }
     }
 }

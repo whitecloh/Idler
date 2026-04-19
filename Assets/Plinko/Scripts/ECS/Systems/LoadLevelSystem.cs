@@ -84,8 +84,14 @@ namespace Plinko.Scripts.ECS.Systems
                 _levelTypePool.Get(runEntity).Value = levelData.LevelType;
                 _enemyBasePool.Get(runEntity) = new EnemyBaseHealthComponent
                 {
-                    Value = levelData.EnemyBaseMaxHealth,
-                    MaxValue = levelData.EnemyBaseMaxHealth
+                    Value = levelData.LevelType == Plinko.Scripts.Data.Common.Enums.LevelType.DefenceBattle ||
+                            levelData.LevelType == Plinko.Scripts.Data.Common.Enums.LevelType.PowerLineBattle
+                        ? 0
+                        : levelData.EnemyBaseMaxHealth,
+                    MaxValue = levelData.LevelType == Plinko.Scripts.Data.Common.Enums.LevelType.DefenceBattle ||
+                               levelData.LevelType == Plinko.Scripts.Data.Common.Enums.LevelType.PowerLineBattle
+                        ? 0
+                        : levelData.EnemyBaseMaxHealth
                 };
                 _manaPool.Get(runEntity).Value = _gameSettingsService.GetManaPerTurn();
                 _battleRuntimeService.Clear();

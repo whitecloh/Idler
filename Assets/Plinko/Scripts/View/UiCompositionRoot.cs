@@ -27,47 +27,55 @@ namespace Plinko.Scripts.View
         [SerializeField] private PurchasePhaseScreenController purchasePhaseScreenController;
         [SerializeField] private RetrainingPhaseScreenController retrainingPhaseScreenController;
         [SerializeField] private FieldUpgradePhaseScreenController fieldUpgradePhaseScreenController;
-        [SerializeField] private BattleScreenController battleScreenController;
+        [SerializeField] private BattleScreenController standardBattleScreenController;
+        [SerializeField] private BaseDefenseScreenController defenceBattleScreenController;
+        [SerializeField] private PowerLineBattleScreenController powerLineBattleScreenController;
         [SerializeField] private BattleResultScreenController battleResultScreenController;
         [SerializeField] private OwnedUnitsScreenController ownedUnitsScreenController;
         [SerializeField] private UiWindowManager windowManager;
 
+        private readonly UiPopupManager _popupManager = new();
         private ShellScreen _shellScreen = ShellScreen.MainMenu;
         private bool _hadRunEntity;
         private bool _currentHasRunEntity;
         private Enums.PhaseType _currentPhase = Enums.PhaseType.MainMenu;
+        private Enums.LevelType _currentLevelType = Enums.LevelType.None;
 
         public MainMenuScreenController MainMenuScreenController => mainMenuScreenController;
         public LocationSelectionScreenController LocationSelectionScreenController => locationSelectionScreenController;
         public PurchasePhaseScreenController PurchasePhaseScreenController => purchasePhaseScreenController;
         public RetrainingPhaseScreenController RetrainingPhaseScreenController => retrainingPhaseScreenController;
         public FieldUpgradePhaseScreenController FieldUpgradePhaseScreenController => fieldUpgradePhaseScreenController;
-        public BattleScreenController BattleScreenController => battleScreenController;
+        public BattleScreenController BattleScreenController => standardBattleScreenController;
+        public BaseDefenseScreenController DefenceBattleScreenController => defenceBattleScreenController;
+        public PowerLineBattleScreenController PowerLineBattleScreenController => powerLineBattleScreenController;
         public BattleResultScreenController BattleResultScreenController => battleResultScreenController;
         public OwnedUnitsScreenController OwnedUnitsScreenController => ownedUnitsScreenController;
 
         private void Awake()
         {
+            _popupManager.ClearRegistrations();
+            RegisterPopupIfPresent(UiPopupManager.PopupId.LocationSelection, locationSelectionScreenController);
+
             if (windowManager != null)
             {
-                windowManager.Configure(
-                    mainMenuScreenController,
-                    purchasePhaseScreenController,
-                    retrainingPhaseScreenController,
-                    fieldUpgradePhaseScreenController,
-                    battleScreenController,
-                    battleResultScreenController);
-                windowManager.ShowImmediate(UiWindowManager.WindowId.MainMenu);
+                windowManager.ClearRegistrations();
+                RegisterWindowIfPresent(UiWindowManager.WindowId.MainMenu, mainMenuScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.Purchase, purchasePhaseScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.Retraining, retrainingPhaseScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.FieldUpgrade, fieldUpgradePhaseScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.StandardBattle, standardBattleScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.DefenceBattle, defenceBattleScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.PowerLineBattle, powerLineBattleScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.BattleResult, battleResultScreenController);
+                windowManager.OpenImmediate(UiWindowManager.WindowId.MainMenu);
             }
             else if (mainMenuScreenController != null)
             {
                 mainMenuScreenController.SetVisibleImmediate(true);
             }
 
-            if (locationSelectionScreenController != null)
-            {
-                locationSelectionScreenController.SetVisibleImmediate(false);
-            }
+            _popupManager.CloseAll(true);
 
             if (ownedUnitsScreenController != null)
             {
@@ -109,7 +117,10 @@ namespace Plinko.Scripts.View
                 fieldUpgradeBridge.Init(world);
             }
 
-            if (battleScreenController != null || battleResultScreenController != null)
+            if (standardBattleScreenController != null ||
+                defenceBattleScreenController != null ||
+                powerLineBattleScreenController != null ||
+                battleResultScreenController != null)
             {
                 battleBridge.Init(world);
             }
@@ -139,9 +150,19 @@ namespace Plinko.Scripts.View
                 fieldUpgradePhaseScreenController.Init(fieldUpgradeBridge, locationBridge);
             }
 
-            if (battleScreenController != null)
+            if (standardBattleScreenController != null)
             {
-                battleScreenController.Init(battleBridge);
+                standardBattleScreenController.Init(battleBridge);
+            }
+
+            if (defenceBattleScreenController != null)
+            {
+                defenceBattleScreenController.Init(battleBridge);
+            }
+
+            if (powerLineBattleScreenController != null)
+            {
+                powerLineBattleScreenController.Init(battleBridge);
             }
 
             if (battleResultScreenController != null)
@@ -150,7 +171,7 @@ namespace Plinko.Scripts.View
             }
 
             ShowMainMenu();
-            SyncScreenVisibility(false, Enums.PhaseType.MainMenu);
+            SyncScreenVisibility(false, Enums.PhaseType.MainMenu, Enums.LevelType.None);
         }
 
         public void RefreshMainMenu(MainMenuViewData viewData)
@@ -197,11 +218,27 @@ namespace Plinko.Scripts.View
         {
         }
 
-        public void RefreshBattleHud(BattleHudViewData viewData)
+        public void RefreshStandardBattleHud(StandardBattleHudViewData viewData)
         {
-            if (battleScreenController != null)
+            if (standardBattleScreenController != null)
             {
-                battleScreenController.Refresh(viewData);
+                standardBattleScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshDefenceBattleHud(DefenceBattleHudViewData viewData)
+        {
+            if (defenceBattleScreenController != null)
+            {
+                defenceBattleScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshPowerLineBattleHud(PowerLineBattleHudViewData viewData)
+        {
+            if (powerLineBattleScreenController != null)
+            {
+                powerLineBattleScreenController.Refresh(viewData);
             }
         }
 
@@ -213,10 +250,11 @@ namespace Plinko.Scripts.View
             }
         }
 
-        public void SyncScreenVisibility(bool hasRunEntity, Enums.PhaseType phase)
+        public void SyncScreenVisibility(bool hasRunEntity, Enums.PhaseType phase, Enums.LevelType levelType)
         {
             _currentHasRunEntity = hasRunEntity;
             _currentPhase = phase;
+            _currentLevelType = levelType;
 
             if (!hasRunEntity && _hadRunEntity)
             {
@@ -230,16 +268,20 @@ namespace Plinko.Scripts.View
 
             if (windowManager != null)
             {
-                windowManager.Show(ResolvePrimaryWindow(hasRunEntity, phase));
+                windowManager.Open(ResolvePrimaryWindow(hasRunEntity, phase, levelType));
             }
             else if (mainMenuScreenController != null)
             {
                 mainMenuScreenController.Show(showMainMenu);
             }
 
-            if (locationSelectionScreenController != null)
+            if (showLocationSelection)
             {
-                locationSelectionScreenController.Show(showLocationSelection);
+                _popupManager.Open(UiPopupManager.PopupId.LocationSelection);
+            }
+            else
+            {
+                _popupManager.Close(UiPopupManager.PopupId.LocationSelection);
             }
 
             if (windowManager == null)
@@ -259,12 +301,29 @@ namespace Plinko.Scripts.View
                     fieldUpgradePhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.FieldUpgradePhase);
                 }
 
-                if (battleScreenController != null)
+                if (standardBattleScreenController != null)
                 {
-                    battleScreenController.Show(hasRunEntity &&
-                                                (phase == Enums.PhaseType.BattlePreparation ||
-                                                 phase == Enums.PhaseType.Battle ||
-                                                 phase == Enums.PhaseType.BattlePlayback));
+                    standardBattleScreenController.Show(hasRunEntity &&
+                                                        levelType == Enums.LevelType.StandardBattle &&
+                                                        (phase == Enums.PhaseType.BattlePreparation ||
+                                                         phase == Enums.PhaseType.Battle ||
+                                                         phase == Enums.PhaseType.BattlePlayback));
+                }
+
+                if (defenceBattleScreenController != null)
+                {
+                    defenceBattleScreenController.Show(hasRunEntity &&
+                                                       levelType == Enums.LevelType.DefenceBattle &&
+                                                       (phase == Enums.PhaseType.BattlePreparation ||
+                                                        phase == Enums.PhaseType.Battle ||
+                                                        phase == Enums.PhaseType.BattlePlayback));
+                }
+
+                if (powerLineBattleScreenController != null)
+                {
+                    powerLineBattleScreenController.Show(hasRunEntity &&
+                                                         levelType == Enums.LevelType.PowerLineBattle &&
+                                                         phase == Enums.PhaseType.Battle);
                 }
 
                 if (battleResultScreenController != null)
@@ -282,16 +341,36 @@ namespace Plinko.Scripts.View
         private void ShowMainMenu()
         {
             _shellScreen = ShellScreen.MainMenu;
-            SyncScreenVisibility(_currentHasRunEntity, _currentPhase);
+            SyncScreenVisibility(_currentHasRunEntity, _currentPhase, _currentLevelType);
         }
 
         private void ShowLocationSelection()
         {
             _shellScreen = ShellScreen.LocationSelection;
-            SyncScreenVisibility(_currentHasRunEntity, _currentPhase);
+            SyncScreenVisibility(_currentHasRunEntity, _currentPhase, _currentLevelType);
         }
 
-        private static UiWindowManager.WindowId ResolvePrimaryWindow(bool hasRunEntity, Enums.PhaseType phase)
+        private void RegisterWindowIfPresent(UiWindowManager.WindowId id, IUiWindow window)
+        {
+            if (window == null)
+            {
+                return;
+            }
+
+            windowManager.Register(id, window);
+        }
+
+        private void RegisterPopupIfPresent(UiPopupManager.PopupId id, IUiWindow popup)
+        {
+            if (popup == null)
+            {
+                return;
+            }
+
+            _popupManager.Register(id, popup);
+        }
+
+        private static UiWindowManager.WindowId ResolvePrimaryWindow(bool hasRunEntity, Enums.PhaseType phase, Enums.LevelType levelType)
         {
             if (!hasRunEntity)
             {
@@ -303,9 +382,14 @@ namespace Plinko.Scripts.View
                 Enums.PhaseType.PurchasePhase => UiWindowManager.WindowId.Purchase,
                 Enums.PhaseType.RetrainingPhase => UiWindowManager.WindowId.Retraining,
                 Enums.PhaseType.FieldUpgradePhase => UiWindowManager.WindowId.FieldUpgrade,
-                Enums.PhaseType.BattlePreparation => UiWindowManager.WindowId.Battle,
-                Enums.PhaseType.Battle => UiWindowManager.WindowId.Battle,
-                Enums.PhaseType.BattlePlayback => UiWindowManager.WindowId.Battle,
+                Enums.PhaseType.BattlePreparation => levelType == Enums.LevelType.DefenceBattle ? UiWindowManager.WindowId.DefenceBattle : UiWindowManager.WindowId.StandardBattle,
+                Enums.PhaseType.Battle => levelType switch
+                {
+                    Enums.LevelType.DefenceBattle => UiWindowManager.WindowId.DefenceBattle,
+                    Enums.LevelType.PowerLineBattle => UiWindowManager.WindowId.PowerLineBattle,
+                    _ => UiWindowManager.WindowId.StandardBattle
+                },
+                Enums.PhaseType.BattlePlayback => levelType == Enums.LevelType.DefenceBattle ? UiWindowManager.WindowId.DefenceBattle : UiWindowManager.WindowId.StandardBattle,
                 Enums.PhaseType.Result => UiWindowManager.WindowId.BattleResult,
                 _ => UiWindowManager.WindowId.MainMenu
             };
