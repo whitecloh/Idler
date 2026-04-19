@@ -22,7 +22,7 @@ MonoBehaviour:
   backgroundSprite: {fileID: 0}
   preBattlePhase: {fileID: 0}
   enemyBaseMaxHealth: 28
-  victoryReward: 50
+  victoryReward: 70
   hpThresholdWaves:
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939101, type: 2}
   - {fileID: 11400000, guid: 3dc71bd18cc9440f888da924cc939102, type: 2}
@@ -41,51 +41,51 @@ MonoBehaviour:
   powerLineBattle:
     laneLength: 12
     spawns:
-    - timeTick: 4
+    - timeTick: 5
       enemy: {fileID: 11400000, guid: bf98f128c16ddc24ca65a851a54783d2, type: 2}
       lane: 0
-    - timeTick: 10
+    - timeTick: 15
       enemy: {fileID: 11400000, guid: 80bdb97eb30ba02409521acf3aa5f3e7, type: 2}
       lane: 0
-    - timeTick: 20
+    - timeTick: 25
       enemy: {fileID: 11400000, guid: 5f91e24501fee6641b1e7d50b3b8995f, type: 2}
       lane: 0
-    - timeTick: 40
+    - timeTick: 45
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9102, type: 2}
       lane: 0
-    - timeTick: 4
+    - timeTick: 5
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9103, type: 2}
       lane: 1
-    - timeTick: 10
+    - timeTick: 15
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
       lane: 1
-    - timeTick: 20
+    - timeTick: 25
       enemy: {fileID: 11400000, guid: bf98f128c16ddc24ca65a851a54783d2, type: 2}
       lane: 1
-    - timeTick: 40
+    - timeTick: 45
       enemy: {fileID: 11400000, guid: 80bdb97eb30ba02409521acf3aa5f3e7, type: 2}
       lane: 1
-    - timeTick: 4
+    - timeTick: 5
       enemy: {fileID: 11400000, guid: 5f91e24501fee6641b1e7d50b3b8995f, type: 2}
       lane: 2
-    - timeTick: 10
+    - timeTick: 15
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9102, type: 2}
       lane: 2
-    - timeTick: 20
+    - timeTick: 25
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9103, type: 2}
       lane: 2
-    - timeTick: 40
+    - timeTick: 45
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
       lane: 2
-    - timeTick: 4
+    - timeTick: 5
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
       lane: 3
-    - timeTick: 10
+    - timeTick: 15
       enemy: {fileID: 11400000, guid: bf98f128c16ddc24ca65a851a54783d2, type: 2}
       lane: 3
-    - timeTick: 20
+    - timeTick: 25
       enemy: {fileID: 11400000, guid: 80bdb97eb30ba02409521acf3aa5f3e7, type: 2}
       lane: 3
-    - timeTick: 40
+    - timeTick: 45
       enemy: {fileID: 11400000, guid: 5f91e24501fee6641b1e7d50b3b8995f, type: 2}
       lane: 3

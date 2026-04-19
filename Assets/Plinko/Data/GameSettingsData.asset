@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d4729a09d91489d95f4e5cffe8df160, type: 3}
   m_Name: GameSettingsData
   m_EditorClassIdentifier: 
-  startingGold: 350
+  startingGold: 50
   startingBaseHealth: 25
-  handSize: 5
+  handSize: 3
   manaPerTurn: 3
   unitShopOfferCount: 3
   pinShopOfferCount: 3
@@ -22,11 +22,11 @@ MonoBehaviour:
   pinShopRerollPrice: 10
   defaultRetrainingOfferCount: 3
   retrainingShopRerollPrice: 10
-  battleTickDuration: 0.25
+  battleTickDuration: 1
   powerLineStartingMana: 0
   powerLineMaxMana: 10
   powerLineManaPerTick: 1
-  powerLineManaTickInterval: 5
+  powerLineManaTickInterval: 3
   powerLineRerollManaCost: 3
   powerLineMovementStep: 0.05
   fallbackPlinkoField: {fileID: 11400000, guid: 11d62c9f32f845f1b2a3323f6b7d4101, type: 2}
