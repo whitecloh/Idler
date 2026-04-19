@@ -42,4 +42,4 @@ MonoBehaviour:
   shopPrice: 42
   generationWeight: 2
   passiveAbility: {fileID: 11400000, guid: 48ad2df78f1b4e0ea67e5b8d2aa76101, type: 2}
-  unlockCondition: {fileID: 0}
+  unlockCondition: {fileID: 11400000, guid: a1143f7b4c8548c8a1f0b80b0110a404, type: 2}

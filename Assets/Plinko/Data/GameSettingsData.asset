@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameSettingsData
   m_EditorClassIdentifier: 
   startingGold: 50
-  startingBaseHealth: 25
+  startingBaseHealth: 100
   handSize: 3
   manaPerTurn: 3
   unitShopOfferCount: 3
@@ -27,6 +27,6 @@ MonoBehaviour:
   powerLineMaxMana: 10
   powerLineManaPerTick: 1
   powerLineManaTickInterval: 3
-  powerLineRerollManaCost: 3
-  powerLineMovementStep: 0.05
+  powerLineRerollManaCost: 1
+  powerLineMovementStep: 0.2
   fallbackPlinkoField: {fileID: 11400000, guid: 11d62c9f32f845f1b2a3323f6b7d4101, type: 2}

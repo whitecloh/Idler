@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: enemy_grunt_1
   displayName: Grunt
-  attack: 5
-  health: 90
+  attack: 3
+  health: 30
   boardX: 0
   boardY: 0
   moveRange: 1

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: enemy_brute_1
   displayName: Brute
   attack: 5
-  health: 90
+  health: 30
   boardX: 0
   boardY: 0
   moveRange: 1

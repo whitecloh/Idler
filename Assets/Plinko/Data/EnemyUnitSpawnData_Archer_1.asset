@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: enemy_archer_1
   displayName: Archer
-  attack: 10
-  health: 70
+  attack: 2
+  health: 30
   boardX: 1
   boardY: 0
   moveRange: 1
