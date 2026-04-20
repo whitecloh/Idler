@@ -53,9 +53,9 @@ MonoBehaviour:
     - timeTick: 50
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9102, type: 2}
       lane: 0
-    - timeTick: 5
-      enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9103, type: 2}
-      lane: 1
+    - timeTick: 25
+      enemy: {fileID: 11400000, guid: 2dd020ad2da1a9245b4c2c1b0a7c2109, type: 2}
+      lane: 0
     - timeTick: 20
       enemy: {fileID: 11400000, guid: 14ff19f5f7ac4c4f8c399cdaf1fd9101, type: 2}
       lane: 1

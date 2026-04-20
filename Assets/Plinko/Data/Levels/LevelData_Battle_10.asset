@@ -101,6 +101,21 @@ MonoBehaviour:
     - timeTick: 60
       enemy: {fileID: 11400000, guid: 624f8c414a99c754ab1f648512dcd256, type: 2}
       lane: 3
+    - timeTick: 65
+      enemy: {fileID: 11400000, guid: 624f8c414a99c754ab1f648512dcd256, type: 2}
+      lane: 3
+    - timeTick: 65
+      enemy: {fileID: 11400000, guid: 624f8c414a99c754ab1f648512dcd256, type: 2}
+      lane: 2
+    - timeTick: 65
+      enemy: {fileID: 11400000, guid: 624f8c414a99c754ab1f648512dcd256, type: 2}
+      lane: 1
+    - timeTick: 65
+      enemy: {fileID: 11400000, guid: 624f8c414a99c754ab1f648512dcd256, type: 2}
+      lane: 0
+    - timeTick: 70
+      enemy: {fileID: 11400000, guid: 624f8c414a99c754ab1f648512dcd256, type: 2}
+      lane: 3
   signalPurchase:
     newUnitSlotCount: 3
     generatorBreakAfterMinSignals: 1

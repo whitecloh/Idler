@@ -20,6 +20,15 @@ MonoBehaviour:
   unlockCondition: {fileID: 0}
   startingUnits:
   - {fileID: 11400000, guid: 0e89a502f3e0de343a148344b4a6bf00, type: 2}
+  - {fileID: 11400000, guid: e8fbfbbda370cd74eba7fa943736ebc7, type: 2}
+  - {fileID: 11400000, guid: 49b1df9ea8776ab4eb8294b68104a5a3, type: 2}
+  - {fileID: 11400000, guid: a412dedb4d72f194eae29a139c113dcb, type: 2}
+  - {fileID: 11400000, guid: d4d5b7c8551716d49bd3b114639de242, type: 2}
+  - {fileID: 11400000, guid: 0e89a502f3e0de343a148344b4a6bf00, type: 2}
+  - {fileID: 11400000, guid: e8fbfbbda370cd74eba7fa943736ebc7, type: 2}
+  - {fileID: 11400000, guid: d4d5b7c8551716d49bd3b114639de242, type: 2}
+  - {fileID: 11400000, guid: 49b1df9ea8776ab4eb8294b68104a5a3, type: 2}
+  - {fileID: 11400000, guid: a412dedb4d72f194eae29a139c113dcb, type: 2}
   levels:
   - {fileID: 11400000, guid: ec5bf2496162c3848945c7f8f1fe18a4, type: 2}
   - {fileID: 11400000, guid: a1113f7b4c8548c8a1f0b80b0110a401, type: 2}
