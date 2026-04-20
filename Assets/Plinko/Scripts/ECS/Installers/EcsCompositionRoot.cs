@@ -264,6 +264,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new RefreshPurchasePhaseUiSystem(
                     _services.GameSettingsService,
                     _services.UnitConfigService,
+                    _services.StatTypeConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.PlinkoConfigService,
@@ -274,6 +275,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new RefreshSignalPurchasePhaseUiSystem(
                     _services.GameSettingsService,
                     _services.UnitConfigService,
+                    _services.StatTypeConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.PlinkoConfigService,
@@ -284,6 +286,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new RefreshRetrainingWindowUiSystem(
                     _services.GameSettingsService,
                     _services.UnitConfigService,
+                    _services.StatTypeConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.PlinkoConfigService,
@@ -294,6 +297,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new RefreshFieldUpgradeUiSystem(
                     _services.GameSettingsService,
                     _services.PinConfigService,
+                    _services.StatTypeConfigService,
                     _services.UnitConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
@@ -306,6 +310,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new RefreshStandardBattleHudUiSystem(
                     _services.GameSettingsService,
                     _services.UnitConfigService,
+                    _services.StatTypeConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.EnemyWaveSelectionService,
@@ -315,6 +320,7 @@ namespace Plinko.Scripts.ECS.Installers
                     _uiCompositionRoot))
                 .Add(new RefreshDefenceBattleHudUiSystem(
                     _services.UnitConfigService,
+                    _services.StatTypeConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.BattleRuntimeService,
@@ -322,6 +328,7 @@ namespace Plinko.Scripts.ECS.Installers
                     _uiCompositionRoot))
                 .Add(new RefreshPowerLineBattleHudUiSystem(
                     _services.UnitConfigService,
+                    _services.StatTypeConfigService,
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.BattleRuntimeService,

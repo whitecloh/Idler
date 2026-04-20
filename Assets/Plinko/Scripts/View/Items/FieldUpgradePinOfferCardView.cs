@@ -79,7 +79,7 @@ namespace Plinko.Scripts.View.Items
             SyncModifierLines(snapshot.Modifiers);
         }
 
-        private void SyncModifierLines(IReadOnlyList<PinModifierLineViewData> modifiers)
+        private void SyncModifierLines(IReadOnlyList<StatDisplayViewData> modifiers)
         {
             var targetCount = modifiers != null ? modifiers.Count : 0;
             while (_modifierViews.Count < targetCount)
@@ -105,6 +105,6 @@ namespace Plinko.Scripts.View.Items
         public Sprite Sprite;
         public string Name;
         public string Price;
-        public List<PinModifierLineViewData> Modifiers = new();
+        public List<StatDisplayViewData> Modifiers = new();
     }
 }

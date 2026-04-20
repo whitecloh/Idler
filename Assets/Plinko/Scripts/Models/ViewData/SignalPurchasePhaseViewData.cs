@@ -53,5 +53,6 @@ namespace Plinko.Scripts.Models.ViewData
         public float MoveSpeed;
         public int AttackRange;
         public float AttackSpeed;
+        public List<StatDisplayViewData> Stats = new();
     }
 }

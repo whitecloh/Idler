@@ -1,28 +1,32 @@
 using System;
+using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Audio;
+using Plinko.Scripts.View.Tooltips;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Items
 {
-    public sealed class PurchaseShopOfferCardView : MonoBehaviour
+    public sealed class PurchaseShopOfferCardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private RectTransform root;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TMP_Text nameText;
-        [SerializeField] private TMP_Text attackText;
-        [SerializeField] private TMP_Text healthText;
         [SerializeField] private TMP_Text manaText;
-        [SerializeField] private TMP_Text moveSpeedText;
-        [SerializeField] private TMP_Text attackRangeText;
-        [SerializeField] private TMP_Text attackSpeedText;
+        [SerializeField] private RectTransform statsRoot;
+        [SerializeField] private UnitStatEntryView statEntryPrefab;
         [SerializeField] private TMP_Text priceText;
         [SerializeField] private Button buyButton;
+        [SerializeField] private RectTransform tooltipAnchor;
 
         private int _offerId;
+        private readonly List<UnitStatEntryView> _statViews = new();
+        private readonly List<StatDisplayViewData> _currentStats = new();
+        private UnitShopOfferViewData _viewData = new();
 
         public int OfferId => _offerId;
         public RectTransform RectTransform => root;
@@ -40,27 +44,23 @@ namespace Plinko.Scripts.View.Items
 
         public void Refresh(UnitShopOfferViewData viewData, bool canBuy)
         {
+            _viewData = viewData;
             _offerId = viewData.OfferId;
             portraitImage.sprite = viewData.PortraitSprite;
             portraitImage.enabled = viewData.PortraitSprite != null;
             nameText.text = viewData.DisplayName;
-            attackText.text = viewData.Attack.ToString();
-            healthText.text = viewData.Health.ToString();
-            manaText.text = viewData.ManaCost.ToString();
-            if (moveSpeedText != null)
+
+            _currentStats.Clear();
+            if (viewData.Stats != null)
             {
-                moveSpeedText.text = viewData.MoveSpeed.ToString("0.##");
+                _currentStats.AddRange(viewData.Stats);
             }
 
-            if (attackRangeText != null)
+            if (manaText != null)
             {
-                attackRangeText.text = viewData.AttackRange.ToString();
+                manaText.text = viewData.ManaCost.ToString();
             }
-
-            if (attackSpeedText != null)
-            {
-                attackSpeedText.text = viewData.AttackSpeed.ToString("0.##");
-            }
+            UnitStatSyncUtility.Sync(statsRoot, statEntryPrefab, _statViews, _currentStats);
 
             priceText.text = viewData.Price.ToString();
             buyButton.interactable = canBuy;
@@ -68,18 +68,26 @@ namespace Plinko.Scripts.View.Items
 
         public OfferVisualSnapshot CaptureSnapshot()
         {
-            return new OfferVisualSnapshot
+            var snapshot = new OfferVisualSnapshot
             {
                 Portrait = portraitImage.sprite,
                 Name = nameText.text,
-                Attack = attackText.text,
-                Health = healthText.text,
-                Mana = manaText.text,
-                MoveSpeed = moveSpeedText != null ? moveSpeedText.text : string.Empty,
-                AttackRange = attackRangeText != null ? attackRangeText.text : string.Empty,
-                AttackSpeed = attackSpeedText != null ? attackSpeedText.text : string.Empty,
+                Mana = manaText != null ? manaText.text : string.Empty,
                 Price = priceText.text
             };
+
+            for (var index = 0; index < _currentStats.Count; index++)
+            {
+                snapshot.Stats.Add(new StatDisplayViewData
+                {
+                    StatTypeId = _currentStats[index].StatTypeId,
+                    DisplayName = _currentStats[index].DisplayName,
+                    Icon = _currentStats[index].Icon,
+                    ValueText = _currentStats[index].ValueText
+                });
+            }
+
+            return snapshot;
         }
 
         public void ApplySnapshot(OfferVisualSnapshot snapshot)
@@ -87,23 +95,18 @@ namespace Plinko.Scripts.View.Items
             portraitImage.sprite = snapshot.Portrait;
             portraitImage.enabled = snapshot.Portrait != null;
             nameText.text = snapshot.Name;
-            attackText.text = snapshot.Attack;
-            healthText.text = snapshot.Health;
-            manaText.text = snapshot.Mana;
-            if (moveSpeedText != null)
+
+            _currentStats.Clear();
+            if (snapshot.Stats != null)
             {
-                moveSpeedText.text = snapshot.MoveSpeed;
+                _currentStats.AddRange(snapshot.Stats);
             }
 
-            if (attackRangeText != null)
+            if (manaText != null)
             {
-                attackRangeText.text = snapshot.AttackRange;
+                manaText.text = snapshot.Mana;
             }
-
-            if (attackSpeedText != null)
-            {
-                attackSpeedText.text = snapshot.AttackSpeed;
-            }
+            UnitStatSyncUtility.Sync(statsRoot, statEntryPrefab, _statViews, _currentStats);
 
             priceText.text = snapshot.Price;
         }
@@ -113,17 +116,31 @@ namespace Plinko.Scripts.View.Items
             buyButton.interactable = isInteractable;
         }
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            UiTooltipManager.Instance?.ShowUnitCard(
+                this,
+                tooltipAnchor != null ? tooltipAnchor : root,
+                UnitTooltipViewDataFactory.FromShopOffer(_viewData));
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            UiTooltipManager.Instance?.Hide(this);
+        }
+
+        private void OnDisable()
+        {
+            UiTooltipManager.Instance?.Hide(this);
+        }
+
         public sealed class OfferVisualSnapshot
         {
             public Sprite Portrait;
             public string Name;
-            public string Attack;
-            public string Health;
             public string Mana;
-            public string MoveSpeed;
-            public string AttackRange;
-            public string AttackSpeed;
             public string Price;
+            public List<StatDisplayViewData> Stats = new();
         }
     }
 }

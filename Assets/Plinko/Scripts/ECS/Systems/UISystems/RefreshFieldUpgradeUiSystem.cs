@@ -18,6 +18,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
     {
         private readonly GameSettingsService _gameSettingsService;
         private readonly PinConfigService _pinConfigService;
+        private readonly StatTypeConfigService _statTypeConfigService;
         private readonly UnitConfigService _unitConfigService;
         private readonly LocationConfigService _locationConfigService;
         private readonly LevelConfigService _levelConfigService;
@@ -50,6 +51,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         public RefreshFieldUpgradeUiSystem(
             GameSettingsService gameSettingsService,
             PinConfigService pinConfigService,
+            StatTypeConfigService statTypeConfigService,
             UnitConfigService unitConfigService,
             LocationConfigService locationConfigService,
             LevelConfigService levelConfigService,
@@ -59,6 +61,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         {
             _gameSettingsService = gameSettingsService;
             _pinConfigService = pinConfigService;
+            _statTypeConfigService = statTypeConfigService;
             _unitConfigService = unitConfigService;
             _locationConfigService = locationConfigService;
             _levelConfigService = levelConfigService;
@@ -368,74 +371,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             };
         }
 
-        private static List<PinModifierLineViewData> BuildModifierLines(PinTypeData pinType)
+        private List<StatDisplayViewData> BuildModifierLines(PinTypeData pinType)
         {
-            var lines = new List<PinModifierLineViewData>();
-            if (pinType == null)
-            {
-                return lines;
-            }
-
-            if (pinType.AttackModifier != 0)
-            {
-                lines.Add(new PinModifierLineViewData
-                {
-                    Label = "ATK",
-                    Value = pinType.AttackModifier
-                });
-            }
-
-            if (pinType.HealthModifier != 0)
-            {
-                lines.Add(new PinModifierLineViewData
-                {
-                    Label = "HP",
-                    Value = pinType.HealthModifier
-                });
-            }
-
-            if (pinType.ManaModifier != 0)
-            {
-                lines.Add(new PinModifierLineViewData
-                {
-                    Label = "Mana",
-                    Value = pinType.ManaModifier
-                });
-            }
-
-            if (System.Math.Abs(pinType.MoveSpeedModifier) > 0.001f)
-            {
-                lines.Add(new PinModifierLineViewData
-                {
-                    Label = "Move",
-                    DisplayValue = FormatSignedFloat(pinType.MoveSpeedModifier)
-                });
-            }
-
-            if (pinType.AttackRangeModifier != 0)
-            {
-                lines.Add(new PinModifierLineViewData
-                {
-                    Label = "Range",
-                    Value = pinType.AttackRangeModifier
-                });
-            }
-
-            if (System.Math.Abs(pinType.AttackSpeedModifier) > 0.001f)
-            {
-                lines.Add(new PinModifierLineViewData
-                {
-                    Label = "ASPD",
-                    DisplayValue = FormatSignedFloat(pinType.AttackSpeedModifier)
-                });
-            }
-
-            return lines;
-        }
-
-        private static string FormatSignedFloat(float value)
-        {
-            return value > 0f ? $"+{value:0.##}" : value.ToString("0.##");
+            return StatViewDataFactory.BuildPinModifierStats(_statTypeConfigService, pinType);
         }
 
         private static Dictionary<int, PinTypeData> BuildAuthoredPinsBySlot(PlinkoFieldSettingsData fieldData)

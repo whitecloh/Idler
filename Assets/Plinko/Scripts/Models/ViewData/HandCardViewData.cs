@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Plinko.Scripts.Data.Visuals;
 using UnityEngine;
 
@@ -22,5 +23,6 @@ namespace Plinko.Scripts.Models.ViewData
         public bool IsDeployed;
         public Sprite PortraitSprite;
         public CharacterAnimationSetData BattleAnimations;
+        public List<StatDisplayViewData> Stats = new();
     }
 }

@@ -16,7 +16,7 @@ MonoBehaviour:
   - cueType: 1
     clips:
     - {fileID: 8300000, guid: 28008000785d1b143bed86929b19fffb, type: 3}
-    volume: 0.251
+    volume: 0.551
     pitchRange: {x: 0, y: 0}
     loop: 1
   - cueType: 2

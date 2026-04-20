@@ -12,14 +12,6 @@ namespace Plinko.Scripts.Models.ViewData
         public string DisplayName;
         public Sprite Sprite;
         public int Price;
-        public List<PinModifierLineViewData> ModifierLines = new();
-    }
-
-    [Serializable]
-    public sealed class PinModifierLineViewData
-    {
-        public string Label;
-        public int Value;
-        public string DisplayValue;
+        public List<StatDisplayViewData> ModifierLines = new();
     }
 }

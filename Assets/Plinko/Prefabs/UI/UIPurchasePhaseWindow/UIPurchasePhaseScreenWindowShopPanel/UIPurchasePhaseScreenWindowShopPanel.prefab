@@ -692,7 +692,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   goldText: {fileID: 7321715048480899461}
   offersRoot: {fileID: 3255155426888444340}
-  offerCardPrefab: {fileID: 753368848405901190, guid: 8fceb0efc22f1654aa5c6561f23733d3, type: 3}
+  offerCardPrefab: {fileID: 5052833007721371930, guid: b7049da587abc49479f32ebb1864f05b, type: 3}
   rerollButton: {fileID: 4714814949154507053}
   rerollPriceText: {fileID: 7913372101806211857}
   animationLayerRoot: {fileID: 3801629087793576385}
@@ -869,7 +869,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

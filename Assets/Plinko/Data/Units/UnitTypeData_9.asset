@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9546d2f1a0043b3832721603fec5520, type: 3}
+  m_Name: UnitTypeData_9
+  m_EditorClassIdentifier: 
+  id: unit_9
+  displayName: Ranger
+  description: Fast backline trainee with higher attack.
+  portraitSprite: {fileID: -693081220, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+  battleAnimations:
+    idleFrames:
+    - {fileID: -693081220, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    - {fileID: 1151162142, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    - {fileID: 1627533562, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    - {fileID: 1150732141, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    runFrames:
+    - {fileID: -1575368880, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    - {fileID: 154749198, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    - {fileID: -1722056734, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    - {fileID: 1727092598, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    attackFrames:
+    - {fileID: -1896041919, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 640685681, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 994853918, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 1062178059, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    hitFrames:
+    - {fileID: 718739901, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    - {fileID: -816820391, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    - {fileID: -1084239501, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    - {fileID: -2080851830, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    castFrames:
+    - {fileID: -1896041919, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 640685681, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 994853918, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 1062178059, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    deathFrames:
+    - {fileID: 908821729, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+    - {fileID: 1198156081, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+    - {fileID: 7919653, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+    - {fileID: -1248350481, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+  attackType: 1
+  projectileSprite: {fileID: 21300000, guid: a696071f55377a34db41021975b2e9c3, type: 3}
+  trainingFieldSprite: {fileID: -693081220, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+  defaultManaCost: 2
+  baseStats:
+  - statType: {fileID: 11400000, guid: b52c069c22697ca49b08af6b55549025, type: 2}
+    value: 20
+  - statType: {fileID: 11400000, guid: 39ef71fdce57816499299e23fe658bc8, type: 2}
+    value: 79
+  - statType: {fileID: 11400000, guid: 3ae053399b021a94ab6b348a0176d5e9, type: 2}
+    value: 3
+  - statType: {fileID: 11400000, guid: e6d69f75dda79dd41ae4022f6aee30e3, type: 2}
+    value: 3
+  - statType: {fileID: 11400000, guid: 544100599fd910f499f828cea9a95020, type: 2}
+    value: 1
+  canAttackOtherLines: 0
+  canMoveBetweenLines: 1
+  shopPrice: 42
+  generationWeight: 2
+  passiveAbility: {fileID: 11400000, guid: 48ad2df78f1b4e0ea67e5b8d2aa76101, type: 2}
+  unlockCondition: {fileID: 11400000, guid: a1143f7b4c8548c8a1f0b80b0110a404, type: 2}

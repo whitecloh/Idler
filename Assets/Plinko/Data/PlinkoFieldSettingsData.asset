@@ -47,5 +47,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 09b9bd1e447d4e3dac4c15d2f7ab1103, type: 2}
   - {fileID: 11400000, guid: 09b9bd1e447d4e3dac4c15d2f7ab1104, type: 2}
   - {fileID: 11400000, guid: 54dd79e9142c5e74d93af570bbfb8174, type: 2}
-  horizontalSpacing: 1
+  horizontalSpacing: 1.25
   verticalSpacing: 1

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Items;
+using Plinko.Scripts.View.Layouts;
 using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
@@ -291,52 +292,39 @@ namespace Plinko.Scripts.View.Controllers
 
         private Vector2 BuildPinPosition(int rowIndex, int columnIndex, IReadOnlyDictionary<int, int> rowCounts)
         {
-            var rowCount = rowCounts.TryGetValue(rowIndex, out var count) ? count : 1;
-            var x = (columnIndex - (rowCount - 1) * 0.5f) * _horizontalSpacing * pixelsPerFieldUnit;
-            var y = GetTopY(rowCounts) - rowIndex * _verticalSpacing * pixelsPerFieldUnit;
-            return new Vector2(x, y);
+            return PlinkoFieldLayoutUtility.BuildPinPosition(
+                rowIndex,
+                columnIndex,
+                rowCounts,
+                _horizontalSpacing,
+                _verticalSpacing,
+                pixelsPerFieldUnit);
         }
 
         private Vector2 BuildBasketPosition(int basketIndex, int totalBasketCount, IReadOnlyDictionary<int, int> rowCounts)
         {
-            var x = (basketIndex - (totalBasketCount - 1) * 0.5f) * _horizontalSpacing * pixelsPerFieldUnit;
-            var y = GetTopY(rowCounts) - GetTotalRowCount(rowCounts) * _verticalSpacing * pixelsPerFieldUnit;
-            return new Vector2(x, y);
+            return PlinkoFieldLayoutUtility.BuildBasketPosition(
+                basketIndex,
+                totalBasketCount,
+                rowCounts,
+                _horizontalSpacing,
+                _verticalSpacing,
+                pixelsPerFieldUnit);
         }
 
         private float GetTopY(IReadOnlyDictionary<int, int> rowCounts)
         {
-            var totalRowCount = Mathf.Max(1, GetTotalRowCount(rowCounts));
-            return (totalRowCount - 1) * _verticalSpacing * pixelsPerFieldUnit * 0.5f;
+            return PlinkoFieldLayoutUtility.GetTopY(rowCounts, _verticalSpacing, pixelsPerFieldUnit);
         }
 
         private static int GetTotalRowCount(IReadOnlyDictionary<int, int> rowCounts)
         {
-            var maxRowIndex = -1;
-            foreach (var pair in rowCounts)
-            {
-                if (pair.Key > maxRowIndex)
-                {
-                    maxRowIndex = pair.Key;
-                }
-            }
-
-            return maxRowIndex + 1;
+            return PlinkoFieldLayoutUtility.GetTotalRowCount(rowCounts);
         }
 
         private static Dictionary<int, int> BuildRowCounts(IReadOnlyList<PurchaseFieldPinViewData> pins)
         {
-            var result = new Dictionary<int, int>();
-            for (var index = 0; index < pins.Count; index++)
-            {
-                var pin = pins[index];
-                if (!result.TryGetValue(pin.RowIndex, out var rowCount) || rowCount < pin.ColumnIndex + 1)
-                {
-                    result[pin.RowIndex] = pin.ColumnIndex + 1;
-                }
-            }
-
-            return result;
+            return PlinkoFieldLayoutUtility.BuildRowCounts(pins);
         }
 
         private void ClearFieldViews()

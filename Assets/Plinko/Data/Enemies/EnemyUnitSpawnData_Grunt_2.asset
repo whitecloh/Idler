@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd790beaed464b718a3dd0fcd53cf04e, type: 3}
+  m_Name: EnemyUnitSpawnData_Grunt_2
+  m_EditorClassIdentifier: 
+  id: enemy_grunt_2
+  displayName: Grunt
+  baseStats:
+  - statType: {fileID: 11400000, guid: b52c069c22697ca49b08af6b55549025, type: 2}
+    value: 20
+  - statType: {fileID: 11400000, guid: 39ef71fdce57816499299e23fe658bc8, type: 2}
+    value: 70
+  - statType: {fileID: 11400000, guid: 3ae053399b021a94ab6b348a0176d5e9, type: 2}
+    value: 1
+  - statType: {fileID: 11400000, guid: e6d69f75dda79dd41ae4022f6aee30e3, type: 2}
+    value: 2
+  - statType: {fileID: 11400000, guid: 544100599fd910f499f828cea9a95020, type: 2}
+    value: 2
+  attack: 20
+  health: 70
+  boardX: 0
+  boardY: 0
+  moveRange: 1
+  attackRange: 1
+  moveSpeed: 2
+  attackSpeed: 2
+  attackType: 0
+  projectileSprite: {fileID: 0}
+  canAttackOtherLines: 0
+  canMoveBetweenLines: 0
+  portraitSprite: {fileID: 21300000, guid: 2738ed824bfa25e409e90681a53faba7, type: 3}
+  battleAnimations:
+    idleFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    runFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    attackFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    hitFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    castFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    deathFrames:
+    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  trainingFieldSprite: {fileID: 21300000, guid: 2738ed824bfa25e409e90681a53faba7, type: 3}

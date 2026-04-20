@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.View.Tooltips;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -14,13 +16,11 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private LayoutElement layoutElement;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TMP_Text nameText;
-        [SerializeField] private TMP_Text attackText;
-        [SerializeField] private TMP_Text healthText;
         [SerializeField] private TMP_Text manaText;
-        [SerializeField] private TMP_Text moveSpeedText;
-        [SerializeField] private TMP_Text attackRangeText;
-        [SerializeField] private TMP_Text attackSpeedText;
         [SerializeField] private GameObject selectedStateRoot;
+        [SerializeField] private RectTransform statsRoot;
+        [SerializeField] private UnitStatEntryView statEntryPrefab;
+        [SerializeField] private RectTransform tooltipAnchor;
 
         private Action<BattleHandCardView> _pointerEntered;
         private Action<BattleHandCardView> _pointerExited;
@@ -28,6 +28,7 @@ namespace Plinko.Scripts.View.Items
         private Action<BattleHandCardView, PointerEventData> _drag;
         private Action<BattleHandCardView, PointerEventData> _endDrag;
         private Action<BattleHandCardView> _clicked;
+        private readonly List<UnitStatEntryView> _statViews = new();
 
         public RectTransform RectTransform => root;
         public CanvasGroup CanvasGroup => canvasGroup;
@@ -56,23 +57,11 @@ namespace Plinko.Scripts.View.Items
             portraitImage.sprite = viewData.PortraitSprite;
             portraitImage.enabled = viewData.PortraitSprite != null;
             nameText.text = viewData.DisplayName;
-            attackText.text = viewData.Attack.ToString();
-            healthText.text = viewData.Health.ToString();
-            manaText.text = viewData.ManaCost.ToString();
-            if (moveSpeedText != null)
+            if (manaText != null)
             {
-                moveSpeedText.text = viewData.MoveSpeed.ToString("0.##");
+                manaText.text = viewData.ManaCost.ToString();
             }
-
-            if (attackRangeText != null)
-            {
-                attackRangeText.text = viewData.AttackRange.ToString();
-            }
-
-            if (attackSpeedText != null)
-            {
-                attackSpeedText.text = viewData.AttackSpeed.ToString("0.##");
-            }
+            UnitStatSyncUtility.Sync(statsRoot, statEntryPrefab, _statViews, viewData.Stats);
 
             SetSelected(false);
         }
@@ -97,16 +86,22 @@ namespace Plinko.Scripts.View.Items
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            UiTooltipManager.Instance?.ShowUnitCard(
+                this,
+                tooltipAnchor != null ? tooltipAnchor : root,
+                UnitTooltipViewDataFactory.FromHandCard(ViewData));
             _pointerEntered?.Invoke(this);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            UiTooltipManager.Instance?.Hide(this);
             _pointerExited?.Invoke(this);
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+            UiTooltipManager.Instance?.Hide(this);
             _beginDrag?.Invoke(this, eventData);
         }
 
@@ -123,6 +118,11 @@ namespace Plinko.Scripts.View.Items
         public void OnPointerClick(PointerEventData eventData)
         {
             _clicked?.Invoke(this);
+        }
+
+        private void OnDisable()
+        {
+            UiTooltipManager.Instance?.Hide(this);
         }
     }
 }

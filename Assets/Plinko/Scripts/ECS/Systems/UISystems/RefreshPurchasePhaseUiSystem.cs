@@ -20,6 +20,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
     {
         private readonly GameSettingsService _gameSettingsService;
         private readonly UnitConfigService _unitConfigService;
+        private readonly StatTypeConfigService _statTypeConfigService;
         private readonly LocationConfigService _locationConfigService;
         private readonly LevelConfigService _levelConfigService;
         private readonly PlinkoConfigService _plinkoConfigService;
@@ -62,6 +63,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         public RefreshPurchasePhaseUiSystem(
             GameSettingsService gameSettingsService,
             UnitConfigService unitConfigService,
+            StatTypeConfigService statTypeConfigService,
             LocationConfigService locationConfigService,
             LevelConfigService levelConfigService,
             PlinkoConfigService plinkoConfigService,
@@ -72,6 +74,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         {
             _gameSettingsService = gameSettingsService;
             _unitConfigService = unitConfigService;
+            _statTypeConfigService = statTypeConfigService;
             _locationConfigService = locationConfigService;
             _levelConfigService = levelConfigService;
             _plinkoConfigService = plinkoConfigService;
@@ -199,12 +202,15 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
                     Attack = unitType != null ? unitType.BaseAttack : 0,
                     Health = unitType != null ? unitType.BaseHealth : 0,
-                    ManaCost = unitType != null ? unitType.DefaultManaCost : 0,
-                    MoveSpeed = unitType != null ? unitType.BaseMoveSpeed : 0f,
-                    AttackRange = unitType != null ? unitType.BattleAttackRange : 0,
-                    AttackSpeed = unitType != null ? unitType.BaseAttackSpeed : 0f,
-                    Price = _pricePool.Get(offerEntity).Value
-                });
+                      ManaCost = unitType != null ? unitType.DefaultManaCost : 0,
+                      MoveSpeed = unitType != null ? unitType.BaseMoveSpeed : 0f,
+                      AttackRange = unitType != null ? unitType.BattleAttackRange : 0,
+                      AttackSpeed = unitType != null ? unitType.BaseAttackSpeed : 0f,
+                      Price = _pricePool.Get(offerEntity).Value,
+                      Stats = StatViewDataFactory.BuildUnitStats(
+                          _statTypeConfigService,
+                          unitType)
+                  });
             }
 
             offers.Sort((left, right) => left.OfferId.CompareTo(right.OfferId));
@@ -409,13 +415,22 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,
-                    ManaCost = _manaCostPool.Get(ownedEntity).Value,
-                    MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
-                    AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
-                    AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
-                    Level = _unitLevelPool.Get(ownedEntity).Value,
-                    UpgradeCount = _upgradeCountPool.Get(ownedEntity).Value
-                });
+                      ManaCost = _manaCostPool.Get(ownedEntity).Value,
+                      MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                      AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                      AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
+                      Level = _unitLevelPool.Get(ownedEntity).Value,
+                      UpgradeCount = _upgradeCountPool.Get(ownedEntity).Value,
+                      Stats = StatViewDataFactory.BuildUnitStats(
+                          _statTypeConfigService,
+                          unitType,
+                          _statsPool.Get(ownedEntity).Attack,
+                          _statsPool.Get(ownedEntity).Health,
+                          _manaCostPool.Get(ownedEntity).Value,
+                          _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                          _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                          _unitCombatStatsPool.Get(ownedEntity).AttackSpeed)
+                  });
             }
 
             result.Sort((left, right) => left.RuntimeId.CompareTo(right.RuntimeId));

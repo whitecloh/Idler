@@ -107,7 +107,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -180}
+  m_AnchoredPosition: {x: 0, y: 60}
   m_SizeDelta: {x: 960, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1336628548910997764
@@ -440,7 +440,7 @@ MonoBehaviour:
   pinPrefab: {fileID: 6781698069040788272, guid: 228ca064bb452b74d9dd06e8a359bf7e, type: 3}
   basketsRoot: {fileID: 1698463317996084628}
   basketPrefab: {fileID: 8897598199327966218, guid: f85578d64173a2744be291db99ab1a07, type: 3}
-  pixelsPerFieldUnit: 50
+  pixelsPerFieldUnit: 80
 --- !u!1 &7992063270492742632
 GameObject:
   m_ObjectHideFlags: 0
@@ -729,9 +729,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5246618631698710226, guid: fd03d4fd6ee88524fbeaa5ae125b140f, type: 3}
+      propertyPath: m_text
+      value: OLD
+      objectReference: {fileID: 0}
     - target: {fileID: 6431853688389860264, guid: fd03d4fd6ee88524fbeaa5ae125b140f, type: 3}
       propertyPath: m_Name
       value: UIFieldUpgradeWindowNewUnitsPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 7107608490614504298, guid: fd03d4fd6ee88524fbeaa5ae125b140f, type: 3}
+      propertyPath: m_text
+      value: NEW
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

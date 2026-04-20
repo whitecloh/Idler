@@ -115,6 +115,7 @@ namespace Plinko.Scripts.Models.ViewData
         public float AttackSpeed;
         public int Level;
         public int UpgradeCount;
+        public List<StatDisplayViewData> Stats = new();
     }
 
     [Serializable]

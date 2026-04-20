@@ -1,48 +1,59 @@
+using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.View.Tooltips;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Items
 {
-    public sealed class RetrainingShopOfferCardView : MonoBehaviour
+    public sealed class RetrainingShopOfferCardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private RectTransform root;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TMP_Text nameText;
-        [SerializeField] private TMP_Text attackText;
-        [SerializeField] private TMP_Text healthText;
         [SerializeField] private TMP_Text manaText;
-        [SerializeField] private TMP_Text moveSpeedText;
-        [SerializeField] private TMP_Text attackRangeText;
-        [SerializeField] private TMP_Text attackSpeedText;
+        [SerializeField] private RectTransform statsRoot;
+        [SerializeField] private UnitStatEntryView statEntryPrefab;
+        [SerializeField] private RectTransform tooltipAnchor;
+
+        private readonly List<UnitStatEntryView> _statViews = new();
+        private RetrainingOfferViewData _viewData = new();
 
         public int RuntimeId { get; private set; }
         public RectTransform RectTransform => root;
 
         public void Refresh(RetrainingOfferViewData viewData)
         {
+            _viewData = viewData;
             RuntimeId = viewData.RuntimeId;
             portraitImage.sprite = viewData.PortraitSprite;
             portraitImage.enabled = viewData.PortraitSprite != null;
             nameText.text = viewData.DisplayName;
-            attackText.text = viewData.Attack.ToString();
-            healthText.text = viewData.Health.ToString();
-            manaText.text = viewData.ManaCost.ToString();
-            if (moveSpeedText != null)
+            if (manaText != null)
             {
-                moveSpeedText.text = viewData.MoveSpeed.ToString("0.##");
+                manaText.text = viewData.ManaCost.ToString();
             }
+            UnitStatSyncUtility.Sync(statsRoot, statEntryPrefab, _statViews, viewData.Stats);
+        }
 
-            if (attackRangeText != null)
-            {
-                attackRangeText.text = viewData.AttackRange.ToString();
-            }
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            UiTooltipManager.Instance?.ShowUnitCard(
+                this,
+                tooltipAnchor != null ? tooltipAnchor : root,
+                UnitTooltipViewDataFactory.FromRetrainingOffer(_viewData));
+        }
 
-            if (attackSpeedText != null)
-            {
-                attackSpeedText.text = viewData.AttackSpeed.ToString("0.##");
-            }
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            UiTooltipManager.Instance?.Hide(this);
+        }
+
+        private void OnDisable()
+        {
+            UiTooltipManager.Instance?.Hide(this);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace Plinko.Scripts.Bootstrap
         public WeightedRandomService WeightedRandomService;
         public UnitConfigService UnitConfigService;
         public PinConfigService PinConfigService;
+        public StatTypeConfigService StatTypeConfigService;
         public PlinkoConfigService PlinkoConfigService;
         public EnemyWaveSelectionService EnemyWaveSelectionService;
         public UnitNamingService UnitNamingService;

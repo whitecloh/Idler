@@ -1,43 +1,50 @@
 using Plinko.Scripts.Models.ViewData;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Items
 {
     public sealed class FieldUpgradeModifierLineView : MonoBehaviour
     {
+        [SerializeField] private Image iconImage;
         [SerializeField] private TMP_Text labelText;
         [SerializeField] private TMP_Text valueText;
+        private StatDisplayViewData _currentViewData;
 
-        public void Refresh(PinModifierLineViewData viewData)
+        public void Refresh(StatDisplayViewData viewData)
         {
-            labelText.text = viewData.Label;
-            valueText.text = !string.IsNullOrWhiteSpace(viewData.DisplayValue)
-                ? viewData.DisplayValue
-                : viewData.Value > 0
-                    ? $"+{viewData.Value}"
-                    : viewData.Value.ToString();
-        }
+            _currentViewData = viewData;
 
-        public PinModifierLineViewData CaptureSnapshot()
-        {
-            return new PinModifierLineViewData
+            if (iconImage != null)
             {
-                Label = labelText.text,
-                Value = ParseValue(valueText.text),
-                DisplayValue = valueText.text
-            };
-        }
-
-        private static int ParseValue(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return 0;
+                iconImage.sprite = viewData != null ? viewData.Icon : null;
+                iconImage.enabled = iconImage.sprite != null;
             }
 
-            var sanitized = value.Replace("+", string.Empty);
-            return int.TryParse(sanitized, out var parsed) ? parsed : 0;
+            labelText.text = viewData != null ? viewData.DisplayName : string.Empty;
+            valueText.text = viewData != null ? viewData.ValueText : string.Empty;
+        }
+
+        public StatDisplayViewData CaptureSnapshot()
+        {
+            if (_currentViewData == null)
+            {
+                return new StatDisplayViewData
+                {
+                    DisplayName = labelText != null ? labelText.text : string.Empty,
+                    Icon = iconImage != null ? iconImage.sprite : null,
+                    ValueText = valueText != null ? valueText.text : string.Empty
+                };
+            }
+
+            return new StatDisplayViewData
+            {
+                StatTypeId = _currentViewData.StatTypeId,
+                DisplayName = _currentViewData.DisplayName,
+                Icon = _currentViewData.Icon,
+                ValueText = _currentViewData.ValueText
+            };
         }
     }
 }

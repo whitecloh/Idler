@@ -50,6 +50,6 @@ namespace Plinko.Scripts.Models.ViewData
         public string PinTypeId;
         public string DisplayName;
         public Sprite Sprite;
-        public List<PinModifierLineViewData> ModifierLines = new();
+        public List<StatDisplayViewData> ModifierLines = new();
     }
 }

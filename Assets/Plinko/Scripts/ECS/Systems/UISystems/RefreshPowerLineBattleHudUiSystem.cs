@@ -15,6 +15,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
     public sealed class RefreshPowerLineBattleHudUiSystem : IEcsInitSystem, IEcsRunSystem
     {
         private readonly UnitConfigService _unitConfigService;
+        private readonly StatTypeConfigService _statTypeConfigService;
         private readonly LocationConfigService _locationConfigService;
         private readonly LevelConfigService _levelConfigService;
         private readonly BattleRuntimeService _battleRuntimeService;
@@ -52,6 +53,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
 
         public RefreshPowerLineBattleHudUiSystem(
             UnitConfigService unitConfigService,
+            StatTypeConfigService statTypeConfigService,
             LocationConfigService locationConfigService,
             LevelConfigService levelConfigService,
             BattleRuntimeService battleRuntimeService,
@@ -59,6 +61,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             UiCompositionRoot uiCompositionRoot)
         {
             _unitConfigService = unitConfigService;
+            _statTypeConfigService = statTypeConfigService;
             _locationConfigService = locationConfigService;
             _levelConfigService = levelConfigService;
             _battleRuntimeService = battleRuntimeService;
@@ -197,7 +200,16 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
                     AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
-                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null
+                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null,
+                    Stats = StatViewDataFactory.BuildUnitStats(
+                        _statTypeConfigService,
+                        unitType,
+                        _statsPool.Get(ownedEntity).Attack,
+                        _statsPool.Get(ownedEntity).Health,
+                        _manaCostPool.Get(ownedEntity).Value,
+                        _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackSpeed)
                 });
             }
 
@@ -223,7 +235,16 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
                     AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
-                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null
+                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null,
+                    Stats = StatViewDataFactory.BuildUnitStats(
+                        _statTypeConfigService,
+                        unitType,
+                        _statsPool.Get(ownedEntity).Attack,
+                        _statsPool.Get(ownedEntity).Health,
+                        _manaCostPool.Get(ownedEntity).Value,
+                        _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackSpeed)
                 });
             }
 

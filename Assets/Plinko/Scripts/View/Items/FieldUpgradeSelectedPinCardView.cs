@@ -38,7 +38,7 @@ namespace Plinko.Scripts.View.Items
             SyncModifierLines(viewData.ModifierLines);
         }
 
-        private void SyncModifierLines(IReadOnlyList<PinModifierLineViewData> modifiers)
+        private void SyncModifierLines(IReadOnlyList<StatDisplayViewData> modifiers)
         {
             var targetCount = modifiers != null ? modifiers.Count : 0;
             while (_modifierViews.Count < targetCount)

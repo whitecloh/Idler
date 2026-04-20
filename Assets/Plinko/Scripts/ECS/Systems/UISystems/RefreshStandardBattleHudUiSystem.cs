@@ -17,6 +17,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
     {
         private readonly GameSettingsService _gameSettingsService;
         private readonly UnitConfigService _unitConfigService;
+        private readonly StatTypeConfigService _statTypeConfigService;
         private readonly LocationConfigService _locationConfigService;
         private readonly LevelConfigService _levelConfigService;
         private readonly EnemyWaveSelectionService _enemyWaveSelectionService;
@@ -42,6 +43,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsPool<UnitLevelComponent> _unitLevelPool;
         private EcsPool<UnitTypeIdComponent> _unitTypePool;
         private EcsPool<UnitStatsComponent> _statsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _manaCostPool;
 
         private EcsFilter _handFilter;
@@ -51,6 +53,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         public RefreshStandardBattleHudUiSystem(
             GameSettingsService gameSettingsService,
             UnitConfigService unitConfigService,
+            StatTypeConfigService statTypeConfigService,
             LocationConfigService locationConfigService,
             LevelConfigService levelConfigService,
             EnemyWaveSelectionService enemyWaveSelectionService,
@@ -61,6 +64,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         {
             _gameSettingsService = gameSettingsService;
             _unitConfigService = unitConfigService;
+            _statTypeConfigService = statTypeConfigService;
             _locationConfigService = locationConfigService;
             _levelConfigService = levelConfigService;
             _enemyWaveSelectionService = enemyWaveSelectionService;
@@ -90,6 +94,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _unitLevelPool = world.GetPool<UnitLevelComponent>();
             _unitTypePool = world.GetPool<UnitTypeIdComponent>();
             _statsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _manaCostPool = world.GetPool<UnitManaCostComponent>();
             _handFilter = world.Filter<HandCardComponent>().Inc<HandCardOwnerUnitComponent>().End();
             _deployedFilter = world.Filter<DeployedForTurnComponent>().Inc<HandCardOwnerUnitComponent>().Inc<DeploymentOrderComponent>().End();
@@ -201,9 +206,21 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,
                     ManaCost = _manaCostPool.Get(ownedEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     IsDeployed = _deployedPool.Has(handEntity),
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
-                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null
+                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null,
+                    Stats = StatViewDataFactory.BuildUnitStats(
+                        _statTypeConfigService,
+                        unitType,
+                        _statsPool.Get(ownedEntity).Attack,
+                        _statsPool.Get(ownedEntity).Health,
+                        _manaCostPool.Get(ownedEntity).Value,
+                        _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackSpeed)
                 });
             }
 
@@ -226,8 +243,20 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,
                     ManaCost = _manaCostPool.Get(ownedEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
-                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null
+                    BattleAnimations = unitType != null ? unitType.BattleAnimations : null,
+                    Stats = StatViewDataFactory.BuildUnitStats(
+                        _statTypeConfigService,
+                        unitType,
+                        _statsPool.Get(ownedEntity).Attack,
+                        _statsPool.Get(ownedEntity).Health,
+                        _manaCostPool.Get(ownedEntity).Value,
+                        _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                        _unitCombatStatsPool.Get(ownedEntity).AttackSpeed)
                 });
             }
 

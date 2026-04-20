@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Plinko.Scripts.Models.ViewData
@@ -20,5 +21,6 @@ namespace Plinko.Scripts.Models.ViewData
         public float AttackSpeed;
         public int UpgradeCount;
         public int Price;
+        public List<StatDisplayViewData> Stats = new();
     }
 }

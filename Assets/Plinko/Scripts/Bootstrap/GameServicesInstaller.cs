@@ -3,6 +3,7 @@ using System.IO;
 using Plinko.Scripts.Data.Locations;
 using Plinko.Scripts.Data.Pins;
 using Plinko.Scripts.Data.Settings;
+using Plinko.Scripts.Data.Stats;
 using Plinko.Scripts.Data.Units;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.Services;
@@ -17,6 +18,7 @@ namespace Plinko.Scripts.Bootstrap
         [SerializeField] private List<UnitTypeData> unitTypes = new();
         [SerializeField] private UnitNamesData unitNamesData;
         [SerializeField] private List<PinTypeData> pinTypes = new();
+        [SerializeField] private List<StatTypeData> statTypes = new();
 
         public GameServicesContext Build()
         {
@@ -28,6 +30,7 @@ namespace Plinko.Scripts.Bootstrap
             var levelConfigService = new LevelConfigService(locationConfigService);
             var unitConfigService = new UnitConfigService(unitTypes, unlocksService);
             var pinConfigService = new PinConfigService(pinTypes, unlocksService);
+            var statTypeConfigService = new StatTypeConfigService(statTypes);
             var plinkoConfigService = new PlinkoConfigService(gameSettingsService);
             var plinkoPathFactory = new PlinkoPathFactory();
             var plinkoRuntimeService = new PlinkoRuntimeService();
@@ -41,6 +44,7 @@ namespace Plinko.Scripts.Bootstrap
                 WeightedRandomService = new WeightedRandomService(),
                 UnitConfigService = unitConfigService,
                 PinConfigService = pinConfigService,
+                StatTypeConfigService = statTypeConfigService,
                 PlinkoConfigService = plinkoConfigService,
                 EnemyWaveSelectionService = new EnemyWaveSelectionService(),
                 UnitNamingService = new UnitNamingService(unitNamesData),

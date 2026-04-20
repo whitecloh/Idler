@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Plinko.Scripts.Data.Meta;
 using Plinko.Scripts.Data.Common;
+using Plinko.Scripts.Data.Stats;
 using Plinko.Scripts.Data.Visuals;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -18,16 +20,10 @@ namespace Plinko.Scripts.Data.Units
         [SerializeField] private Enums.AttackType attackType = Enums.AttackType.Melee;
         [SerializeField] private Sprite projectileSprite;
         [SerializeField] private Sprite trainingFieldSprite;
-        [SerializeField] private int baseAttack;
-        [SerializeField] private int baseHealth;
         [SerializeField] private int defaultManaCost;
-        [SerializeField] private float baseMoveSpeed = 0.4f;
-        [SerializeField] private int battleMoveRange = 1;
-        [SerializeField] private int battleAttackRange = 1;
-        [SerializeField] private float baseAttackSpeed = 0.5f;
+        [SerializeField] private List<StatValueEntryData> baseStats = new();
         [SerializeField] private bool canAttackOtherLines;
         [SerializeField] private bool canMoveBetweenLines;
-        [SerializeField] private int passiveIncomePerTick;
         [SerializeField] private int shopPrice;
         [SerializeField] private int generationWeight = 1;
         [SerializeField] private PassiveAbilityData passiveAbility;
@@ -41,20 +37,56 @@ namespace Plinko.Scripts.Data.Units
         public Enums.AttackType AttackType => attackType;
         public Sprite ProjectileSprite => projectileSprite;
         public Sprite TrainingFieldSprite => trainingFieldSprite;
+        public IReadOnlyList<StatValueEntryData> BaseStats => baseStats;
         public Sprite Icon => portraitSprite;
-        public int BaseAttack => baseAttack;
-        public int BaseHealth => baseHealth;
+        public int BaseAttack => GetIntStat(StatTypeIds.Attack);
+        public int BaseHealth => GetIntStat(StatTypeIds.Health);
         public int DefaultManaCost => defaultManaCost;
-        public float BaseMoveSpeed => baseMoveSpeed;
-        public int BattleMoveRange => battleMoveRange;
-        public int BattleAttackRange => battleAttackRange;
-        public float BaseAttackSpeed => baseAttackSpeed;
+        public float BaseMoveSpeed => GetFloatStat(StatTypeIds.MoveSpeed, 0.4f);
+        public int BattleMoveRange => GetIntStat(StatTypeIds.MoveRange, 1);
+        public int BattleAttackRange => GetIntStat(StatTypeIds.AttackRange, 1);
+        public float BaseAttackSpeed => GetFloatStat(StatTypeIds.AttackSpeed, 0.5f);
         public bool CanAttackOtherLines => canAttackOtherLines;
         public bool CanMoveBetweenLines => canMoveBetweenLines;
-        public int PassiveIncomePerTick => passiveIncomePerTick;
+        public int PassiveIncomePerTick => GetIntStat(StatTypeIds.PassiveIncome);
         public int ShopPrice => shopPrice;
         public int GenerationWeight => generationWeight;
         public PassiveAbilityData PassiveAbility => passiveAbility;
         public UnlockConditionData UnlockCondition => unlockCondition;
+
+        public bool TryGetBaseStatValue(string statTypeId, out float value)
+        {
+            if (baseStats != null)
+            {
+                for (var index = 0; index < baseStats.Count; index++)
+                {
+                    var entry = baseStats[index];
+                    if (entry == null || entry.StatType == null || entry.StatType.Id != statTypeId)
+                    {
+                        continue;
+                    }
+
+                    value = entry.Value;
+                    return true;
+                }
+            }
+
+            value = 0f;
+            return false;
+        }
+
+        private int GetIntStat(string statTypeId, int fallback = 0)
+        {
+            return TryGetBaseStatValue(statTypeId, out var value)
+                ? Mathf.RoundToInt(value)
+                : fallback;
+        }
+
+        private float GetFloatStat(string statTypeId, float fallback)
+        {
+            return TryGetBaseStatValue(statTypeId, out var value)
+                ? value
+                : fallback;
+        }
     }
 }
