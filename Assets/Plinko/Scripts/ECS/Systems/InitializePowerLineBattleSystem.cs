@@ -18,6 +18,7 @@ namespace Plinko.Scripts.ECS.Systems
 
         private EcsFilter _requestFilter;
         private EcsFilter _handCardFilter;
+        private EcsFilter _ownedUnitFilter;
         private EcsPool<InitializePowerLineBattleRequest> _requestPool;
         private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
         private EcsPool<CurrentPhaseComponent> _phasePool;
@@ -27,6 +28,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<HandStateComponent> _handStatePool;
         private EcsPool<BattleStateComponent> _battleStatePool;
         private EcsPool<HandCardComponent> _handCardPool;
+        private EcsPool<OwnedUnitComponent> _ownedUnitPool;
         private EcsPool<ManaChangedEvent> _manaChangedEventPool;
         private EcsPool<DrawPowerLineHandCardsRequest> _drawHandRequestPool;
         private EcsPool<SaveRunRequest> _saveRunRequestPool;
@@ -48,6 +50,7 @@ namespace Plinko.Scripts.ECS.Systems
             var world = systems.GetWorld();
             _requestFilter = world.Filter<InitializePowerLineBattleRequest>().End();
             _handCardFilter = world.Filter<HandCardComponent>().End();
+            _ownedUnitFilter = world.Filter<OwnedUnitComponent>().End();
             _requestPool = world.GetPool<InitializePowerLineBattleRequest>();
             _levelTypePool = world.GetPool<CurrentLevelTypeComponent>();
             _phasePool = world.GetPool<CurrentPhaseComponent>();
@@ -57,6 +60,7 @@ namespace Plinko.Scripts.ECS.Systems
             _handStatePool = world.GetPool<HandStateComponent>();
             _battleStatePool = world.GetPool<BattleStateComponent>();
             _handCardPool = world.GetPool<HandCardComponent>();
+            _ownedUnitPool = world.GetPool<OwnedUnitComponent>();
             _manaChangedEventPool = world.GetPool<ManaChangedEvent>();
             _drawHandRequestPool = world.GetPool<DrawPowerLineHandCardsRequest>();
             _saveRunRequestPool = world.GetPool<SaveRunRequest>();
@@ -91,6 +95,12 @@ namespace Plinko.Scripts.ECS.Systems
                 _battleRuntimeService.CurrentTimeline = null;
                 _battleRuntimeService.CurrentEnemyWave = null;
                 _battleRuntimeService.CurrentBaseDefenseState = null;
+                state.DeckOwnedUnitRuntimeIds.Clear();
+                foreach (var ownedUnitEntity in _ownedUnitFilter)
+                {
+                    state.DeckOwnedUnitRuntimeIds.Add(_ownedUnitPool.Get(ownedUnitEntity).RuntimeId);
+                }
+                state.DeckOwnedUnitRuntimeIds.Sort();
                 _battleRuntimeService.CurrentPowerLineState = state;
                 _battleRuntimeService.CurrentResult = null;
 
