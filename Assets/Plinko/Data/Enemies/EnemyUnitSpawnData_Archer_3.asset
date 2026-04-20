@@ -18,7 +18,7 @@ MonoBehaviour:
   - statType: {fileID: 11400000, guid: b52c069c22697ca49b08af6b55549025, type: 2}
     value: 10
   - statType: {fileID: 11400000, guid: 39ef71fdce57816499299e23fe658bc8, type: 2}
-    value: 60
+    value: 90
   - statType: {fileID: 11400000, guid: 3ae053399b021a94ab6b348a0176d5e9, type: 2}
     value: 3
   - statType: {fileID: 11400000, guid: e6d69f75dda79dd41ae4022f6aee30e3, type: 2}

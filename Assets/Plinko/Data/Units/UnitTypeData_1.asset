@@ -61,7 +61,7 @@ MonoBehaviour:
   - statType: {fileID: 11400000, guid: e6d69f75dda79dd41ae4022f6aee30e3, type: 2}
     value: 2
   - statType: {fileID: 11400000, guid: 544100599fd910f499f828cea9a95020, type: 2}
-    value: 0
+    value: 1
   canAttackOtherLines: 0
   canMoveBetweenLines: 1
   shopPrice: 30
