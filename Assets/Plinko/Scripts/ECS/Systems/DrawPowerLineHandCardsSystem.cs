@@ -4,7 +4,6 @@ using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
-using Plinko.Scripts.Services;
 using UnityEngine;
 
 namespace Plinko.Scripts.ECS.Systems
@@ -67,23 +66,35 @@ namespace Plinko.Scripts.ECS.Systems
                     _handStatePool.Get(runEntity).CardCount = 0;
                 }
 
-                var ownedRuntimeIds = new List<int>();
-                foreach (var ownedEntity in _ownedUnitFilter)
+                var occupiedOwnedRuntimeIds = new HashSet<int>();
+                foreach (var handCardEntity in _handCardFilter)
                 {
-                    ownedRuntimeIds.Add(_ownedUnitPool.Get(ownedEntity).RuntimeId);
+                    occupiedOwnedRuntimeIds.Add(_handCardOwnerPool.Get(handCardEntity).OwnedUnitRuntimeId);
                 }
 
-                if (ownedRuntimeIds.Count == 0 || request.Count <= 0)
+                var availableOwnedRuntimeIds = new List<int>();
+                foreach (var ownedEntity in _ownedUnitFilter)
+                {
+                    var ownedRuntimeId = _ownedUnitPool.Get(ownedEntity).RuntimeId;
+                    if (!occupiedOwnedRuntimeIds.Contains(ownedRuntimeId))
+                    {
+                        availableOwnedRuntimeIds.Add(ownedRuntimeId);
+                    }
+                }
+
+                if (availableOwnedRuntimeIds.Count == 0 || request.Count <= 0)
                 {
                     world.DelEntity(requestEntity);
                     continue;
                 }
 
                 ref var handState = ref _handStatePool.Get(runEntity);
-                var drawCount = Mathf.Max(0, request.Count);
+                var drawCount = Mathf.Min(Mathf.Max(0, request.Count), availableOwnedRuntimeIds.Count);
                 for (var index = 0; index < drawCount; index++)
                 {
-                    var ownerRuntimeId = ownedRuntimeIds[Random.Range(0, ownedRuntimeIds.Count)];
+                    var selectionIndex = Random.Range(0, availableOwnedRuntimeIds.Count);
+                    var ownerRuntimeId = availableOwnedRuntimeIds[selectionIndex];
+                    availableOwnedRuntimeIds.RemoveAt(selectionIndex);
                     var cardEntity = world.NewEntity();
                     _handCardPool.Add(cardEntity).HandCardRuntimeId = handState.NextRuntimeId++;
                     _handCardOwnerPool.Add(cardEntity).OwnedUnitRuntimeId = ownerRuntimeId;

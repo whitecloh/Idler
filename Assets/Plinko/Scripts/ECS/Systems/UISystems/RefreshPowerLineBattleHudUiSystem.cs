@@ -219,13 +219,25 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
 
         private List<BattleDeckUnitViewData> BuildDeckUnits()
         {
+            var handOwnedRuntimeIds = new HashSet<int>();
+            foreach (var handEntity in _handFilter)
+            {
+                handOwnedRuntimeIds.Add(_handCardOwnerPool.Get(handEntity).OwnedUnitRuntimeId);
+            }
+
             var units = new List<BattleDeckUnitViewData>();
             foreach (var ownedEntity in _ownedFilter)
             {
+                var runtimeId = _ownedUnitPool.Get(ownedEntity).RuntimeId;
+                if (handOwnedRuntimeIds.Contains(runtimeId))
+                {
+                    continue;
+                }
+
                 var unitType = _unitConfigService.GetUnit(_unitTypePool.Get(ownedEntity).Value);
                 units.Add(new BattleDeckUnitViewData
                 {
-                    RuntimeId = _ownedUnitPool.Get(ownedEntity).RuntimeId,
+                    RuntimeId = runtimeId,
                     DisplayName = _displayNamePool.Get(ownedEntity).Value,
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,

@@ -23,6 +23,7 @@ namespace Plinko.Scripts.ECS.Installers
                 .Add(new StartNewRunSystem(
                     _services.LocationConfigService,
                     _services.UnlocksService,
+                    _services.UnitNamingService,
                     _services.GameSettingsService,
                     _services.PlinkoRuntimeService,
                     _services.BattleRuntimeService,
@@ -36,6 +37,7 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.LocationConfigService,
                     _services.LevelConfigService,
                     _services.UnitConfigService,
+                    _services.UnitNamingService,
                     _services.GameSettingsService,
                     _services.PlinkoRuntimeService,
                     _services.BattleRuntimeService,
