@@ -8203,6 +8203,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UIPurchasePhaseScreenWindow
       objectReference: {fileID: 0}
+    - target: {fileID: 6355806281317265528, guid: e3bc4eedbd47c4f4e84cfaa66e94c276, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
