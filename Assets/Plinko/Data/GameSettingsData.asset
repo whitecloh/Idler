@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GameSettingsData
   m_EditorClassIdentifier: 
   startingGold: 50
+  maxGold: 999
   startingBaseHealth: 100
   handSize: 3
   manaPerTurn: 3
@@ -25,7 +26,7 @@ MonoBehaviour:
   battleTickDuration: 1
   powerLineStartingMana: 0
   powerLineMaxMana: 10
-  powerLineManaPerTick: 1
+  powerLineManaPerTick: 2
   powerLineManaTickInterval: 3
   powerLineRerollManaCost: 1
   powerLineMovementStep: 0.2
