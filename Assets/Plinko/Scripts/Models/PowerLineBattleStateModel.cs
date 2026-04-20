@@ -20,6 +20,7 @@ namespace Plinko.Scripts.Models
         public int RerollManaCost;
         public int NextRuntimeId = 1;
         public float TickAccumulator;
+        public List<int> DeckOwnedUnitRuntimeIds = new();
         public List<PowerLineLaneStateModel> Lanes = new();
         public List<PowerLineUnitStateModel> PlayerUnits = new();
         public List<PowerLineUnitStateModel> EnemyUnits = new();

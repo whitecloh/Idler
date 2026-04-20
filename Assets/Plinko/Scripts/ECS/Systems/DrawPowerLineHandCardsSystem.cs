@@ -4,12 +4,14 @@ using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
+using Plinko.Scripts.Services;
 using UnityEngine;
 
 namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class DrawPowerLineHandCardsSystem : IEcsInitSystem, IEcsRunSystem
     {
+        private readonly BattleRuntimeService _battleRuntimeService;
         private readonly RunEntityIndex _runEntityIndex;
 
         private EcsFilter _requestFilter;
@@ -23,8 +25,11 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<HandCardComponent> _handCardPool;
         private EcsPool<HandCardOwnerUnitComponent> _handCardOwnerPool;
 
-        public DrawPowerLineHandCardsSystem(RunEntityIndex runEntityIndex)
+        public DrawPowerLineHandCardsSystem(
+            BattleRuntimeService battleRuntimeService,
+            RunEntityIndex runEntityIndex)
         {
+            _battleRuntimeService = battleRuntimeService;
             _runEntityIndex = runEntityIndex;
         }
 
@@ -54,29 +59,35 @@ namespace Plinko.Scripts.ECS.Systems
                     _levelTypePool.Get(runEntity).Value != Enums.LevelType.PowerLineBattle ||
                     !_phasePool.Has(runEntity) ||
                     _phasePool.Get(runEntity).Value != Enums.PhaseType.Battle ||
-                    !_handStatePool.Has(runEntity))
+                    !_handStatePool.Has(runEntity) ||
+                    _battleRuntimeService.CurrentPowerLineState == null)
                 {
                     world.DelEntity(requestEntity);
                     continue;
                 }
 
+                var state = _battleRuntimeService.CurrentPowerLineState;
                 if (request.ClearExisting)
                 {
+                    foreach (var handCardEntity in _handCardFilter)
+                    {
+                        var ownedUnitRuntimeId = _handCardOwnerPool.Get(handCardEntity).OwnedUnitRuntimeId;
+                        if (!state.DeckOwnedUnitRuntimeIds.Contains(ownedUnitRuntimeId))
+                        {
+                            state.DeckOwnedUnitRuntimeIds.Add(ownedUnitRuntimeId);
+                        }
+                    }
+
+                    state.DeckOwnedUnitRuntimeIds.Sort();
                     ClearHand(world);
                     _handStatePool.Get(runEntity).CardCount = 0;
-                }
-
-                var occupiedOwnedRuntimeIds = new HashSet<int>();
-                foreach (var handCardEntity in _handCardFilter)
-                {
-                    occupiedOwnedRuntimeIds.Add(_handCardOwnerPool.Get(handCardEntity).OwnedUnitRuntimeId);
                 }
 
                 var availableOwnedRuntimeIds = new List<int>();
                 foreach (var ownedEntity in _ownedUnitFilter)
                 {
                     var ownedRuntimeId = _ownedUnitPool.Get(ownedEntity).RuntimeId;
-                    if (!occupiedOwnedRuntimeIds.Contains(ownedRuntimeId))
+                    if (state.DeckOwnedUnitRuntimeIds.Contains(ownedRuntimeId))
                     {
                         availableOwnedRuntimeIds.Add(ownedRuntimeId);
                     }
@@ -95,6 +106,7 @@ namespace Plinko.Scripts.ECS.Systems
                     var selectionIndex = Random.Range(0, availableOwnedRuntimeIds.Count);
                     var ownerRuntimeId = availableOwnedRuntimeIds[selectionIndex];
                     availableOwnedRuntimeIds.RemoveAt(selectionIndex);
+                    state.DeckOwnedUnitRuntimeIds.Remove(ownerRuntimeId);
                     var cardEntity = world.NewEntity();
                     _handCardPool.Add(cardEntity).HandCardRuntimeId = handState.NextRuntimeId++;
                     _handCardOwnerPool.Add(cardEntity).OwnedUnitRuntimeId = ownerRuntimeId;

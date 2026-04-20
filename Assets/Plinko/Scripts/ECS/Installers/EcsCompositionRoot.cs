@@ -203,6 +203,7 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.BattleRuntimeService,
                     _services.RunEntityIndex))
                 .Add(new DrawPowerLineHandCardsSystem(
+                    _services.BattleRuntimeService,
                     _services.RunEntityIndex))
                 .Add(new RerollPowerLineHandSystem(
                     _services.GameSettingsService,

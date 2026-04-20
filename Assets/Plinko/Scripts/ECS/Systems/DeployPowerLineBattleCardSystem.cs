@@ -33,7 +33,6 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<ManaChangedEvent> _manaChangedEventPool;
         private EcsPool<DrawPowerLineHandCardsRequest> _drawHandRequestPool;
         private EcsPool<UnitDeployedEvent> _unitDeployedEventPool;
-        private EcsPool<OwnedUnitPoolChangedEvent> _ownedUnitPoolChangedEventPool;
         private EcsPool<PowerLineUnitSpawnedEvent> _powerLineUnitSpawnedEventPool;
         private EcsPool<PowerLinePlugStateChangedEvent> _powerLinePlugStateChangedEventPool;
 
@@ -69,7 +68,6 @@ namespace Plinko.Scripts.ECS.Systems
             _manaChangedEventPool = world.GetPool<ManaChangedEvent>();
             _drawHandRequestPool = world.GetPool<DrawPowerLineHandCardsRequest>();
             _unitDeployedEventPool = world.GetPool<UnitDeployedEvent>();
-            _ownedUnitPoolChangedEventPool = world.GetPool<OwnedUnitPoolChangedEvent>();
             _powerLineUnitSpawnedEventPool = world.GetPool<PowerLineUnitSpawnedEvent>();
             _powerLinePlugStateChangedEventPool = world.GetPool<PowerLinePlugStateChangedEvent>();
         }
@@ -170,9 +168,6 @@ namespace Plinko.Scripts.ECS.Systems
                 ref var drawRequest = ref _drawHandRequestPool.Add(world.NewEntity());
                 drawRequest.Count = 1;
                 drawRequest.ClearExisting = false;
-                _ownedUnitIndex.Unregister(ownedUnitRuntimeId);
-                world.DelEntity(ownedUnitEntity);
-                _ownedUnitPoolChangedEventPool.Add(world.NewEntity());
                 _unitDeployedEventPool.Add(world.NewEntity()).OwnedUnitRuntimeId = ownedUnitRuntimeId;
                 world.DelEntity(requestEntity);
             }

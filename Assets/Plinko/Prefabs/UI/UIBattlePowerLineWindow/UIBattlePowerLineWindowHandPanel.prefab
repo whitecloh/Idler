@@ -1245,11 +1245,11 @@ MonoBehaviour:
   handRoot: {fileID: 4506438873201123447}
   handCardPrefab: {fileID: 6208809864237904708, guid: 9d7400fb7cab7ea4c841a0be892570ec, type: 3}
   deckButton: {fileID: 5571105895871889856}
+  deckCountText: {fileID: 9133645457120942677}
   rerollButton: {fileID: 447627675712636025}
   rerollCostText: {fileID: 7807338591886979110}
   manaText: {fileID: 6234930828126340333}
   manaHighlightFeedback: {fileID: 1556759955894600070}
-  floatingTextManager: {fileID: 0}
   deckPopup: {fileID: 0}
   hoverScale: 1.08
   hoverDuration: 0.12
@@ -1322,7 +1322,7 @@ GameObject:
   - component: {fileID: 7040522377197021413}
   - component: {fileID: 5571105895871889856}
   m_Layer: 5
-  m_Name: AllCards_Button
+  m_Name: Deck_Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1376,7 +1376,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6626e52301e8e85438113d9f9a73e401, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4eb321dd9f3f2be40bcf253c8acffc86, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
