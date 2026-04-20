@@ -19,6 +19,7 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private RectTransform handRoot;
         [SerializeField] private BattleHandCardView handCardPrefab;
         [SerializeField] private Button deckButton;
+        [SerializeField] private TMP_Text deckCountText;
         [SerializeField] private Button rerollButton;
         [SerializeField] private TMP_Text rerollCostText;
         [SerializeField] private TMP_Text manaText;
@@ -69,7 +70,16 @@ namespace Plinko.Scripts.View.Controllers
             manaText.text = $"{viewData.CurrentMana}/{viewData.MaxMana}";
             rerollCostText.text = $"{viewData.RerollManaCost}";
             rerollButton.interactable = viewData.CanReroll;
+            deckButton.interactable = viewData.DeckUnits.Count > 0;
+            if (deckCountText != null)
+            {
+                deckCountText.text = viewData.DeckUnits.Count.ToString();
+            }
             deckPopup.Refresh(viewData.DeckUnits);
+            if (viewData.DeckUnits.Count <= 0)
+            {
+                deckPopup.HideImmediate();
+            }
 
             SyncHand(viewData.HandCards);
             SyncAvailability();

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Leopotam.EcsLite;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Data.Levels;
+using Plinko.Scripts.Data.Locations;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
@@ -18,6 +19,7 @@ namespace Plinko.Scripts.ECS.Systems
         private readonly LocationConfigService _locationConfigService;
         private readonly LevelConfigService _levelConfigService;
         private readonly UnitConfigService _unitConfigService;
+        private readonly UnitNamingService _unitNamingService;
         private readonly GameSettingsService _gameSettingsService;
         private readonly PlinkoRuntimeService _plinkoRuntimeService;
         private readonly BattleRuntimeService _battleRuntimeService;
@@ -64,6 +66,7 @@ namespace Plinko.Scripts.ECS.Systems
             LocationConfigService locationConfigService,
             LevelConfigService levelConfigService,
             UnitConfigService unitConfigService,
+            UnitNamingService unitNamingService,
             GameSettingsService gameSettingsService,
             PlinkoRuntimeService plinkoRuntimeService,
             BattleRuntimeService battleRuntimeService,
@@ -77,6 +80,7 @@ namespace Plinko.Scripts.ECS.Systems
             _locationConfigService = locationConfigService;
             _levelConfigService = levelConfigService;
             _unitConfigService = unitConfigService;
+            _unitNamingService = unitNamingService;
             _gameSettingsService = gameSettingsService;
             _plinkoRuntimeService = plinkoRuntimeService;
             _battleRuntimeService = battleRuntimeService;
@@ -341,10 +345,52 @@ namespace Plinko.Scripts.ECS.Systems
             _runEntityIndex.SetRunEntity(runEntity);
             _battleRuntimeService.CurrentBaseDefenseState = null;
             _battleRuntimeService.CurrentPowerLineState = null;
+            var starterUnits = BuildStarterOwnedUnits(location);
+            if (starterUnits.Count > 0)
+            {
+                _restoreOwnedUnitsRequestPool.Add(world.NewEntity()).OwnedUnits = starterUnits;
+            }
 
             _runStartedEventPool.Add(world.NewEntity());
             _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
             _startLevelRequestPool.Add(world.NewEntity()).LevelIndex = 0;
+        }
+
+        private List<OwnedUnitSaveDto> BuildStarterOwnedUnits(LocationData location)
+        {
+            var result = new List<OwnedUnitSaveDto>();
+            if (location?.StartingUnits == null)
+            {
+                return result;
+            }
+
+            var nextRuntimeId = 1;
+            for (var index = 0; index < location.StartingUnits.Count; index++)
+            {
+                var unitType = location.StartingUnits[index];
+                if (unitType == null)
+                {
+                    continue;
+                }
+
+                result.Add(new OwnedUnitSaveDto
+                {
+                    RuntimeId = nextRuntimeId++,
+                    DisplayName = _unitNamingService.GetNextDisplayName(unitType.DisplayName),
+                    Level = 1,
+                    UnitTypeId = unitType.Id,
+                    Attack = Mathf.Max(0, unitType.BaseAttack),
+                    Health = Mathf.Max(1, unitType.BaseHealth),
+                    ManaCost = Mathf.Max(0, unitType.DefaultManaCost),
+                    MoveSpeed = Mathf.Max(0f, unitType.BaseMoveSpeed),
+                    AttackRange = Mathf.Max(0, unitType.BattleAttackRange),
+                    AttackSpeed = Mathf.Max(0f, unitType.BaseAttackSpeed),
+                    PassiveAbilityId = unitType.PassiveAbility != null ? unitType.PassiveAbility.Id : string.Empty,
+                    UpgradeCount = 0
+                });
+            }
+
+            return result;
         }
 
         private BattleRestoreState BuildBattleRestoreState(

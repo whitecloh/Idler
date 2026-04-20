@@ -1,10 +1,14 @@
+using System.Collections.Generic;
 using Leopotam.EcsLite;
 using Plinko.Scripts.Data.Common;
+using Plinko.Scripts.Data.Locations;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
 using Plinko.Scripts.ECS.Requests;
+using Plinko.Scripts.Models;
 using Plinko.Scripts.Services;
+using UnityEngine;
 
 namespace Plinko.Scripts.ECS.Systems
 {
@@ -12,6 +16,7 @@ namespace Plinko.Scripts.ECS.Systems
     {
         private readonly LocationConfigService _locationConfigService;
         private readonly UnlocksService _unlocksService;
+        private readonly UnitNamingService _unitNamingService;
         private readonly GameSettingsService _gameSettingsService;
         private readonly PlinkoRuntimeService _plinkoRuntimeService;
         private readonly BattleRuntimeService _battleRuntimeService;
@@ -42,10 +47,12 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<RunStartedEvent> _runStartedEventPool;
         private EcsPool<GoldChangedEvent> _goldChangedEventPool;
         private EcsPool<StartLevelRequest> _startLevelRequestPool;
+        private EcsPool<RestoreOwnedUnitsRequest> _restoreOwnedUnitsRequestPool;
 
         public StartNewRunSystem(
             LocationConfigService locationConfigService,
             UnlocksService unlocksService,
+            UnitNamingService unitNamingService,
             GameSettingsService gameSettingsService,
             PlinkoRuntimeService plinkoRuntimeService,
             BattleRuntimeService battleRuntimeService,
@@ -57,6 +64,7 @@ namespace Plinko.Scripts.ECS.Systems
         {
             _locationConfigService = locationConfigService;
             _unlocksService = unlocksService;
+            _unitNamingService = unitNamingService;
             _gameSettingsService = gameSettingsService;
             _plinkoRuntimeService = plinkoRuntimeService;
             _battleRuntimeService = battleRuntimeService;
@@ -91,6 +99,7 @@ namespace Plinko.Scripts.ECS.Systems
             _runStartedEventPool = world.GetPool<RunStartedEvent>();
             _goldChangedEventPool = world.GetPool<GoldChangedEvent>();
             _startLevelRequestPool = world.GetPool<StartLevelRequest>();
+            _restoreOwnedUnitsRequestPool = world.GetPool<RestoreOwnedUnitsRequest>();
         }
         
         public void Run(IEcsSystems systems)
@@ -158,11 +167,54 @@ namespace Plinko.Scripts.ECS.Systems
 
                 _runEntityIndex.SetRunEntity(runEntity);
 
+                var starterUnits = BuildStarterOwnedUnits(location);
+                if (starterUnits.Count > 0)
+                {
+                    _restoreOwnedUnitsRequestPool.Add(world.NewEntity()).OwnedUnits = starterUnits;
+                }
+
                 _runStartedEventPool.Add(world.NewEntity());
                 _goldChangedEventPool.Add(world.NewEntity()).Value = _gameSettingsService.GetStartingGold();
                 _startLevelRequestPool.Add(world.NewEntity()).LevelIndex = 0;
                 world.DelEntity(requestEntity);
             }
+        }
+
+        private List<OwnedUnitSaveDto> BuildStarterOwnedUnits(LocationData location)
+        {
+            var result = new List<OwnedUnitSaveDto>();
+            if (location?.StartingUnits == null)
+            {
+                return result;
+            }
+
+            var nextRuntimeId = 1;
+            for (var index = 0; index < location.StartingUnits.Count; index++)
+            {
+                var unitType = location.StartingUnits[index];
+                if (unitType == null)
+                {
+                    continue;
+                }
+
+                result.Add(new OwnedUnitSaveDto
+                {
+                    RuntimeId = nextRuntimeId++,
+                    DisplayName = _unitNamingService.GetNextDisplayName(unitType.DisplayName),
+                    Level = 1,
+                    UnitTypeId = unitType.Id,
+                    Attack = Mathf.Max(0, unitType.BaseAttack),
+                    Health = Mathf.Max(1, unitType.BaseHealth),
+                    ManaCost = Mathf.Max(0, unitType.DefaultManaCost),
+                    MoveSpeed = Mathf.Max(0f, unitType.BaseMoveSpeed),
+                    AttackRange = Mathf.Max(0, unitType.BattleAttackRange),
+                    AttackSpeed = Mathf.Max(0f, unitType.BaseAttackSpeed),
+                    PassiveAbilityId = unitType.PassiveAbility != null ? unitType.PassiveAbility.Id : string.Empty,
+                    UpgradeCount = 0
+                });
+            }
+
+            return result;
         }
     }
 }
