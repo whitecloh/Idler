@@ -1,4 +1,5 @@
 using Plinko.Scripts.Data.Meta;
+using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Data.Visuals;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -14,6 +15,8 @@ namespace Plinko.Scripts.Data.Units
         [FormerlySerializedAs("icon")]
         [SerializeField] private Sprite portraitSprite;
         [SerializeField] private CharacterAnimationSetData battleAnimations = new();
+        [SerializeField] private Enums.AttackType attackType = Enums.AttackType.Melee;
+        [SerializeField] private Sprite projectileSprite;
         [SerializeField] private Sprite trainingFieldSprite;
         [SerializeField] private int baseAttack;
         [SerializeField] private int baseHealth;
@@ -24,6 +27,7 @@ namespace Plinko.Scripts.Data.Units
         [SerializeField] private float baseAttackSpeed = 0.5f;
         [SerializeField] private bool canAttackOtherLines;
         [SerializeField] private bool canMoveBetweenLines;
+        [SerializeField] private int passiveIncomePerTick;
         [SerializeField] private int shopPrice;
         [SerializeField] private int generationWeight = 1;
         [SerializeField] private PassiveAbilityData passiveAbility;
@@ -34,6 +38,8 @@ namespace Plinko.Scripts.Data.Units
         public string Description => description;
         public Sprite PortraitSprite => portraitSprite;
         public CharacterAnimationSetData BattleAnimations => battleAnimations;
+        public Enums.AttackType AttackType => attackType;
+        public Sprite ProjectileSprite => projectileSprite;
         public Sprite TrainingFieldSprite => trainingFieldSprite;
         public Sprite Icon => portraitSprite;
         public int BaseAttack => baseAttack;
@@ -45,6 +51,7 @@ namespace Plinko.Scripts.Data.Units
         public float BaseAttackSpeed => baseAttackSpeed;
         public bool CanAttackOtherLines => canAttackOtherLines;
         public bool CanMoveBetweenLines => canMoveBetweenLines;
+        public int PassiveIncomePerTick => passiveIncomePerTick;
         public int ShopPrice => shopPrice;
         public int GenerationWeight => generationWeight;
         public PassiveAbilityData PassiveAbility => passiveAbility;

@@ -1,6 +1,7 @@
 using System;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -68,6 +69,7 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             UiAnimationManager.Instance.PlaySpringPunch(cardButton.transform as RectTransform);
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
             _onSelected.Invoke(_viewData.LocationId);
         }
     }

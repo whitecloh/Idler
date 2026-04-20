@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
 
@@ -37,6 +38,7 @@ namespace Plinko.Scripts.View.Controllers
                 }
 
                 var realCard = Instantiate(unitCardPrefab, contentRoot);
+                realCard.transform.SetSiblingIndex(0);
                 realCard.Refresh(completion.CardData);
                 realCard.RectTransform.localScale = Vector3.zero;
                 _cardsByRuntimeId[completion.RuntimeId] = realCard;
@@ -67,6 +69,7 @@ namespace Plinko.Scripts.View.Controllers
                     () =>
                     {
                         Destroy(ghostCard.gameObject);
+                        AudioManager.Instance?.Play(GameAudioCueType.CardAppear);
                         UiAnimationManager.Instance.PlayScaleTo(realCard.RectTransform, "trained-card-reveal", Vector3.one, 0.18f, Ease.OutBack);
                     });
             }

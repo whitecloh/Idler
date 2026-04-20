@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
 using TMPro;
@@ -108,6 +109,7 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             UiAnimationManager.Instance.PlaySpringPunch(buyButton.transform as RectTransform);
+            AudioManager.Instance?.Play(GameAudioCueType.PurchaseGold);
             _retrainingPhaseBridge.RequestBuyBatch();
             _isPurchaseAnimating = true;
             ApplyButtons(false, false, 0, 0);
@@ -122,6 +124,7 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             UiAnimationManager.Instance.PlaySpringPunch(rerollButton.transform as RectTransform);
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
             _retrainingPhaseBridge.RequestRerollShop();
         }
 

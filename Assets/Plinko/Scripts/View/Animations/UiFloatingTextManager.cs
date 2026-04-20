@@ -5,6 +5,8 @@ namespace Plinko.Scripts.View.Animations
 {
     public sealed class UiFloatingTextManager : MonoBehaviour
     {
+        public static UiFloatingTextManager Instance { get; private set; }
+
         [SerializeField] private RectTransform root;
         [SerializeField] private UiFloatingTextView floatingTextPrefab;
         [SerializeField] private Camera uiCamera;
@@ -14,6 +16,19 @@ namespace Plinko.Scripts.View.Animations
 
         private RectTransform _worldViewportRect;
         private Camera _worldProjectionCamera;
+
+        private void Awake()
+        {
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
 
         public void ConfigureWorldViewport(RectTransform viewportRect, Camera projectionCamera)
         {

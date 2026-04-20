@@ -1,4 +1,5 @@
 using System.Collections;
+using Plinko.Scripts.View.Audio;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -11,12 +12,13 @@ namespace Plinko.Scripts.View
             None = 0,
             MainMenu = 1,
             Purchase = 2,
-            Retraining = 3,
-            FieldUpgrade = 4,
-            StandardBattle = 5,
-            DefenceBattle = 6,
-            PowerLineBattle = 7,
-            BattleResult = 8
+            SignalPurchase = 3,
+            Retraining = 4,
+            FieldUpgrade = 5,
+            StandardBattle = 6,
+            DefenceBattle = 7,
+            PowerLineBattle = 8,
+            BattleResult = 9
         }
 
         [SerializeField] private UiLoadingWindow loadingWindow;
@@ -54,6 +56,7 @@ namespace Plinko.Scripts.View
             pendingWindow = WindowId.None;
             currentWindow = targetWindow;
             ApplyPrimaryWindow(targetWindow, true);
+            PlayOpenWindowSound(targetWindow);
         }
 
         public void Open(WindowId targetWindow)
@@ -80,6 +83,7 @@ namespace Plinko.Scripts.View
                 pendingWindow = WindowId.None;
                 currentWindow = targetWindow;
                 ApplyPrimaryWindow(targetWindow, false);
+                PlayOpenWindowSound(targetWindow);
                 return;
             }
 
@@ -155,6 +159,7 @@ namespace Plinko.Scripts.View
             yield return new WaitForSecondsRealtime(loadingMinShowDuration);
             currentWindow = targetWindow;
             ApplyPrimaryWindow(targetWindow, false);
+            PlayOpenWindowSound(targetWindow);
             loadingWindow.Hide();
             pendingWindow = WindowId.None;
             transitionRoutine = null;
@@ -182,6 +187,16 @@ namespace Plinko.Scripts.View
             }
 
             window.Show(isVisible);
+        }
+
+        private static void PlayOpenWindowSound(WindowId targetWindow)
+        {
+            if (targetWindow == WindowId.None)
+            {
+                return;
+            }
+
+            AudioManager.Instance?.Play(GameAudioCueType.WindowOpen);
         }
     }
 }

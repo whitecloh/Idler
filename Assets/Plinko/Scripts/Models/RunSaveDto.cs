@@ -25,6 +25,11 @@ namespace Plinko.Scripts.Models
         public int BattleDamageToEnemyBaseTotal;
         public int BattleDamageToPlayerBaseTotal;
         public int PurchaseRerollCount;
+        public int SignalPurchaseRerollCount;
+        public int SignalSignalsLaunchedCount;
+        public int SignalGeneratorBreakAfterSignalCount;
+        public bool SignalGeneratorBroken;
+        public bool SignalGeneratorWillBreakAfterCurrentSignal;
         public int PinRerollCount;
         public bool HasActiveRun;
         public BattleResultModel BattleResult;

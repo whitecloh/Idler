@@ -1,6 +1,7 @@
 using System;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using TMPro;
 using UnityEngine;
@@ -26,6 +27,7 @@ namespace Plinko.Scripts.View.Controllers
         private BattleResultViewData _viewData = new();
         private bool _isVisible;
         private bool _listenersBound;
+        private string _lastOutcomeAudioKey = string.Empty;
 
         public void Init(LocationBridge locationBridge, BattleBridge battleBridge)
         {
@@ -48,16 +50,26 @@ namespace Plinko.Scripts.View.Controllers
                 if (isVisible)
                 {
                     visibility.ShowAnimated();
+                    TryPlayOutcomeAudio();
                 }
                 else
                 {
                     visibility.HideAnimated();
+                    _lastOutcomeAudioKey = string.Empty;
                 }
 
                 return;
             }
 
             ResolveRoot().SetActive(isVisible);
+            if (isVisible)
+            {
+                TryPlayOutcomeAudio();
+            }
+            else
+            {
+                _lastOutcomeAudioKey = string.Empty;
+            }
         }
 
         public void SetVisibleImmediate(bool isVisible)
@@ -72,18 +84,31 @@ namespace Plinko.Scripts.View.Controllers
                 else
                 {
                     visibility.HideImmediate();
+                    _lastOutcomeAudioKey = string.Empty;
                 }
 
                 return;
             }
 
             ResolveRoot().SetActive(isVisible);
+            if (isVisible)
+            {
+                TryPlayOutcomeAudio();
+            }
+            else
+            {
+                _lastOutcomeAudioKey = string.Empty;
+            }
         }
 
         public void Refresh(BattleResultViewData viewData)
         {
             _viewData = viewData;
             ApplyViewData();
+            if (_isVisible)
+            {
+                TryPlayOutcomeAudio();
+            }
         }
 
         private string GetPrimaryActionLabel()
@@ -139,6 +164,7 @@ namespace Plinko.Scripts.View.Controllers
         private void OnPrimaryActionClicked()
         {
             UiAnimationManager.Instance.PlaySpringPunch(primaryActionButton.transform as RectTransform);
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
 
             if (_viewData.CanAdvance)
             {
@@ -155,6 +181,23 @@ namespace Plinko.Scripts.View.Controllers
         private GameObject ResolveRoot()
         {
             return root;
+        }
+
+        private void TryPlayOutcomeAudio()
+        {
+            if (!_viewData.IsVictory && !_viewData.IsDefeat)
+            {
+                return;
+            }
+
+            var audioKey = $"{_viewData.IsVictory}:{_viewData.IsDefeat}:{_viewData.IsRunCompleted}:{_viewData.PlayerBaseHealthAfter}:{_viewData.EnemyBaseHealthAfter}";
+            if (_lastOutcomeAudioKey == audioKey)
+            {
+                return;
+            }
+
+            _lastOutcomeAudioKey = audioKey;
+            AudioManager.Instance?.Play(_viewData.IsDefeat ? GameAudioCueType.Defeat : GameAudioCueType.Victory);
         }
     }
 }

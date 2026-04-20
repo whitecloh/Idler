@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a89a91ccda0e2294d94d7c5ba4913fdc, type: 3}
+  m_Name: GameAudioLibrary
+  m_EditorClassIdentifier: 
+  cues:
+  - cueType: 1
+    clips:
+    - {fileID: 8300000, guid: 28008000785d1b143bed86929b19fffb, type: 3}
+    volume: 0.251
+    pitchRange: {x: 0, y: 0}
+    loop: 1
+  - cueType: 2
+    clips:
+    - {fileID: 8300000, guid: c8a071294b66d6243bb485cd04d513d8, type: 3}
+    volume: 0.138
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 3
+    clips:
+    - {fileID: 8300000, guid: 3bc6359a61ab96f4da065b9dd4cd618c, type: 3}
+    volume: 0.079
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 4
+    clips:
+    - {fileID: 8300000, guid: d0b7a2334d4be5243805a64c83952c49, type: 3}
+    volume: 0.096
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 5
+    clips:
+    - {fileID: 8300000, guid: 151f35a03ecd8f94bb2dd82c7da8e437, type: 3}
+    volume: 0.096
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 6
+    clips:
+    - {fileID: 8300000, guid: 151f35a03ecd8f94bb2dd82c7da8e437, type: 3}
+    volume: 0.096
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 7
+    clips:
+    - {fileID: 8300000, guid: 2ec5f500e35294b41b4625d5384c300c, type: 3}
+    volume: 0.096
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 8
+    clips:
+    - {fileID: 8300000, guid: 21403c647e272e24187733d74e386d1f, type: 3}
+    volume: 0.096
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 9
+    clips:
+    - {fileID: 8300000, guid: 21403c647e272e24187733d74e386d1f, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0.57, y: 0.44}
+    loop: 0
+  - cueType: 10
+    clips:
+    - {fileID: 8300000, guid: 2a1fa53fed8a10841a10c10eacb32794, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0.57, y: 0.44}
+    loop: 0
+  - cueType: 11
+    clips:
+    - {fileID: 8300000, guid: b42016f51df3b1e4bbb0eb668f22f61a, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0.57, y: 0.44}
+    loop: 0
+  - cueType: 12
+    clips:
+    - {fileID: 8300000, guid: bc7627cb8e3f25644949105ca06386ce, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0.57, y: 0.44}
+    loop: 0
+  - cueType: 13
+    clips:
+    - {fileID: 8300000, guid: de6c38a7ae03ee14794485460553078c, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0.57, y: 0.44}
+    loop: 0
+  - cueType: 14
+    clips:
+    - {fileID: 8300000, guid: 2d6eb48bb159bc444a6f0764d501f615, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0.57, y: 0.44}
+    loop: 0
+  - cueType: 15
+    clips:
+    - {fileID: 8300000, guid: 73cabd963d33ccc43af2c9e6f2020f9c, type: 3}
+    volume: 0.054
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 16
+    clips:
+    - {fileID: 8300000, guid: 11fb74e016fb57647952bba0c2027ccc, type: 3}
+    volume: 0.127
+    pitchRange: {x: 0, y: 0}
+    loop: 0
+  - cueType: 17
+    clips:
+    - {fileID: 8300000, guid: 0173ec4409e1f0f40b1d45d3c342f795, type: 3}
+    volume: 0.155
+    pitchRange: {x: 0, y: 0}
+    loop: 0

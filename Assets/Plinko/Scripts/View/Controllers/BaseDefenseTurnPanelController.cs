@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
 using TMPro;
@@ -24,7 +25,6 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private Button autoBattleButton;
         [SerializeField] private TMP_Text manaText;
         [SerializeField] private UiTextHighlightFeedback manaHighlightFeedback;
-        [SerializeField] private UiFloatingTextManager floatingTextManager;
         [SerializeField] private BattleDeckPopupController deckPopup;
         [SerializeField] private float hoverScale = 1.08f;
         [SerializeField] private float hoverDuration = 0.12f;
@@ -136,7 +136,9 @@ namespace Plinko.Scripts.View.Controllers
                 return false;
             }
 
-            floatingTextManager.SpawnAtRectTransform($"-{SelectedCard.ManaCost}", Color.white, manaAnchor);
+            UiFloatingTextManager.Instance?.SpawnAtRectTransform($"-{SelectedCard.ManaCost}", Color.white, manaAnchor);
+            AudioManager.Instance?.Play(GameAudioCueType.PurchaseMana);
+            AudioManager.Instance?.Play(GameAudioCueType.CardDeploy);
             _battleBridge.RequestDeployCard(SelectedCard.HandCardRuntimeId, laneIndex, cellIndex);
             _viewsByRuntimeId.Remove(SelectedCard.HandCardRuntimeId);
             SelectedCard = null;
@@ -149,6 +151,7 @@ namespace Plinko.Scripts.View.Controllers
         private void HandleDeckClicked()
         {
             UiAnimationManager.Instance.PlaySpringPunch(deckButton.transform as RectTransform);
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
             deckPopup.Toggle();
         }
 
@@ -159,6 +162,7 @@ namespace Plinko.Scripts.View.Controllers
             ReturnCardsToDeck();
             deckPopup.Hide();
             UiAnimationManager.Instance.PlaySpringPunch(autoBattleButton.transform as RectTransform);
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
             _battleBridge.RequestStartBattle();
         }
 
@@ -197,6 +201,7 @@ namespace Plinko.Scripts.View.Controllers
                     Ease.OutCubic,
                     Ease.OutBack,
                     () => ReturnCardToHand(view, index));
+                AudioManager.Instance?.Play(GameAudioCueType.CardAppear);
 
                 yield return new WaitForSecondsRealtime(dealInterval);
             }

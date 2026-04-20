@@ -18,12 +18,15 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private Button nextLevelButton;
         [SerializeField] private RectTransform pendingUnitsRoot;
         [SerializeField] private PurchaseArmyPreviewUnitView pendingUnitPrefab;
-        [SerializeField] private List<RectTransform> pendingUnitAnchors = new();
+        [SerializeField] private RectTransform pendingLeftEdgeAnchor;
+        [SerializeField] private RectTransform pendingRightEdgeAnchor;
         [SerializeField] private RectTransform retrainedUnitsRoot;
         [SerializeField] private PurchaseArmyPreviewUnitView retrainedUnitPrefab;
-        [SerializeField] private List<RectTransform> retrainedUnitAnchors = new();
+        [SerializeField] private RectTransform retrainedLeftEdgeAnchor;
+        [SerializeField] private RectTransform retrainedRightEdgeAnchor;
         [SerializeField] private float spawnScaleDuration = 0.2f;
         [SerializeField] private float hideDuration = 0.18f;
+        [SerializeField] private float moveDuration = 0.18f;
 
         private readonly Dictionary<int, PurchaseArmyPreviewUnitView> _pendingViewsByRuntimeId = new();
         private readonly Dictionary<int, PurchaseArmyPreviewUnitView> _retrainedViewsByRuntimeId = new();
@@ -93,7 +96,7 @@ namespace Plinko.Scripts.View.Controllers
         private void SyncPendingGroup(IReadOnlyList<PurchaseArmyPreviewUnitViewData> units, bool immediate)
         {
             var activeRuntimeIds = new HashSet<int>();
-            var visibleCount = Mathf.Min(units.Count, pendingUnitAnchors.Count);
+            var visibleCount = units.Count;
             for (var index = 0; index < visibleCount; index++)
             {
                 var unit = units[index];
@@ -108,12 +111,12 @@ namespace Plinko.Scripts.View.Controllers
                 }
 
                 var rect = view.RectTransform;
-                rect.anchoredPosition = pendingUnitAnchors[index].anchoredPosition;
+                var targetPosition = GetLinePosition(pendingUnitsRoot, pendingLeftEdgeAnchor, pendingRightEdgeAnchor, index, visibleCount);
                 view.Refresh(unit);
-                _lastKnownPendingWorldPositions[unit.RuntimeId] = UiRectTransformUtility.GetWorldCenter(rect);
 
                 if (isNew)
                 {
+                    rect.anchoredPosition = targetPosition;
                     if (immediate)
                     {
                         rect.localScale = Vector3.one;
@@ -127,7 +130,24 @@ namespace Plinko.Scripts.View.Controllers
                 else
                 {
                     rect.localScale = Vector3.one;
+                    if (!immediate)
+                    {
+                        UiAnimationManager.Instance.PlayMoveAndScale(
+                            rect,
+                            $"retraining-pending-move-{unit.RuntimeId}",
+                            targetPosition,
+                            Vector3.one,
+                            moveDuration,
+                            Ease.OutQuad,
+                            Ease.OutQuad);
+                    }
+                    else
+                    {
+                        rect.anchoredPosition = targetPosition;
+                    }
                 }
+
+                _lastKnownPendingWorldPositions[unit.RuntimeId] = UiRectTransformUtility.GetWorldCenter(rect);
             }
 
             var staleRuntimeIds = new List<int>();
@@ -165,7 +185,7 @@ namespace Plinko.Scripts.View.Controllers
         private void SyncRetrainedGroup(IReadOnlyList<PurchaseArmyPreviewUnitViewData> units, bool immediate)
         {
             var activeRuntimeIds = new HashSet<int>();
-            var visibleCount = Mathf.Min(units.Count, retrainedUnitAnchors.Count);
+            var visibleCount = units.Count;
             for (var index = 0; index < visibleCount; index++)
             {
                 var unit = units[index];
@@ -180,11 +200,12 @@ namespace Plinko.Scripts.View.Controllers
                 }
 
                 var rect = view.RectTransform;
-                rect.anchoredPosition = retrainedUnitAnchors[index].anchoredPosition;
+                var targetPosition = GetLinePosition(retrainedUnitsRoot, retrainedLeftEdgeAnchor, retrainedRightEdgeAnchor, index, visibleCount);
                 view.Refresh(unit);
 
                 if (isNew)
                 {
+                    rect.anchoredPosition = targetPosition;
                     if (immediate)
                     {
                         rect.localScale = Vector3.one;
@@ -198,6 +219,21 @@ namespace Plinko.Scripts.View.Controllers
                 else
                 {
                     rect.localScale = Vector3.one;
+                    if (!immediate)
+                    {
+                        UiAnimationManager.Instance.PlayMoveAndScale(
+                            rect,
+                            $"retraining-retrained-move-{unit.RuntimeId}",
+                            targetPosition,
+                            Vector3.one,
+                            moveDuration,
+                            Ease.OutQuad,
+                            Ease.OutQuad);
+                    }
+                    else
+                    {
+                        rect.anchoredPosition = targetPosition;
+                    }
                 }
             }
 
@@ -226,6 +262,29 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             views.Clear();
+        }
+
+        private static Vector2 GetLinePosition(RectTransform root, RectTransform leftAnchor, RectTransform rightAnchor, int index, int totalCount)
+        {
+            var left = GetLocalAnchorPosition(root, leftAnchor);
+            var right = GetLocalAnchorPosition(root, rightAnchor);
+            if (totalCount <= 1)
+            {
+                return Vector2.Lerp(left, right, 0.5f);
+            }
+
+            var t = index / (float)(totalCount - 1);
+            return Vector2.Lerp(left, right, t);
+        }
+
+        private static Vector2 GetLocalAnchorPosition(RectTransform root, RectTransform anchor)
+        {
+            if (root == null || anchor == null)
+            {
+                return Vector2.zero;
+            }
+
+            return UiRectTransformUtility.WorldToAnchoredPosition(root, null, anchor.position);
         }
     }
 }

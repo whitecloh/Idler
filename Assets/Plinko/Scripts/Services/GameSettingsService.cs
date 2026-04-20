@@ -13,6 +13,7 @@ namespace Plinko.Scripts.Services
         }
 
         public int GetStartingGold() => _settings != null ? _settings.StartingGold : 0;
+        public int GetMaxGold() => _settings != null ? _settings.MaxGold : 0;
         public int GetStartingBaseHealth() => _settings != null ? _settings.StartingBaseHealth : 0;
         public int GetHandSize() => _settings != null ? _settings.HandSize : 3;
         public int GetManaPerTurn() => _settings != null ? _settings.ManaPerTurn : 3;

@@ -35,6 +35,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentManaComponent> _manaPool;
         private EcsPool<HandStateComponent> _handStatePool;
         private EcsPool<PurchasePhaseStateComponent> _purchasePool;
+        private EcsPool<SignalPurchasePhaseStateComponent> _signalPurchasePool;
         private EcsPool<RetrainingPhaseStateComponent> _retrainingPool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradePool;
         private EcsPool<BattleStateComponent> _battlePool;
@@ -83,6 +84,7 @@ namespace Plinko.Scripts.ECS.Systems
             _manaPool = world.GetPool<CurrentManaComponent>();
             _handStatePool = world.GetPool<HandStateComponent>();
             _purchasePool = world.GetPool<PurchasePhaseStateComponent>();
+            _signalPurchasePool = world.GetPool<SignalPurchasePhaseStateComponent>();
             _retrainingPool = world.GetPool<RetrainingPhaseStateComponent>();
             _fieldUpgradePool = world.GetPool<FieldUpgradePhaseStateComponent>();
             _battlePool = world.GetPool<BattleStateComponent>();
@@ -125,6 +127,16 @@ namespace Plinko.Scripts.ECS.Systems
                 _manaPool.Add(runEntity).Value = _gameSettingsService.GetManaPerTurn();
                 _handStatePool.Add(runEntity) = new HandStateComponent { CardCount = 0, NextRuntimeId = 1 };
                 _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = 0, ActiveTrainingCount = 0, CanEnterBattle = false };
+                _signalPurchasePool.Add(runEntity) = new SignalPurchasePhaseStateComponent
+                {
+                    RerollCount = 0,
+                    ActiveTrainingCount = 0,
+                    SignalsLaunchedCount = 0,
+                    GeneratorBreakAfterSignalCount = 1,
+                    IsGeneratorBroken = false,
+                    WillBreakAfterCurrentSignal = false,
+                    PassiveIncomeTickElapsed = 0f
+                };
                 _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
                 {
                     OfferCount = _gameSettingsService.GetDefaultRetrainingOfferCount(),

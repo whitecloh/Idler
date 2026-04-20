@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Plinko.Scripts.View.Audio;
 
 namespace Plinko.Scripts.View
 {
@@ -29,6 +30,10 @@ namespace Plinko.Scripts.View
         {
             SetVisible(id, true, immediate);
             _openPopups.Add(id);
+            if (id != PopupId.None)
+            {
+                AudioManager.Instance?.Play(GameAudioCueType.PopupOpen);
+            }
         }
 
         public void Close(PopupId id, bool immediate = false)

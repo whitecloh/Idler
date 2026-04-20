@@ -26,6 +26,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsPool<UnitLevelComponent> _levelPool;
         private EcsPool<UnitTypeIdComponent> _unitTypePool;
         private EcsPool<UnitStatsComponent> _statsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _manaCostPool;
         private EcsPool<UpgradeCountComponent> _upgradeCountPool;
         private EcsPool<OfferPriceComponent> _pricePool;
@@ -57,6 +58,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _displayNamePool = world.GetPool<UnitDisplayNameComponent>();
             _unitTypePool = world.GetPool<UnitTypeIdComponent>();
             _statsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _manaCostPool = world.GetPool<UnitManaCostComponent>();
             _upgradeCountPool = world.GetPool<UpgradeCountComponent>();
             _pricePool = world.GetPool<OfferPriceComponent>();
@@ -96,6 +98,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     Attack = _statsPool.Get(offerEntity).Attack,
                     Health = _statsPool.Get(offerEntity).Health,
                     ManaCost = _manaCostPool.Get(offerEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(offerEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(offerEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(offerEntity).AttackSpeed,
                     UpgradeCount = _upgradeCountPool.Get(offerEntity).Value,
                     Price = price
                 });

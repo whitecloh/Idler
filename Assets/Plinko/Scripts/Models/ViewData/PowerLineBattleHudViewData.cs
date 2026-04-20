@@ -31,6 +31,7 @@ namespace Plinko.Scripts.Models.ViewData
         public List<PowerLineUnitViewData> PlayerUnits = new();
         public List<PowerLineUnitViewData> EnemyUnits = new();
         public List<PowerLineUnitSpawnedEventViewData> UnitSpawnEvents = new();
+        public List<PowerLineAttackEventViewData> AttackEvents = new();
         public List<PowerLineDamageEventViewData> DamageEvents = new();
         public List<PowerLinePlugEventViewData> PlugEvents = new();
         public List<PowerLineLaneConnectedEventViewData> LaneConnectedEvents = new();
@@ -66,11 +67,13 @@ namespace Plinko.Scripts.Models.ViewData
         public float MoveSpeed;
         public int AttackRange;
         public float AttackSpeed;
+        public Enums.AttackType AttackType;
         public int LaneIndex;
         public float NormalizedPosition;
         public bool IsEnemy;
         public bool IsCarryingPlug;
         public Sprite PortraitSprite;
+        public Sprite ProjectileSprite;
         public CharacterAnimationSetData BattleAnimations;
     }
 
@@ -81,6 +84,19 @@ namespace Plinko.Scripts.Models.ViewData
         public bool IsEnemy;
         public int LaneIndex;
         public float NormalizedPosition;
+    }
+
+    [Serializable]
+    public sealed class PowerLineAttackEventViewData
+    {
+        public int AttackerRuntimeId;
+        public bool AttackerIsEnemy;
+        public bool TargetIsBase;
+        public int LaneIndex;
+        public float StartNormalizedPosition;
+        public float TargetNormalizedPosition;
+        public Enums.AttackType AttackType;
+        public Sprite ProjectileSprite;
     }
 
     [Serializable]

@@ -11,6 +11,7 @@ namespace Plinko.Scripts.View.Animations
     {
         private const string FeedbackScaleChannel = "feedback-scale";
         private const string FeedbackRotationChannel = "feedback-rotation";
+        private const string FeedbackPositionChannel = "feedback-position";
 
         public static UiAnimationManager Instance { get; private set; }
 
@@ -53,16 +54,17 @@ namespace Plinko.Scripts.View.Animations
             activeTweens.Clear();
         }
 
-        public void PlaySpringPunch(RectTransform target)
+        public void PlaySpringPunch(RectTransform target, float intensity = 1f)
         {
+            var multiplier = Mathf.Max(0.01f, intensity);
             var initialScale = target.localScale;
-            var upScale = initialScale * (1f + springPunchScale);
-            var downScale = initialScale * (1f - springPunchScale * 0.35f);
+            var upScale = initialScale * (1f + springPunchScale * multiplier);
+            var downScale = initialScale * (1f - springPunchScale * 0.35f * multiplier);
 
             var sequence = DOTween.Sequence()
-                .Append(target.DOScale(upScale, springPunchUpDuration).SetEase(Ease.OutQuad))
-                .Append(target.DOScale(downScale, springPunchDownDuration).SetEase(Ease.InOutQuad))
-                .Append(target.DOScale(initialScale, springPunchReturnDuration).SetEase(Ease.OutBack))
+                .Append(target.DOScale(upScale, Mathf.Max(0.01f, springPunchUpDuration * multiplier)).SetEase(Ease.OutQuad))
+                .Append(target.DOScale(downScale, Mathf.Max(0.01f, springPunchDownDuration * multiplier)).SetEase(Ease.InOutQuad))
+                .Append(target.DOScale(initialScale, Mathf.Max(0.01f, springPunchReturnDuration * multiplier)).SetEase(Ease.OutBack))
                 .OnKill(() =>
                 {
                     if (target != null)
@@ -81,11 +83,12 @@ namespace Plinko.Scripts.View.Animations
             ReplaceTween(target, FeedbackScaleChannel, sequence);
         }
 
-        public void PlayPunch(RectTransform target)
+        public void PlayPunch(RectTransform target, float intensity = 1f)
         {
+            var multiplier = Mathf.Max(0.01f, intensity);
             var initialScale = target.localScale;
             var tween = target
-                .DOPunchScale(Vector3.one * punchScale, punchDuration, 10, 0.8f)
+                .DOPunchScale(Vector3.one * punchScale * multiplier, Mathf.Max(0.01f, punchDuration * multiplier), 10, 0.8f)
                 .OnKill(() =>
                 {
                     if (target != null)
@@ -104,11 +107,12 @@ namespace Plinko.Scripts.View.Animations
             ReplaceTween(target, FeedbackScaleChannel, tween);
         }
 
-        public void PlayTransformPunch(Transform target)
+        public void PlayTransformPunch(Transform target, float intensity = 1f)
         {
+            var multiplier = Mathf.Max(0.01f, intensity);
             var initialScale = target.localScale;
             var tween = target
-                .DOPunchScale(Vector3.one * punchScale, punchDuration, 10, 0.8f)
+                .DOPunchScale(Vector3.one * punchScale * multiplier, Mathf.Max(0.01f, punchDuration * multiplier), 10, 0.8f)
                 .OnKill(() =>
                 {
                     if (target != null)
@@ -127,11 +131,37 @@ namespace Plinko.Scripts.View.Animations
             ReplaceTween(target, FeedbackScaleChannel, tween);
         }
 
-        public void PlayShake(RectTransform target)
+        public void PlayTransformShake(Transform target, float intensity = 1f)
         {
+            var multiplier = Mathf.Max(0.01f, intensity);
+            var initialPosition = target.localPosition;
+            var tween = target
+                .DOShakePosition(Mathf.Max(0.01f, shakeDuration * multiplier), shakeStrength * multiplier, shakeVibrato, 90f, false, true)
+                .SetEase(Ease.OutQuad)
+                .OnKill(() =>
+                {
+                    if (target != null)
+                    {
+                        target.localPosition = initialPosition;
+                    }
+                })
+                .OnComplete(() =>
+                {
+                    if (target != null)
+                    {
+                        target.localPosition = initialPosition;
+                    }
+                });
+
+            ReplaceTween(target, FeedbackPositionChannel, tween);
+        }
+
+        public void PlayShake(RectTransform target, float intensity = 1f)
+        {
+            var multiplier = Mathf.Max(0.01f, intensity);
             var initialRotation = target.localEulerAngles;
             var tween = target
-                .DOShakeRotation(shakeDuration, new Vector3(0f, 0f, shakeStrength), shakeVibrato, shakeRandomness)
+                .DOShakeRotation(Mathf.Max(0.01f, shakeDuration * multiplier), new Vector3(0f, 0f, shakeStrength * multiplier), shakeVibrato, shakeRandomness)
                 .SetEase(Ease.OutQuad)
                 .OnKill(() =>
                 {

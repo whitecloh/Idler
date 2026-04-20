@@ -64,12 +64,14 @@ namespace Plinko.Scripts.Models
         public float MoveSpeed;
         public int AttackRange;
         public float AttackSpeed;
+        public Enums.AttackType AttackType;
         public float AttackAccumulator;
         public Enums.PowerLineLane Lane;
         public float Position;
         public bool IsEnemy;
         public bool IsCarryingPlug;
         public Sprite PortraitSprite;
+        public Sprite ProjectileSprite;
         public CharacterAnimationSetData BattleAnimations;
     }
 
@@ -84,8 +86,10 @@ namespace Plinko.Scripts.Models
         public float MoveSpeed;
         public int AttackRange;
         public float AttackSpeed;
+        public Enums.AttackType AttackType;
         public Enums.PowerLineLane Lane;
         public Sprite PortraitSprite;
+        public Sprite ProjectileSprite;
         public CharacterAnimationSetData BattleAnimations;
     }
 }

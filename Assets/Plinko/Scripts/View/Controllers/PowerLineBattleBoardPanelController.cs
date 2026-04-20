@@ -78,6 +78,7 @@ namespace Plinko.Scripts.View.Controllers
                 PositionLaneViews();
             }
 
+            ApplyBoardFeedback();
             RefreshLaneStates();
         }
 
@@ -170,6 +171,23 @@ namespace Plinko.Scripts.View.Controllers
             if (_worldPresenter != null)
             {
                 _worldPresenter.BindViewport(boardViewport.rectTransform);
+            }
+        }
+
+        private void ApplyBoardFeedback()
+        {
+            if (boardViewport == null || _viewData.DamageEvents == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < _viewData.DamageEvents.Count; index++)
+            {
+                if (_viewData.DamageEvents[index].TargetIsBase)
+                {
+                    UiAnimationManager.Instance.PlaySpringPunch(boardViewport.rectTransform, 0.35f);
+                    break;
+                }
             }
         }
     }

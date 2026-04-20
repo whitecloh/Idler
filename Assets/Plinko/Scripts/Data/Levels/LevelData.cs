@@ -23,6 +23,7 @@ namespace Plinko.Scripts.Data.Levels
         [SerializeField] private List<EnemyWaveThresholdData> hpThresholdWaves = new();
         [SerializeField] private BaseDefenseBattleData baseDefenseBattle;
         [SerializeField] private PowerLineBattleData powerLineBattle;
+        [SerializeField] private SignalPurchaseData signalPurchase;
 
         public string Id => id;
         public string DisplayName => displayName;
@@ -38,5 +39,6 @@ namespace Plinko.Scripts.Data.Levels
         public IReadOnlyList<EnemyWaveThresholdData> HpThresholdWaves => hpThresholdWaves;
         public BaseDefenseBattleData BaseDefenseBattle => baseDefenseBattle;
         public PowerLineBattleData PowerLineBattle => powerLineBattle;
+        public SignalPurchaseData SignalPurchase => signalPurchase;
     }  
 }

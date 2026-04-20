@@ -1,5 +1,6 @@
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
@@ -43,12 +44,14 @@ namespace Plinko.Scripts.View.Controllers
             confirmButton.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(confirmButton.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
                 _fieldUpgradeBridge.RequestReplaceBoardPin();
             });
 
             cancelButton.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(cancelButton.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
                 if (_viewData.SelectedSlotIndex >= 0)
                 {
                     _fieldUpgradeBridge.RequestCancelBoardSlotSelection(_viewData.SelectedSlotIndex);

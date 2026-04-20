@@ -21,11 +21,13 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentLocationComponent> _locationPool;
         private EcsPool<CurrentLevelComponent> _levelPool;
         private EcsPool<CurrentPhaseComponent> _phasePool;
+        private EcsPool<SignalPurchasePhaseStateComponent> _signalPurchasePool;
         private EcsPool<RetrainingPhaseStateComponent> _retrainingPool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradePool;
         private EcsPool<RetrainingPurchasedOnLevelComponent> _purchasedOnLevelPool;
         private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
         private EcsPool<PurchasePhaseEnteredEvent> _purchasePhaseEnteredEventPool;
+        private EcsPool<SignalPurchasePhaseEnteredEvent> _signalPurchasePhaseEnteredEventPool;
         private EcsPool<RetrainingPhaseEnteredEvent> _retrainingPhaseEnteredEventPool;
         private EcsPool<FieldUpgradePhaseEnteredEvent> _fieldUpgradePhaseEnteredEventPool;
         private EcsPool<BeginBattleTurnRequest> _beginBattleTurnRequestPool;
@@ -49,11 +51,13 @@ namespace Plinko.Scripts.ECS.Systems
             _locationPool = world.GetPool<CurrentLocationComponent>();
             _levelPool = world.GetPool<CurrentLevelComponent>();
             _phasePool = world.GetPool<CurrentPhaseComponent>();
+            _signalPurchasePool = world.GetPool<SignalPurchasePhaseStateComponent>();
             _retrainingPool = world.GetPool<RetrainingPhaseStateComponent>();
             _fieldUpgradePool = world.GetPool<FieldUpgradePhaseStateComponent>();
             _purchasedOnLevelPool = world.GetPool<RetrainingPurchasedOnLevelComponent>();
             _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
             _purchasePhaseEnteredEventPool = world.GetPool<PurchasePhaseEnteredEvent>();
+            _signalPurchasePhaseEnteredEventPool = world.GetPool<SignalPurchasePhaseEnteredEvent>();
             _retrainingPhaseEnteredEventPool = world.GetPool<RetrainingPhaseEnteredEvent>();
             _fieldUpgradePhaseEnteredEventPool = world.GetPool<FieldUpgradePhaseEnteredEvent>();
             _beginBattleTurnRequestPool = world.GetPool<BeginBattleTurnRequest>();
@@ -86,6 +90,9 @@ namespace Plinko.Scripts.ECS.Systems
                     case Enums.LevelType.Purchase:
                         nextPhase = Enums.PhaseType.PurchasePhase;
                         break;
+                    case Enums.LevelType.SignalPurchase:
+                        nextPhase = Enums.PhaseType.SignalPurchasePhase;
+                        break;
                     case Enums.LevelType.Retraining:
                         nextPhase = Enums.PhaseType.RetrainingPhase;
                         break;
@@ -102,6 +109,24 @@ namespace Plinko.Scripts.ECS.Systems
                 }
 
                 _phasePool.Get(runEntity).Value = nextPhase;
+
+                ref var signalPurchaseState = ref _signalPurchasePool.Get(runEntity);
+                signalPurchaseState.RerollCount = 0;
+                signalPurchaseState.ActiveTrainingCount = 0;
+                signalPurchaseState.SignalsLaunchedCount = 0;
+                signalPurchaseState.PassiveIncomeTickElapsed = 0f;
+                signalPurchaseState.IsGeneratorBroken = false;
+                signalPurchaseState.WillBreakAfterCurrentSignal = false;
+                if (levelData.SignalPurchase != null)
+                {
+                    var minSignals = levelData.SignalPurchase.GeneratorBreakAfterMinSignals;
+                    var maxSignals = levelData.SignalPurchase.GeneratorBreakAfterMaxSignals;
+                    signalPurchaseState.GeneratorBreakAfterSignalCount = UnityEngine.Random.Range(minSignals, maxSignals + 1);
+                }
+                else
+                {
+                    signalPurchaseState.GeneratorBreakAfterSignalCount = 1;
+                }
 
                 ref var retrainingState = ref _retrainingPool.Get(runEntity);
                 retrainingState.OfferCount = levelData.PreBattlePhase != null && levelData.PreBattlePhase.OverrideRetrainingOfferCount > 0
@@ -129,6 +154,10 @@ namespace Plinko.Scripts.ECS.Systems
                 {
                     case Enums.PhaseType.PurchasePhase:
                         _purchasePhaseEnteredEventPool.Add(world.NewEntity());
+                        _saveRunRequestPool.Add(world.NewEntity());
+                        break;
+                    case Enums.PhaseType.SignalPurchasePhase:
+                        _signalPurchasePhaseEnteredEventPool.Add(world.NewEntity());
                         _saveRunRequestPool.Add(world.NewEntity());
                         break;
                     case Enums.PhaseType.RetrainingPhase:

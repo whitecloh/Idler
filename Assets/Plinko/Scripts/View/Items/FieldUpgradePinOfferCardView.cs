@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,7 @@ namespace Plinko.Scripts.View.Items
             buyButton.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(buyButton.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.PurchaseGold);
                 onBuyClicked.Invoke(_offerId);
             });
         }

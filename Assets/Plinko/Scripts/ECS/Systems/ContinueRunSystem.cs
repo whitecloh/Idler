@@ -41,6 +41,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentManaComponent> _manaPool;
         private EcsPool<HandStateComponent> _handStatePool;
         private EcsPool<PurchasePhaseStateComponent> _purchasePool;
+        private EcsPool<SignalPurchasePhaseStateComponent> _signalPurchasePool;
         private EcsPool<RetrainingPhaseStateComponent> _retrainingPool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradePool;
         private EcsPool<BattleStateComponent> _battlePool;
@@ -103,6 +104,7 @@ namespace Plinko.Scripts.ECS.Systems
             _manaPool = world.GetPool<CurrentManaComponent>();
             _handStatePool = world.GetPool<HandStateComponent>();
             _purchasePool = world.GetPool<PurchasePhaseStateComponent>();
+            _signalPurchasePool = world.GetPool<SignalPurchasePhaseStateComponent>();
             _retrainingPool = world.GetPool<RetrainingPhaseStateComponent>();
             _fieldUpgradePool = world.GetPool<FieldUpgradePhaseStateComponent>();
             _battlePool = world.GetPool<BattleStateComponent>();
@@ -211,6 +213,16 @@ namespace Plinko.Scripts.ECS.Systems
                     NextRuntimeId = battleRestore.NextHandRuntimeId
                 };
                 _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = Mathf.Max(0, dto.PurchaseRerollCount), ActiveTrainingCount = 0, CanEnterBattle = true };
+                _signalPurchasePool.Add(runEntity) = new SignalPurchasePhaseStateComponent
+                {
+                    RerollCount = Mathf.Max(0, dto.SignalPurchaseRerollCount),
+                    ActiveTrainingCount = 0,
+                    SignalsLaunchedCount = Mathf.Max(0, dto.SignalSignalsLaunchedCount),
+                    GeneratorBreakAfterSignalCount = Mathf.Max(1, dto.SignalGeneratorBreakAfterSignalCount),
+                    IsGeneratorBroken = dto.SignalGeneratorBroken,
+                    WillBreakAfterCurrentSignal = dto.SignalGeneratorWillBreakAfterCurrentSignal,
+                    PassiveIncomeTickElapsed = 0f
+                };
                 _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
                 {
                     OfferCount = retrainingOfferCount,
@@ -297,6 +309,16 @@ namespace Plinko.Scripts.ECS.Systems
             _manaPool.Add(runEntity).Value = _gameSettingsService.GetManaPerTurn();
             _handStatePool.Add(runEntity) = new HandStateComponent { CardCount = 0, NextRuntimeId = 1 };
             _purchasePool.Add(runEntity) = new PurchasePhaseStateComponent { RerollCount = 0, ActiveTrainingCount = 0, CanEnterBattle = false };
+            _signalPurchasePool.Add(runEntity) = new SignalPurchasePhaseStateComponent
+            {
+                RerollCount = 0,
+                ActiveTrainingCount = 0,
+                SignalsLaunchedCount = 0,
+                GeneratorBreakAfterSignalCount = 1,
+                IsGeneratorBroken = false,
+                WillBreakAfterCurrentSignal = false,
+                PassiveIncomeTickElapsed = 0f
+            };
             _retrainingPool.Add(runEntity) = new RetrainingPhaseStateComponent
             {
                 OfferCount = _gameSettingsService.GetDefaultRetrainingOfferCount(),
@@ -746,6 +768,9 @@ namespace Plinko.Scripts.ECS.Systems
                    dto.BattleDamageToEnemyBaseTotal >= 0 &&
                    dto.BattleDamageToPlayerBaseTotal >= 0 &&
                    dto.PurchaseRerollCount >= 0 &&
+                   dto.SignalPurchaseRerollCount >= 0 &&
+                   dto.SignalSignalsLaunchedCount >= 0 &&
+                   dto.SignalGeneratorBreakAfterSignalCount >= 0 &&
                    dto.PinRerollCount >= 0 &&
                    dto.BaseDefenseCompletedTurnCount >= 0 &&
                    dto.BaseDefenseManaCap >= 0 &&
@@ -759,6 +784,10 @@ namespace Plinko.Scripts.ECS.Systems
             {
                 case Enums.LevelType.Purchase:
                     return savedPhase == Enums.PhaseType.PurchasePhase || savedPhase == Enums.PhaseType.Result
+                        ? savedPhase
+                        : Enums.PhaseType.None;
+                case Enums.LevelType.SignalPurchase:
+                    return savedPhase == Enums.PhaseType.SignalPurchasePhase || savedPhase == Enums.PhaseType.Result
                         ? savedPhase
                         : Enums.PhaseType.None;
                 case Enums.LevelType.Retraining:

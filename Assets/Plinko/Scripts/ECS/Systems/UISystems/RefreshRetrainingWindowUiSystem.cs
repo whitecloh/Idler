@@ -40,6 +40,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsPool<UnitLevelComponent> _unitLevelPool;
         private EcsPool<UnitTypeIdComponent> _unitTypePool;
         private EcsPool<UnitStatsComponent> _statsPool;
+        private EcsPool<UnitCombatStatsComponent> _unitCombatStatsPool;
         private EcsPool<UnitManaCostComponent> _manaCostPool;
         private EcsPool<UpgradeCountComponent> _upgradeCountPool;
         private EcsPool<OfferPriceComponent> _pricePool;
@@ -96,6 +97,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _unitLevelPool = world.GetPool<UnitLevelComponent>();
             _unitTypePool = world.GetPool<UnitTypeIdComponent>();
             _statsPool = world.GetPool<UnitStatsComponent>();
+            _unitCombatStatsPool = world.GetPool<UnitCombatStatsComponent>();
             _manaCostPool = world.GetPool<UnitManaCostComponent>();
             _upgradeCountPool = world.GetPool<UpgradeCountComponent>();
             _pricePool = world.GetPool<OfferPriceComponent>();
@@ -216,6 +218,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     Attack = _statsPool.Get(offerEntity).Attack,
                     Health = _statsPool.Get(offerEntity).Health,
                     ManaCost = _manaCostPool.Get(offerEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(offerEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(offerEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(offerEntity).AttackSpeed,
                     UpgradeCount = _upgradeCountPool.Get(offerEntity).Value,
                     Price = _pricePool.Get(offerEntity).Value
                 });
@@ -415,6 +420,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     Attack = _statsPool.Get(ownedEntity).Attack,
                     Health = _statsPool.Get(ownedEntity).Health,
                     ManaCost = _manaCostPool.Get(ownedEntity).Value,
+                    MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
+                    AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
+                    AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
                     Level = _unitLevelPool.Get(ownedEntity).Value,
                     UpgradeCount = _upgradeCountPool.Get(ownedEntity).Value
                 });

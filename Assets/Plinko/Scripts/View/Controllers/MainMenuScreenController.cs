@@ -194,6 +194,7 @@ namespace Plinko.Scripts.View.Controllers
             button.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(button.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
                 callback.Invoke();
             });
         }

@@ -27,6 +27,17 @@ namespace Plinko.Scripts.ECS.Components
         public int ActiveTrainingCount;
     }
 
+    public struct SignalPurchasePhaseStateComponent
+    {
+        public int RerollCount;
+        public int ActiveTrainingCount;
+        public int SignalsLaunchedCount;
+        public int GeneratorBreakAfterSignalCount;
+        public bool IsGeneratorBroken;
+        public bool WillBreakAfterCurrentSignal;
+        public float PassiveIncomeTickElapsed;
+    }
+
     public struct FieldUpgradePhaseStateComponent
     {
         public int RerollCount;
@@ -105,6 +116,9 @@ namespace Plinko.Scripts.ECS.Components
         public bool IsRetraining;
         public int SourceOfferId;
     }
+
+    public struct SignalPendingUnitComponent { }
+    public struct SignalPendingSlotComponent { public int Value; }
     
     public struct PlinkoTrainingPlaybackComponent
     {

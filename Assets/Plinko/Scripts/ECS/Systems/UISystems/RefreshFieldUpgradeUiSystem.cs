@@ -403,7 +403,39 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 });
             }
 
+            if (System.Math.Abs(pinType.MoveSpeedModifier) > 0.001f)
+            {
+                lines.Add(new PinModifierLineViewData
+                {
+                    Label = "Move",
+                    DisplayValue = FormatSignedFloat(pinType.MoveSpeedModifier)
+                });
+            }
+
+            if (pinType.AttackRangeModifier != 0)
+            {
+                lines.Add(new PinModifierLineViewData
+                {
+                    Label = "Range",
+                    Value = pinType.AttackRangeModifier
+                });
+            }
+
+            if (System.Math.Abs(pinType.AttackSpeedModifier) > 0.001f)
+            {
+                lines.Add(new PinModifierLineViewData
+                {
+                    Label = "ASPD",
+                    DisplayValue = FormatSignedFloat(pinType.AttackSpeedModifier)
+                });
+            }
+
             return lines;
+        }
+
+        private static string FormatSignedFloat(float value)
+        {
+            return value > 0f ? $"+{value:0.##}" : value.ToString("0.##");
         }
 
         private static Dictionary<int, PinTypeData> BuildAuthoredPinsBySlot(PlinkoFieldSettingsData fieldData)

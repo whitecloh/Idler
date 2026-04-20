@@ -3,6 +3,7 @@ using DG.Tweening;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
 
@@ -19,19 +20,22 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private PowerLineUnitWorldView playerUnitPrefab;
         [SerializeField] private Transform enemyUnitsRoot;
         [SerializeField] private PowerLineUnitWorldView enemyUnitPrefab;
+        [SerializeField] private Transform projectilesRoot;
+        [SerializeField] private PowerLineProjectileWorldView projectilePrefab;
         [SerializeField] private Transform plugsRoot;
         [SerializeField] private PowerLinePlugWorldView plugPrefab;
-        [SerializeField] private UiFloatingTextManager floatingTextManager;
         [SerializeField] private float moveDuration = 0.18f;
-        [SerializeField] private float laneSideOffset = 0.25f;
         [SerializeField] private float unitStackSpacing = 0.22f;
+        [SerializeField] private float laneCongestionThreshold = 0.035f;
         [SerializeField] private float exitDistance = 0.35f;
         [SerializeField] private float exitDuration = 0.22f;
+        [SerializeField] private float projectileDuration = 0.12f;
 
         private readonly Dictionary<int, PowerLineUnitWorldView> _playerViews = new();
         private readonly Dictionary<int, PowerLineUnitWorldView> _enemyViews = new();
         private readonly Dictionary<Enums.PowerLineLane, PowerLinePlugWorldView> _plugViews = new();
         private readonly Dictionary<Enums.PowerLineLane, PowerLineLaneWorldView> _laneViewsByType = new();
+        private static Sprite _fallbackProjectileSprite;
         private PowerLineBattleHudViewData _viewData = new();
         private HandCardViewData _selectedCard;
         private int _currentMana;
@@ -73,9 +77,9 @@ namespace Plinko.Scripts.View.Controllers
 
         public void BindViewport(RectTransform viewportRect)
         {
-            if (floatingTextManager != null)
+            if (UiFloatingTextManager.Instance != null)
             {
-                floatingTextManager.ConfigureWorldViewport(viewportRect, worldCamera);
+                UiFloatingTextManager.Instance.ConfigureWorldViewport(viewportRect, worldCamera);
             }
         }
 
@@ -85,6 +89,7 @@ namespace Plinko.Scripts.View.Controllers
             _currentMana = 0;
             ClearUnitViews(_playerViews);
             ClearUnitViews(_enemyViews);
+            ClearProjectiles();
             ClearPlugViews();
             RefreshLaneStates();
         }
@@ -160,7 +165,8 @@ namespace Plinko.Scripts.View.Controllers
             bool isEnemy)
         {
             var activeRuntimeIds = new HashSet<int>();
-            var laneSlotCounters = new Dictionary<int, int>();
+            var previousNormalizedPositionByLane = new Dictionary<int, float>();
+            var congestionIndexByLane = new Dictionary<int, int>();
 
             for (var index = 0; index < units.Count; index++)
             {
@@ -171,9 +177,27 @@ namespace Plinko.Scripts.View.Controllers
                     continue;
                 }
 
+                var lateralOffset = 0f;
+                if (previousNormalizedPositionByLane.TryGetValue(unit.LaneIndex, out var previousNormalizedPosition) &&
+                    Mathf.Abs(unit.NormalizedPosition - previousNormalizedPosition) <= laneCongestionThreshold)
+                {
+                    congestionIndexByLane.TryGetValue(unit.LaneIndex, out var congestionIndex);
+                    congestionIndex++;
+                    congestionIndexByLane[unit.LaneIndex] = congestionIndex;
+                    lateralOffset = GetCongestionOffset(congestionIndex);
+                }
+                else
+                {
+                    congestionIndexByLane[unit.LaneIndex] = 0;
+                }
+
+                previousNormalizedPositionByLane[unit.LaneIndex] = unit.NormalizedPosition;
+                var targetPosition = laneView.GetWorldPosition(unit.NormalizedPosition, lateralOffset);
+
                 if (!viewsByRuntimeId.TryGetValue(unit.RuntimeId, out var view))
                 {
                     view = Instantiate(prefab, parent);
+                    view.RootTransform.position = targetPosition;
                     viewsByRuntimeId.Add(unit.RuntimeId, view);
                 }
 
@@ -188,22 +212,18 @@ namespace Plinko.Scripts.View.Controllers
                     MoveSpeed = unit.MoveSpeed,
                     AttackRange = unit.AttackRange,
                     AttackSpeed = unit.AttackSpeed,
+                    AttackType = unit.AttackType,
                     IsEnemy = unit.IsEnemy,
                     PortraitSprite = unit.PortraitSprite,
+                    ProjectileSprite = unit.ProjectileSprite,
                     BattleAnimations = unit.BattleAnimations
                 });
 
-                laneSlotCounters.TryGetValue(unit.LaneIndex, out var slotIndex);
-                laneSlotCounters[unit.LaneIndex] = slotIndex + 1;
-
-                var lateralOffset = isEnemy ? -laneSideOffset : laneSideOffset;
-                if (unit.IsCarryingPlug && !isEnemy)
-                {
-                    lateralOffset += 0.15f;
-                }
-
-                lateralOffset += GetStackOffset(slotIndex, isEnemy);
-                var targetPosition = laneView.GetWorldPosition(unit.NormalizedPosition, lateralOffset);
+                var delta = targetPosition - view.RootTransform.position;
+                var isMoving = delta.sqrMagnitude > 0.0004f;
+                var facingRight = Mathf.Abs(delta.x) > 0.001f ? delta.x >= 0f : !isEnemy;
+                view.SetFacing(facingRight);
+                view.SetMoving(isMoving);
                 UiAnimationManager.Instance.PlayWorldMoveAndScale(
                     view.RootTransform,
                     $"power-line-world-unit-{unit.RuntimeId}",
@@ -255,6 +275,10 @@ namespace Plinko.Scripts.View.Controllers
 
         private void ApplyTransientEvents()
         {
+            var playedPlayerAttackSound = false;
+            var playedEnemyAttackSound = false;
+            var playedDamageSound = false;
+
             for (var index = 0; index < _viewData.UnitSpawnEvents.Count; index++)
             {
                 var evt = _viewData.UnitSpawnEvents[index];
@@ -265,15 +289,54 @@ namespace Plinko.Scripts.View.Controllers
                 }
             }
 
+            for (var index = 0; index < _viewData.AttackEvents.Count; index++)
+            {
+                var evt = _viewData.AttackEvents[index];
+                var views = evt.AttackerIsEnemy ? _enemyViews : _playerViews;
+                if (views.TryGetValue(evt.AttackerRuntimeId, out var attackerView))
+                {
+                    var targetWorldPosition = evt.TargetIsBase
+                        ? playerBaseView.RootTransform.position
+                        : ResolveLaneWorldPosition(evt.LaneIndex, evt.TargetNormalizedPosition);
+                    attackerView.SetFacing(targetWorldPosition.x >= attackerView.RootTransform.position.x);
+                    attackerView.PlayAttack();
+                }
+
+                if (evt.AttackerIsEnemy)
+                {
+                    if (!playedEnemyAttackSound)
+                    {
+                        AudioManager.Instance?.Play(GameAudioCueType.EnemyAttack);
+                        playedEnemyAttackSound = true;
+                    }
+                }
+                else if (!playedPlayerAttackSound)
+                {
+                    AudioManager.Instance?.Play(GameAudioCueType.UnitAttack);
+                    playedPlayerAttackSound = true;
+                }
+
+                if (evt.AttackType == Enums.AttackType.Ranged)
+                {
+                    SpawnProjectile(evt);
+                }
+            }
+
             for (var index = 0; index < _viewData.DamageEvents.Count; index++)
             {
                 var evt = _viewData.DamageEvents[index];
+                if (!playedDamageSound)
+                {
+                    AudioManager.Instance?.Play(GameAudioCueType.DamageTaken);
+                    playedDamageSound = true;
+                }
+
                 if (evt.TargetIsBase)
                 {
                     UiAnimationManager.Instance.PlayTransformPunch(playerBaseView.RootTransform);
-                    if (floatingTextManager != null)
+                    if (UiFloatingTextManager.Instance != null)
                     {
-                        floatingTextManager.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), playerBaseView.RootTransform.position);
+                        UiFloatingTextManager.Instance.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), playerBaseView.RootTransform.position);
                     }
 
                     continue;
@@ -285,19 +348,20 @@ namespace Plinko.Scripts.View.Controllers
                     if (_laneViewsByType.TryGetValue((Enums.PowerLineLane)evt.LaneIndex, out var laneView))
                     {
                         var worldPosition = laneView.GetWorldPosition(evt.NormalizedPosition);
-                        if (floatingTextManager != null)
+                        if (UiFloatingTextManager.Instance != null)
                         {
-                            floatingTextManager.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), worldPosition);
+                            UiFloatingTextManager.Instance.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), worldPosition);
                         }
                     }
 
                     continue;
                 }
 
+                unitViewTarget.PlayHit();
                 UiAnimationManager.Instance.PlayTransformPunch(unitViewTarget.RootTransform);
-                if (floatingTextManager != null)
+                if (UiFloatingTextManager.Instance != null)
                 {
-                    floatingTextManager.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), unitViewTarget.RootTransform.position);
+                    UiFloatingTextManager.Instance.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), unitViewTarget.RootTransform.position);
                 }
             }
 
@@ -322,14 +386,15 @@ namespace Plinko.Scripts.View.Controllers
             }
         }
 
-        private float GetStackOffset(int slotIndex, bool isEnemy)
+        private float GetCongestionOffset(int congestionIndex)
         {
-            if (slotIndex <= 0)
+            if (congestionIndex <= 0)
             {
                 return 0f;
             }
 
-            return (isEnemy ? -1f : 1f) * slotIndex * unitStackSpacing;
+            var magnitude = ((congestionIndex + 1) / 2) * unitStackSpacing;
+            return congestionIndex % 2 == 1 ? magnitude : -magnitude;
         }
 
         private void RemoveStaleUnitViews(Dictionary<int, PowerLineUnitWorldView> viewsByRuntimeId, HashSet<int> activeRuntimeIds, bool isEnemy)
@@ -399,6 +464,74 @@ namespace Plinko.Scripts.View.Controllers
             views.Clear();
         }
 
+        private void SpawnProjectile(PowerLineAttackEventViewData evt)
+        {
+            if (projectilePrefab == null || projectilesRoot == null)
+            {
+                return;
+            }
+
+            var startWorldPosition = ResolveLaneWorldPosition(evt.LaneIndex, evt.StartNormalizedPosition);
+            var targetWorldPosition = evt.TargetIsBase
+                ? ResolveLaneWorldPosition(evt.LaneIndex, 0f)
+                : ResolveLaneWorldPosition(evt.LaneIndex, evt.TargetNormalizedPosition);
+            var projectileView = Instantiate(projectilePrefab, projectilesRoot);
+            projectileView.RootTransform.position = startWorldPosition;
+            var projectileScale = projectileView.RootTransform.localScale;
+            projectileView.Refresh(evt.ProjectileSprite != null ? evt.ProjectileSprite : GetFallbackProjectileSprite(), targetWorldPosition.x >= startWorldPosition.x);
+
+            UiAnimationManager.Instance.PlayWorldMoveAndScale(
+                projectileView.RootTransform,
+                $"power-line-projectile-{evt.AttackerRuntimeId}-{evt.LaneIndex}",
+                targetWorldPosition,
+                projectileScale,
+                projectileDuration,
+                Ease.Linear,
+                Ease.Linear,
+                () =>
+                {
+                    if (projectileView != null)
+                    {
+                        Destroy(projectileView.gameObject);
+                    }
+                });
+
+            if (projectileView.SpriteRenderer != null)
+            {
+                UiAnimationManager.Instance.PlaySpriteFade(
+                    projectileView.SpriteRenderer,
+                    $"power-line-projectile-fade-{evt.AttackerRuntimeId}-{evt.LaneIndex}",
+                    0f,
+                    projectileDuration,
+                    Ease.Linear);
+            }
+        }
+
+        private Vector3 ResolveLaneWorldPosition(int laneIndex, float normalizedPosition)
+        {
+            if (_laneViewsByType.TryGetValue((Enums.PowerLineLane)laneIndex, out var laneView))
+            {
+                return laneView.GetWorldPosition(normalizedPosition);
+            }
+
+            return Vector3.zero;
+        }
+
+        private static Sprite GetFallbackProjectileSprite()
+        {
+            if (_fallbackProjectileSprite != null)
+            {
+                return _fallbackProjectileSprite;
+            }
+
+            _fallbackProjectileSprite = Sprite.Create(
+                Texture2D.whiteTexture,
+                new Rect(0f, 0f, Texture2D.whiteTexture.width, Texture2D.whiteTexture.height),
+                new Vector2(0.5f, 0.5f),
+                100f);
+            return _fallbackProjectileSprite;
+        }
+
         private void ClearPlugViews()
         {
             foreach (var pair in _plugViews)
@@ -407,6 +540,19 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             _plugViews.Clear();
+        }
+
+        private void ClearProjectiles()
+        {
+            if (projectilesRoot == null)
+            {
+                return;
+            }
+
+            for (var index = projectilesRoot.childCount - 1; index >= 0; index--)
+            {
+                Destroy(projectilesRoot.GetChild(index).gameObject);
+            }
         }
     }
 }

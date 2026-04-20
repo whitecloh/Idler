@@ -52,6 +52,10 @@ namespace Plinko.Scripts.ECS.Requests
     public struct GenerateUnitShopOffersRequest { public int OfferCount; }
     public struct RerollUnitShopRequest { }
     public struct BuyUnitRequest { public int OfferId; }
+    public struct GenerateSignalUnitShopOffersRequest { public int OfferCount; }
+    public struct RerollSignalUnitShopRequest { }
+    public struct BuySignalUnitRequest { public int OfferId; }
+    public struct LaunchSignalRequest { }
     public struct GenerateRetrainingShopOffersRequest { public int OfferCount; }
     public struct RerollRetrainingShopRequest { }
     public struct BuyRetrainingBatchRequest { }

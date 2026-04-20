@@ -88,8 +88,10 @@ namespace Plinko.Scripts.Services
                 MoveSpeed = Mathf.Max(0f, enemy.MoveSpeed),
                 AttackRange = Mathf.Max(0, enemy.AttackRange),
                 AttackSpeed = Mathf.Max(0f, enemy.AttackSpeed),
+                AttackType = enemy.AttackType,
                 Lane = spawn.Lane,
                 PortraitSprite = enemy.PortraitSprite,
+                ProjectileSprite = enemy.ProjectileSprite,
                 BattleAnimations = enemy.BattleAnimations
             };
         }
@@ -104,8 +106,10 @@ namespace Plinko.Scripts.Services
             float moveSpeed,
             int attackRange,
             float attackSpeed,
+            Enums.AttackType attackType,
             Enums.PowerLineLane lane,
             Sprite portraitSprite,
+            Sprite projectileSprite,
             Data.Visuals.CharacterAnimationSetData battleAnimations)
         {
             return new PowerLineUnitStateModel
@@ -120,12 +124,14 @@ namespace Plinko.Scripts.Services
                 MoveSpeed = Mathf.Max(0f, moveSpeed),
                 AttackRange = Mathf.Max(0, attackRange),
                 AttackSpeed = Mathf.Max(0f, attackSpeed),
+                AttackType = attackType,
                 AttackAccumulator = 0f,
                 Lane = lane,
                 Position = 0f,
                 IsEnemy = false,
                 IsCarryingPlug = false,
                 PortraitSprite = portraitSprite,
+                ProjectileSprite = projectileSprite,
                 BattleAnimations = battleAnimations
             };
         }
@@ -144,12 +150,14 @@ namespace Plinko.Scripts.Services
                 MoveSpeed = spawn.MoveSpeed,
                 AttackRange = spawn.AttackRange,
                 AttackSpeed = spawn.AttackSpeed,
+                AttackType = spawn.AttackType,
                 AttackAccumulator = 0f,
                 Lane = spawn.Lane,
                 Position = state.LaneLength,
                 IsEnemy = true,
                 IsCarryingPlug = false,
                 PortraitSprite = spawn.PortraitSprite,
+                ProjectileSprite = spawn.ProjectileSprite,
                 BattleAnimations = spawn.BattleAnimations
             };
         }

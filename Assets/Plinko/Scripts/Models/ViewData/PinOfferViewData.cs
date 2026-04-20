@@ -20,5 +20,6 @@ namespace Plinko.Scripts.Models.ViewData
     {
         public string Label;
         public int Value;
+        public string DisplayValue;
     }
 }

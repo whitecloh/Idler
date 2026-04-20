@@ -12,9 +12,11 @@ namespace Plinko.Scripts.View.Items
         public void Refresh(PinModifierLineViewData viewData)
         {
             labelText.text = viewData.Label;
-            valueText.text = viewData.Value > 0
-                ? $"+{viewData.Value}"
-                : viewData.Value.ToString();
+            valueText.text = !string.IsNullOrWhiteSpace(viewData.DisplayValue)
+                ? viewData.DisplayValue
+                : viewData.Value > 0
+                    ? $"+{viewData.Value}"
+                    : viewData.Value.ToString();
         }
 
         public PinModifierLineViewData CaptureSnapshot()
@@ -22,7 +24,8 @@ namespace Plinko.Scripts.View.Items
             return new PinModifierLineViewData
             {
                 Label = labelText.text,
-                Value = ParseValue(valueText.text)
+                Value = ParseValue(valueText.text),
+                DisplayValue = valueText.text
             };
         }
 

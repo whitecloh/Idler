@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: level_purchase_01
   displayName: 
-  levelType: 1
+  levelType: 7
   progressSprite: {fileID: 0}
   gridSprite: {fileID: 0}
   playerBaseSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
@@ -36,3 +36,7 @@ MonoBehaviour:
   powerLineBattle:
     laneLength: 12
     spawns: []
+  signalPurchase:
+    newUnitSlotCount: 3
+    generatorBreakAfterMinSignals: 2
+    generatorBreakAfterMaxSignals: 3

@@ -112,6 +112,20 @@ namespace Plinko.Scripts.View.Controllers
             CenterCurrentItem(viewData.Levels);
         }
 
+        public void Refresh(SignalPurchasePhaseViewData viewData)
+        {
+            locationTitleText.text = viewData.LocationDisplayName;
+
+            if (_levelKey != viewData.LevelKey)
+            {
+                _levelKey = viewData.LevelKey;
+                Rebuild(viewData.Levels);
+            }
+
+            Apply(viewData.Levels);
+            CenterCurrentItem(viewData.Levels);
+        }
+
         private void Rebuild(IReadOnlyList<PurchaseLevelProgressEntryViewData> levels)
         {
             for (var index = 0; index < _items.Count; index++)

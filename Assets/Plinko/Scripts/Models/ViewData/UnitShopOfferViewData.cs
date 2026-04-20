@@ -13,6 +13,9 @@ namespace Plinko.Scripts.Models.ViewData
         public int Attack;
         public int Health;
         public int ManaCost;
+        public float MoveSpeed;
+        public int AttackRange;
+        public float AttackSpeed;
         public int Price;
     }
 }

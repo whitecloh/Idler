@@ -69,7 +69,21 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.WeightedRandomService,
                     _services.RunEntityIndex,
                     _services.ShopOfferIndex))
+                .Add(new GenerateSignalUnitShopOffersSystem(
+                    _services.GameSettingsService,
+                    _services.LevelConfigService,
+                    _services.UnitConfigService,
+                    _services.WeightedRandomService,
+                    _services.RunEntityIndex,
+                    _services.ShopOfferIndex))
                 .Add(new RerollUnitShopSystem(
+                    _services.GameSettingsService,
+                    _services.LevelConfigService,
+                    _services.UnitConfigService,
+                    _services.WeightedRandomService,
+                    _services.RunEntityIndex,
+                    _services.ShopOfferIndex))
+                .Add(new RerollSignalUnitShopSystem(
                     _services.GameSettingsService,
                     _services.LevelConfigService,
                     _services.UnitConfigService,
@@ -83,12 +97,29 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.WeightedRandomService,
                     _services.RunEntityIndex,
                     _services.ShopOfferIndex))
+                .Add(new BuySignalUnitSystem(
+                    _services.UnitConfigService,
+                    _services.UnitNamingService,
+                    _services.LevelConfigService,
+                    _services.WeightedRandomService,
+                    _services.RunEntityIndex,
+                    _services.ShopOfferIndex))
                 .Add(new BeginPurchasedTrainingSystem(
+                    _services.TrainingPipelineService,
+                    _services.RunEntityIndex))
+                .Add(new LaunchSignalSystem(
                     _services.TrainingPipelineService,
                     _services.RunEntityIndex))
                 .Add(new AdvancePlinkoTrainingPlaybackSystem())
                 .Add(new CompletePurchasedTrainingSystem(
                     _services.PlinkoRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new CompleteSignalPurchaseTrainingSystem(
+                    _services.PlinkoRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new AccrueSignalPurchaseIncomeSystem(
+                    _services.GameSettingsService,
+                    _services.UnitConfigService,
                     _services.RunEntityIndex))
                 .Add(new GenerateRetrainingShopOffersSystem(
                     _services.UnitConfigService,
@@ -198,6 +229,9 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.LocationConfigService,
                     _services.BattleRuntimeService,
                     _services.RunEntityIndex))
+                .Add(new ClampGoldSystem(
+                    _services.GameSettingsService,
+                    _services.RunEntityIndex))
                 .Add(new AdvanceToNextLevelSystem(
                     _services.BattleRuntimeService,
                     _services.LevelConfigService,
@@ -228,6 +262,16 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.RunEntityIndex,
                     _uiCompositionRoot))
                 .Add(new RefreshPurchasePhaseUiSystem(
+                    _services.GameSettingsService,
+                    _services.UnitConfigService,
+                    _services.LocationConfigService,
+                    _services.LevelConfigService,
+                    _services.PlinkoConfigService,
+                    _services.PinConfigService,
+                    _services.PlinkoRuntimeService,
+                    _services.RunEntityIndex,
+                    _uiCompositionRoot))
+                .Add(new RefreshSignalPurchasePhaseUiSystem(
                     _services.GameSettingsService,
                     _services.UnitConfigService,
                     _services.LocationConfigService,

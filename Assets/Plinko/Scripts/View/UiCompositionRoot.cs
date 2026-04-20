@@ -19,12 +19,14 @@ namespace Plinko.Scripts.View
         [SerializeField] private MainMenuBridge mainMenuBridge;
         [SerializeField] private LocationBridge locationBridge;
         [SerializeField] private PurchasePhaseBridge purchasePhaseBridge;
+        [SerializeField] private SignalPurchaseBridge signalPurchaseBridge;
         [SerializeField] private RetrainingPhaseBridge retrainingPhaseBridge;
         [SerializeField] private FieldUpgradeBridge fieldUpgradeBridge;
         [SerializeField] private BattleBridge battleBridge;
         [SerializeField] private MainMenuScreenController mainMenuScreenController;
         [SerializeField] private LocationSelectionScreenController locationSelectionScreenController;
         [SerializeField] private PurchasePhaseScreenController purchasePhaseScreenController;
+        [SerializeField] private SignalPurchasePhaseScreenController signalPurchasePhaseScreenController;
         [SerializeField] private RetrainingPhaseScreenController retrainingPhaseScreenController;
         [SerializeField] private FieldUpgradePhaseScreenController fieldUpgradePhaseScreenController;
         [SerializeField] private BattleScreenController standardBattleScreenController;
@@ -44,6 +46,7 @@ namespace Plinko.Scripts.View
         public MainMenuScreenController MainMenuScreenController => mainMenuScreenController;
         public LocationSelectionScreenController LocationSelectionScreenController => locationSelectionScreenController;
         public PurchasePhaseScreenController PurchasePhaseScreenController => purchasePhaseScreenController;
+        public SignalPurchasePhaseScreenController SignalPurchasePhaseScreenController => signalPurchasePhaseScreenController;
         public RetrainingPhaseScreenController RetrainingPhaseScreenController => retrainingPhaseScreenController;
         public FieldUpgradePhaseScreenController FieldUpgradePhaseScreenController => fieldUpgradePhaseScreenController;
         public BattleScreenController BattleScreenController => standardBattleScreenController;
@@ -62,6 +65,7 @@ namespace Plinko.Scripts.View
                 windowManager.ClearRegistrations();
                 RegisterWindowIfPresent(UiWindowManager.WindowId.MainMenu, mainMenuScreenController);
                 RegisterWindowIfPresent(UiWindowManager.WindowId.Purchase, purchasePhaseScreenController);
+                RegisterWindowIfPresent(UiWindowManager.WindowId.SignalPurchase, signalPurchasePhaseScreenController);
                 RegisterWindowIfPresent(UiWindowManager.WindowId.Retraining, retrainingPhaseScreenController);
                 RegisterWindowIfPresent(UiWindowManager.WindowId.FieldUpgrade, fieldUpgradePhaseScreenController);
                 RegisterWindowIfPresent(UiWindowManager.WindowId.StandardBattle, standardBattleScreenController);
@@ -95,6 +99,7 @@ namespace Plinko.Scripts.View
             }
 
             if (purchasePhaseScreenController != null ||
+                signalPurchasePhaseScreenController != null ||
                 retrainingPhaseScreenController != null ||
                 fieldUpgradePhaseScreenController != null ||
                 battleResultScreenController != null)
@@ -105,6 +110,11 @@ namespace Plinko.Scripts.View
             if (purchasePhaseScreenController != null)
             {
                 purchasePhaseBridge.Init(world);
+            }
+
+            if (signalPurchasePhaseScreenController != null)
+            {
+                signalPurchaseBridge.Init(world);
             }
 
             if (retrainingPhaseScreenController != null)
@@ -138,6 +148,11 @@ namespace Plinko.Scripts.View
             if (purchasePhaseScreenController != null)
             {
                 purchasePhaseScreenController.Init(purchasePhaseBridge, locationBridge);
+            }
+
+            if (signalPurchasePhaseScreenController != null)
+            {
+                signalPurchasePhaseScreenController.Init(signalPurchaseBridge, locationBridge);
             }
 
             if (retrainingPhaseScreenController != null)
@@ -195,6 +210,14 @@ namespace Plinko.Scripts.View
             if (purchasePhaseScreenController != null)
             {
                 purchasePhaseScreenController.Refresh(viewData);
+            }
+        }
+
+        public void RefreshSignalPurchasePhase(SignalPurchasePhaseViewData viewData)
+        {
+            if (signalPurchasePhaseScreenController != null)
+            {
+                signalPurchasePhaseScreenController.Refresh(viewData);
             }
         }
 
@@ -291,6 +314,11 @@ namespace Plinko.Scripts.View
                     purchasePhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.PurchasePhase);
                 }
 
+                if (signalPurchasePhaseScreenController != null)
+                {
+                    signalPurchasePhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.SignalPurchasePhase);
+                }
+
                 if (retrainingPhaseScreenController != null)
                 {
                     retrainingPhaseScreenController.Show(hasRunEntity && phase == Enums.PhaseType.RetrainingPhase);
@@ -380,6 +408,7 @@ namespace Plinko.Scripts.View
             return phase switch
             {
                 Enums.PhaseType.PurchasePhase => UiWindowManager.WindowId.Purchase,
+                Enums.PhaseType.SignalPurchasePhase => UiWindowManager.WindowId.SignalPurchase,
                 Enums.PhaseType.RetrainingPhase => UiWindowManager.WindowId.Retraining,
                 Enums.PhaseType.FieldUpgradePhase => UiWindowManager.WindowId.FieldUpgrade,
                 Enums.PhaseType.BattlePreparation => levelType == Enums.LevelType.DefenceBattle ? UiWindowManager.WindowId.DefenceBattle : UiWindowManager.WindowId.StandardBattle,

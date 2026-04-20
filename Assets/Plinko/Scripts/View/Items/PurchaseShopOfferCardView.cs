@@ -1,6 +1,7 @@
 using System;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +16,9 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private TMP_Text attackText;
         [SerializeField] private TMP_Text healthText;
         [SerializeField] private TMP_Text manaText;
+        [SerializeField] private TMP_Text moveSpeedText;
+        [SerializeField] private TMP_Text attackRangeText;
+        [SerializeField] private TMP_Text attackSpeedText;
         [SerializeField] private TMP_Text priceText;
         [SerializeField] private Button buyButton;
 
@@ -29,6 +33,7 @@ namespace Plinko.Scripts.View.Items
             buyButton.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(buyButton.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.PurchaseGold);
                 onBuyClicked.Invoke(_offerId);
             });
         }
@@ -42,6 +47,21 @@ namespace Plinko.Scripts.View.Items
             attackText.text = viewData.Attack.ToString();
             healthText.text = viewData.Health.ToString();
             manaText.text = viewData.ManaCost.ToString();
+            if (moveSpeedText != null)
+            {
+                moveSpeedText.text = viewData.MoveSpeed.ToString("0.##");
+            }
+
+            if (attackRangeText != null)
+            {
+                attackRangeText.text = viewData.AttackRange.ToString();
+            }
+
+            if (attackSpeedText != null)
+            {
+                attackSpeedText.text = viewData.AttackSpeed.ToString("0.##");
+            }
+
             priceText.text = viewData.Price.ToString();
             buyButton.interactable = canBuy;
         }
@@ -55,6 +75,9 @@ namespace Plinko.Scripts.View.Items
                 Attack = attackText.text,
                 Health = healthText.text,
                 Mana = manaText.text,
+                MoveSpeed = moveSpeedText != null ? moveSpeedText.text : string.Empty,
+                AttackRange = attackRangeText != null ? attackRangeText.text : string.Empty,
+                AttackSpeed = attackSpeedText != null ? attackSpeedText.text : string.Empty,
                 Price = priceText.text
             };
         }
@@ -67,6 +90,21 @@ namespace Plinko.Scripts.View.Items
             attackText.text = snapshot.Attack;
             healthText.text = snapshot.Health;
             manaText.text = snapshot.Mana;
+            if (moveSpeedText != null)
+            {
+                moveSpeedText.text = snapshot.MoveSpeed;
+            }
+
+            if (attackRangeText != null)
+            {
+                attackRangeText.text = snapshot.AttackRange;
+            }
+
+            if (attackSpeedText != null)
+            {
+                attackSpeedText.text = snapshot.AttackSpeed;
+            }
+
             priceText.text = snapshot.Price;
         }
 
@@ -82,6 +120,9 @@ namespace Plinko.Scripts.View.Items
             public string Attack;
             public string Health;
             public string Mana;
+            public string MoveSpeed;
+            public string AttackRange;
+            public string AttackSpeed;
             public string Price;
         }
     }

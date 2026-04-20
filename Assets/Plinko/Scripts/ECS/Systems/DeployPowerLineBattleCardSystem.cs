@@ -135,8 +135,10 @@ namespace Plinko.Scripts.ECS.Systems
                     _unitCombatStatsPool.Get(ownedUnitEntity).MoveSpeed,
                     _unitCombatStatsPool.Get(ownedUnitEntity).AttackRange,
                     _unitCombatStatsPool.Get(ownedUnitEntity).AttackSpeed,
+                    unitType != null ? unitType.AttackType : Enums.AttackType.Melee,
                     lane,
                     unitType != null ? unitType.PortraitSprite : null,
+                    unitType != null ? unitType.ProjectileSprite : null,
                     unitType != null ? unitType.BattleAnimations : null);
 
                 _battleRuntimeService.CurrentPowerLineState.PlayerUnits.Add(unit);

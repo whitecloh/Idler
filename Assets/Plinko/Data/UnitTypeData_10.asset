@@ -15,21 +15,41 @@ MonoBehaviour:
   id: unit_10
   displayName: Ranger
   description: Fast backline trainee with higher attack.
-  portraitSprite: {fileID: 21300000, guid: 9d7fada4a0d34ad4683cd006d5f1f7d8, type: 3}
+  portraitSprite: {fileID: -693081220, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
   battleAnimations:
     idleFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: -693081220, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    - {fileID: 1151162142, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    - {fileID: 1627533562, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
+    - {fileID: 1150732141, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
     runFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: -1575368880, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    - {fileID: 154749198, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    - {fileID: -1722056734, guid: c41f98d9a38de0743af836385748eeec, type: 3}
+    - {fileID: 1727092598, guid: c41f98d9a38de0743af836385748eeec, type: 3}
     attackFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: -1896041919, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 640685681, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 994853918, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 1062178059, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
     hitFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 718739901, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    - {fileID: -816820391, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    - {fileID: -1084239501, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
+    - {fileID: -2080851830, guid: ba128de28daf4b248aa22fb003e8909e, type: 3}
     castFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: -1896041919, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 640685681, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 994853918, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
+    - {fileID: 1062178059, guid: 687089550ec2b01489a8ad4d5644f31d, type: 3}
     deathFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  trainingFieldSprite: {fileID: 21300000, guid: 9d7fada4a0d34ad4683cd006d5f1f7d8, type: 3}
+    - {fileID: 908821729, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+    - {fileID: 1198156081, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+    - {fileID: 7919653, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+    - {fileID: -1248350481, guid: 6aee2acd68121cd498b8296496e07cdf, type: 3}
+  attackType: 1
+  projectileSprite: {fileID: 21300000, guid: a696071f55377a34db41021975b2e9c3, type: 3}
+  trainingFieldSprite: {fileID: -693081220, guid: 0431818096588ab408eeba18d8eeaa5f, type: 3}
   baseAttack: 5
   baseHealth: 50
   defaultManaCost: 0
@@ -39,6 +59,7 @@ MonoBehaviour:
   baseAttackSpeed: 1
   canAttackOtherLines: 0
   canMoveBetweenLines: 1
+  passiveIncomePerTick: 1
   shopPrice: 8
   generationWeight: 4
   passiveAbility: {fileID: 11400000, guid: 48ad2df78f1b4e0ea67e5b8d2aa76101, type: 2}

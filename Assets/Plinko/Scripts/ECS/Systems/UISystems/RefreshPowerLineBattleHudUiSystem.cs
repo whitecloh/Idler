@@ -40,10 +40,12 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsFilter _handFilter;
         private EcsFilter _ownedFilter;
         private EcsFilter _unitSpawnedFilter;
+        private EcsFilter _attackFilter;
         private EcsFilter _damageFilter;
         private EcsFilter _plugChangedFilter;
         private EcsFilter _laneConnectedFilter;
         private EcsPool<PowerLineUnitSpawnedEvent> _unitSpawnedEventPool;
+        private EcsPool<PowerLineAttackEvent> _attackEventPool;
         private EcsPool<PowerLineDamageEvent> _damageEventPool;
         private EcsPool<PowerLinePlugStateChangedEvent> _plugChangedEventPool;
         private EcsPool<PowerLineLaneConnectedEvent> _laneConnectedEventPool;
@@ -85,10 +87,12 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _handFilter = world.Filter<HandCardComponent>().Inc<HandCardOwnerUnitComponent>().End();
             _ownedFilter = world.Filter<OwnedUnitComponent>().End();
             _unitSpawnedFilter = world.Filter<PowerLineUnitSpawnedEvent>().End();
+            _attackFilter = world.Filter<PowerLineAttackEvent>().End();
             _damageFilter = world.Filter<PowerLineDamageEvent>().End();
             _plugChangedFilter = world.Filter<PowerLinePlugStateChangedEvent>().End();
             _laneConnectedFilter = world.Filter<PowerLineLaneConnectedEvent>().End();
             _unitSpawnedEventPool = world.GetPool<PowerLineUnitSpawnedEvent>();
+            _attackEventPool = world.GetPool<PowerLineAttackEvent>();
             _damageEventPool = world.GetPool<PowerLineDamageEvent>();
             _plugChangedEventPool = world.GetPool<PowerLinePlugStateChangedEvent>();
             _laneConnectedEventPool = world.GetPool<PowerLineLaneConnectedEvent>();
@@ -157,6 +161,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 PlayerUnits = BuildUnits(state.PlayerUnits, state.LaneLength),
                 EnemyUnits = BuildUnits(state.EnemyUnits, state.LaneLength),
                 UnitSpawnEvents = BuildUnitSpawnEvents(state.LaneLength),
+                AttackEvents = BuildAttackEvents(state.LaneLength),
                 DamageEvents = BuildDamageEvents(state.LaneLength),
                 PlugEvents = BuildPlugEvents(state.LaneLength),
                 LaneConnectedEvents = BuildLaneConnectedEvents()
@@ -278,11 +283,13 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     MoveSpeed = unit.MoveSpeed,
                     AttackRange = unit.AttackRange,
                     AttackSpeed = unit.AttackSpeed,
+                    AttackType = unit.AttackType,
                     LaneIndex = (int)unit.Lane,
                     NormalizedPosition = laneLength > 0f ? unit.Position / laneLength : 0f,
                     IsEnemy = unit.IsEnemy,
                     IsCarryingPlug = unit.IsCarryingPlug,
                     PortraitSprite = unit.PortraitSprite,
+                    ProjectileSprite = unit.ProjectileSprite,
                     BattleAnimations = unit.BattleAnimations
                 });
             }
@@ -307,6 +314,28 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     IsEnemy = evt.IsEnemy,
                     LaneIndex = (int)evt.Lane,
                     NormalizedPosition = laneLength > 0f ? evt.Position / laneLength : 0f
+                });
+            }
+
+            return result;
+        }
+
+        private List<PowerLineAttackEventViewData> BuildAttackEvents(float laneLength)
+        {
+            var result = new List<PowerLineAttackEventViewData>();
+            foreach (var entity in _attackFilter)
+            {
+                var evt = _attackEventPool.Get(entity);
+                result.Add(new PowerLineAttackEventViewData
+                {
+                    AttackerRuntimeId = evt.AttackerRuntimeId,
+                    AttackerIsEnemy = evt.AttackerIsEnemy,
+                    TargetIsBase = evt.TargetIsBase,
+                    LaneIndex = (int)evt.Lane,
+                    StartNormalizedPosition = laneLength > 0f ? evt.StartPosition / laneLength : 0f,
+                    TargetNormalizedPosition = laneLength > 0f ? evt.TargetPosition / laneLength : 0f,
+                    AttackType = evt.AttackType,
+                    ProjectileSprite = evt.ProjectileSprite
                 });
             }
 

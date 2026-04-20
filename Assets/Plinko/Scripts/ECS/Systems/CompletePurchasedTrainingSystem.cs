@@ -1,4 +1,5 @@
 using Leopotam.EcsLite;
+using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.ECS.Components;
 using Plinko.Scripts.ECS.Events;
 using Plinko.Scripts.ECS.Indexes;
@@ -16,6 +17,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsFilter _eventFilter;
         private EcsFilter _stagedFilter;
         private EcsPool<TrainingCompletedEvent> _trainingCompletedEventPool;
+        private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<StagedTraineeComponent> _stagedPool;
         private EcsPool<PurchasePhaseStateComponent> _purchaseStatePool;
         private EcsPool<RegisterOwnedUnitRequest> _registerOwnedUnitRequestPool;
@@ -32,6 +34,7 @@ namespace Plinko.Scripts.ECS.Systems
             _eventFilter = world.Filter<TrainingCompletedEvent>().End();
             _stagedFilter = world.Filter<StagedTraineeComponent>().End();
             _trainingCompletedEventPool = world.GetPool<TrainingCompletedEvent>();
+            _phasePool = world.GetPool<CurrentPhaseComponent>();
             _stagedPool = world.GetPool<StagedTraineeComponent>();
             _purchaseStatePool = world.GetPool<PurchasePhaseStateComponent>();
             _registerOwnedUnitRequestPool = world.GetPool<RegisterOwnedUnitRequest>();
@@ -41,6 +44,11 @@ namespace Plinko.Scripts.ECS.Systems
         {
             var world = systems.GetWorld();
             if (!_runEntityIndex.TryGetRunEntity(out var runEntity))
+            {
+                return;
+            }
+
+            if (_phasePool.Get(runEntity).Value != Enums.PhaseType.PurchasePhase)
             {
                 return;
             }

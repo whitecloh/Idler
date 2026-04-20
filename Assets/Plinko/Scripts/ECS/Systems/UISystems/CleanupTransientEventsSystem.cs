@@ -13,6 +13,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsFilter _ownedUnitReplacedFilter;
         private EcsFilter _ownedUnitPoolChangedFilter;
         private EcsFilter _purchasePhaseEnteredFilter;
+        private EcsFilter _signalPurchasePhaseEnteredFilter;
         private EcsFilter _retrainingPhaseEnteredFilter;
         private EcsFilter _fieldUpgradePhaseEnteredFilter;
         private EcsFilter _shopOffersChangedFilter;
@@ -23,6 +24,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsFilter _plinkoBoardChangedFilter;
         private EcsFilter _pinPurchasedFilter;
         private EcsFilter _unitPurchasedFilter;
+        private EcsFilter _signalUnitPurchasedFilter;
+        private EcsFilter _signalLaunchStartedFilter;
+        private EcsFilter _signalGeneratorBrokenFilter;
         private EcsFilter _unitTrainingStartedFilter;
         private EcsFilter _trainingPlaybackStartedFilter;
         private EcsFilter _trainingCompletedFilter;
@@ -32,6 +36,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         private EcsFilter _manaChangedFilter;
         private EcsFilter _enemyWaveSelectedFilter;
         private EcsFilter _powerLineUnitSpawnedFilter;
+        private EcsFilter _powerLineAttackFilter;
         private EcsFilter _powerLineDamageFilter;
         private EcsFilter _powerLineUnitDiedFilter;
         private EcsFilter _powerLinePlugStateChangedFilter;
@@ -55,6 +60,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _ownedUnitReplacedFilter = world.Filter<OwnedUnitReplacedEvent>().End();
             _ownedUnitPoolChangedFilter = world.Filter<OwnedUnitPoolChangedEvent>().End();
             _purchasePhaseEnteredFilter = world.Filter<PurchasePhaseEnteredEvent>().End();
+            _signalPurchasePhaseEnteredFilter = world.Filter<SignalPurchasePhaseEnteredEvent>().End();
             _retrainingPhaseEnteredFilter = world.Filter<RetrainingPhaseEnteredEvent>().End();
             _fieldUpgradePhaseEnteredFilter = world.Filter<FieldUpgradePhaseEnteredEvent>().End();
             _shopOffersChangedFilter = world.Filter<ShopOffersChangedEvent>().End();
@@ -65,6 +71,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _plinkoBoardChangedFilter = world.Filter<PlinkoBoardChangedEvent>().End();
             _pinPurchasedFilter = world.Filter<PinPurchasedEvent>().End();
             _unitPurchasedFilter = world.Filter<UnitPurchasedEvent>().End();
+            _signalUnitPurchasedFilter = world.Filter<SignalUnitPurchasedEvent>().End();
+            _signalLaunchStartedFilter = world.Filter<SignalLaunchStartedEvent>().End();
+            _signalGeneratorBrokenFilter = world.Filter<SignalGeneratorBrokenEvent>().End();
             _unitTrainingStartedFilter = world.Filter<UnitTrainingStartedEvent>().End();
             _trainingPlaybackStartedFilter = world.Filter<TrainingPlaybackStartedEvent>().End();
             _trainingCompletedFilter = world.Filter<TrainingCompletedEvent>().End();
@@ -74,6 +83,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             _manaChangedFilter = world.Filter<ManaChangedEvent>().End();
             _enemyWaveSelectedFilter = world.Filter<EnemyWaveSelectedEvent>().End();
             _powerLineUnitSpawnedFilter = world.Filter<PowerLineUnitSpawnedEvent>().End();
+            _powerLineAttackFilter = world.Filter<PowerLineAttackEvent>().End();
             _powerLineDamageFilter = world.Filter<PowerLineDamageEvent>().End();
             _powerLineUnitDiedFilter = world.Filter<PowerLineUnitDiedEvent>().End();
             _powerLinePlugStateChangedFilter = world.Filter<PowerLinePlugStateChangedEvent>().End();
@@ -98,6 +108,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             DeleteFilter(world, _ownedUnitReplacedFilter);
             DeleteFilter(world, _ownedUnitPoolChangedFilter);
             DeleteFilter(world, _purchasePhaseEnteredFilter);
+            DeleteFilter(world, _signalPurchasePhaseEnteredFilter);
             DeleteFilter(world, _retrainingPhaseEnteredFilter);
             DeleteFilter(world, _fieldUpgradePhaseEnteredFilter);
             DeleteFilter(world, _shopOffersChangedFilter);
@@ -108,6 +119,9 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             DeleteFilter(world, _plinkoBoardChangedFilter);
             DeleteFilter(world, _pinPurchasedFilter);
             DeleteFilter(world, _unitPurchasedFilter);
+            DeleteFilter(world, _signalUnitPurchasedFilter);
+            DeleteFilter(world, _signalLaunchStartedFilter);
+            DeleteFilter(world, _signalGeneratorBrokenFilter);
             DeleteFilter(world, _unitTrainingStartedFilter);
             DeleteFilter(world, _trainingPlaybackStartedFilter);
             DeleteFilter(world, _trainingCompletedFilter);
@@ -117,6 +131,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             DeleteFilter(world, _manaChangedFilter);
             DeleteFilter(world, _enemyWaveSelectedFilter);
             DeleteFilter(world, _powerLineUnitSpawnedFilter);
+            DeleteFilter(world, _powerLineAttackFilter);
             DeleteFilter(world, _powerLineDamageFilter);
             DeleteFilter(world, _powerLineUnitDiedFilter);
             DeleteFilter(world, _powerLinePlugStateChangedFilter);

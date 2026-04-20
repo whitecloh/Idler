@@ -97,7 +97,7 @@ namespace Plinko.Scripts.View.Controllers
                 var basketData = viewData.Baskets[index];
                 var basketView = Instantiate(basketPrefab, basketsRoot);
                 var rect = basketView.RectTransform;
-                rect.anchoredPosition = BuildBasketPosition(basketData.BasketIndex, viewData.Baskets.Count);
+                rect.anchoredPosition = BuildBasketPosition(basketData.BasketIndex, viewData.Baskets.Count, rowCounts);
                 basketView.Refresh(basketData);
                 _basketViews.Add(basketView);
                 _basketViewsById[basketData.BasketId] = basketView;
@@ -125,7 +125,7 @@ namespace Plinko.Scripts.View.Controllers
                 var basketData = viewData.Baskets[index];
                 var basketView = Instantiate(basketPrefab, basketsRoot);
                 var rect = basketView.RectTransform;
-                rect.anchoredPosition = BuildBasketPosition(basketData.BasketIndex, viewData.Baskets.Count);
+                rect.anchoredPosition = BuildBasketPosition(basketData.BasketIndex, viewData.Baskets.Count, rowCounts);
                 basketView.Refresh(basketData);
                 _basketViews.Add(basketView);
                 _basketViewsById[basketData.BasketId] = basketView;
@@ -293,14 +293,35 @@ namespace Plinko.Scripts.View.Controllers
         {
             var rowCount = rowCounts.TryGetValue(rowIndex, out var count) ? count : 1;
             var x = (columnIndex - (rowCount - 1) * 0.5f) * _horizontalSpacing * pixelsPerFieldUnit;
-            var y = -rowIndex * _verticalSpacing * pixelsPerFieldUnit;
+            var y = GetTopY(rowCounts) - rowIndex * _verticalSpacing * pixelsPerFieldUnit;
             return new Vector2(x, y);
         }
 
-        private Vector2 BuildBasketPosition(int basketIndex, int totalBasketCount)
+        private Vector2 BuildBasketPosition(int basketIndex, int totalBasketCount, IReadOnlyDictionary<int, int> rowCounts)
         {
             var x = (basketIndex - (totalBasketCount - 1) * 0.5f) * _horizontalSpacing * pixelsPerFieldUnit;
-            return new Vector2(x, 0f);
+            var y = GetTopY(rowCounts) - GetTotalRowCount(rowCounts) * _verticalSpacing * pixelsPerFieldUnit;
+            return new Vector2(x, y);
+        }
+
+        private float GetTopY(IReadOnlyDictionary<int, int> rowCounts)
+        {
+            var totalRowCount = Mathf.Max(1, GetTotalRowCount(rowCounts));
+            return (totalRowCount - 1) * _verticalSpacing * pixelsPerFieldUnit * 0.5f;
+        }
+
+        private static int GetTotalRowCount(IReadOnlyDictionary<int, int> rowCounts)
+        {
+            var maxRowIndex = -1;
+            foreach (var pair in rowCounts)
+            {
+                if (pair.Key > maxRowIndex)
+                {
+                    maxRowIndex = pair.Key;
+                }
+            }
+
+            return maxRowIndex + 1;
         }
 
         private static Dictionary<int, int> BuildRowCounts(IReadOnlyList<PurchaseFieldPinViewData> pins)

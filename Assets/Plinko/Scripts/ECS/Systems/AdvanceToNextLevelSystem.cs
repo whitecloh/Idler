@@ -22,6 +22,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentLevelComponent> _levelPool;
         private EcsPool<RunStatusComponent> _statusPool;
         private EcsPool<PurchasePhaseStateComponent> _purchaseStatePool;
+        private EcsPool<SignalPurchasePhaseStateComponent> _signalPurchaseStatePool;
         private EcsPool<RetrainingPhaseStateComponent> _retrainingStatePool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradeStatePool;
         private EcsPool<LevelCompletedEvent> _levelCompletedEventPool;
@@ -50,6 +51,7 @@ namespace Plinko.Scripts.ECS.Systems
             _levelPool = world.GetPool<CurrentLevelComponent>();
             _statusPool = world.GetPool<RunStatusComponent>();
             _purchaseStatePool = world.GetPool<PurchasePhaseStateComponent>();
+            _signalPurchaseStatePool = world.GetPool<SignalPurchasePhaseStateComponent>();
             _retrainingStatePool = world.GetPool<RetrainingPhaseStateComponent>();
             _fieldUpgradeStatePool = world.GetPool<FieldUpgradePhaseStateComponent>();
             _levelCompletedEventPool = world.GetPool<LevelCompletedEvent>();
@@ -102,6 +104,10 @@ namespace Plinko.Scripts.ECS.Systems
                 case Enums.PhaseType.PurchasePhase:
                     return !_purchaseStatePool.Has(runEntity) ||
                            _purchaseStatePool.Get(runEntity).ActiveTrainingCount <= 0;
+                case Enums.PhaseType.SignalPurchasePhase:
+                    return !_signalPurchaseStatePool.Has(runEntity) ||
+                           (_signalPurchaseStatePool.Get(runEntity).ActiveTrainingCount <= 0 &&
+                            _signalPurchaseStatePool.Get(runEntity).IsGeneratorBroken);
                 case Enums.PhaseType.RetrainingPhase:
                     return !_retrainingStatePool.Has(runEntity) ||
                            _retrainingStatePool.Get(runEntity).ActiveTrainingCount <= 0;

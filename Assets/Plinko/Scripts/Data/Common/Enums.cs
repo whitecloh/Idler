@@ -10,7 +10,8 @@ namespace Plinko.Scripts.Data.Common
             FieldUpgrade = 3,
             StandardBattle = 4,
             DefenceBattle = 5,
-            PowerLineBattle = 6
+            PowerLineBattle = 6,
+            SignalPurchase = 7
         }
 
         public enum PowerLineLane
@@ -19,6 +20,12 @@ namespace Plinko.Scripts.Data.Common
             Yellow = 1,
             Blue = 2,
             Green = 3
+        }
+
+        public enum AttackType
+        {
+            Melee = 0,
+            Ranged = 1
         }
 
         public enum PhaseType
@@ -33,7 +40,8 @@ namespace Plinko.Scripts.Data.Common
             BattlePreparation = 7,
             Battle = 8,
             BattlePlayback = 9,
-            Result = 10
+            Result = 10,
+            SignalPurchasePhase = 11
         }
 
         public enum RunStatus

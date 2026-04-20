@@ -8,6 +8,7 @@ namespace Plinko.Scripts.Data.Settings
     public sealed class GameSettingsData : ScriptableObject
     {
         [SerializeField] private int startingGold;
+        [SerializeField] private int maxGold = 999;
         [SerializeField] private int startingBaseHealth;
         [SerializeField] private int handSize = 3;
         [SerializeField] private int manaPerTurn = 3;
@@ -28,6 +29,7 @@ namespace Plinko.Scripts.Data.Settings
         [SerializeField] private PlinkoFieldSettingsData fallbackPlinkoField;
 
         public int StartingGold => startingGold;
+        public int MaxGold => maxGold;
         public int StartingBaseHealth => startingBaseHealth;
         public int HandSize => handSize;
         public int ManaPerTurn => manaPerTurn;

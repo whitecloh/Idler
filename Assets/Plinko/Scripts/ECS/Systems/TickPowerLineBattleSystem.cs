@@ -36,6 +36,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<RunFailedEvent> _runFailedEventPool;
         private EcsPool<SaveRunRequest> _saveRunRequestPool;
         private EcsPool<PowerLineUnitSpawnedEvent> _powerLineUnitSpawnedEventPool;
+        private EcsPool<PowerLineAttackEvent> _powerLineAttackEventPool;
         private EcsPool<PowerLineDamageEvent> _powerLineDamageEventPool;
         private EcsPool<PowerLineUnitDiedEvent> _powerLineUnitDiedEventPool;
         private EcsPool<PowerLinePlugStateChangedEvent> _powerLinePlugStateChangedEventPool;
@@ -75,6 +76,7 @@ namespace Plinko.Scripts.ECS.Systems
             _runFailedEventPool = world.GetPool<RunFailedEvent>();
             _saveRunRequestPool = world.GetPool<SaveRunRequest>();
             _powerLineUnitSpawnedEventPool = world.GetPool<PowerLineUnitSpawnedEvent>();
+            _powerLineAttackEventPool = world.GetPool<PowerLineAttackEvent>();
             _powerLineDamageEventPool = world.GetPool<PowerLineDamageEvent>();
             _powerLineUnitDiedEventPool = world.GetPool<PowerLineUnitDiedEvent>();
             _powerLinePlugStateChangedEventPool = world.GetPool<PowerLinePlugStateChangedEvent>();
@@ -220,6 +222,34 @@ namespace Plinko.Scripts.ECS.Systems
                         TickAttack(world, unit, target, tickDuration);
                         continue;
                     }
+
+                    var targetPosition = Mathf.Max(unit.Position, target.Position - unit.AttackRange);
+                    var moveDelta = unit.MoveSpeed * movementStep;
+                    unit.AttackAccumulator = 0f;
+                    unit.Position = Mathf.Clamp(Mathf.Min(unit.Position + moveDelta, targetPosition), 0f, state.LaneLength);
+                    if (TryPickupPlug(laneState, unit))
+                    {
+                        _powerLinePlugStateChangedEventPool.Add(world.NewEntity()) = new PowerLinePlugStateChangedEvent
+                        {
+                            Lane = laneState.Lane,
+                            Status = laneState.Plug.Status,
+                            Position = laneState.Plug.Position,
+                            CarrierRuntimeId = laneState.Plug.CarrierRuntimeId
+                        };
+                    }
+
+                    if (unit.IsCarryingPlug)
+                    {
+                        laneState.Plug.Position = unit.Position;
+                        laneState.Plug.CarrierRuntimeId = unit.RuntimeId;
+                    }
+
+                    if (unit.IsCarryingPlug && unit.Position >= state.LaneLength)
+                    {
+                        ConnectLane(world, runEntity, state, laneState);
+                    }
+
+                    continue;
                 }
 
                 unit.AttackAccumulator = 0f;
@@ -279,6 +309,12 @@ namespace Plinko.Scripts.ECS.Systems
                         TickAttack(world, unit, target, tickDuration);
                         continue;
                     }
+
+                    var targetPosition = Mathf.Min(unit.Position, target.Position + unit.AttackRange);
+                    var moveDelta = unit.MoveSpeed * movementStep;
+                    unit.AttackAccumulator = 0f;
+                    unit.Position = Mathf.Clamp(Mathf.Max(unit.Position - moveDelta, targetPosition), 0f, state.LaneLength);
+                    continue;
                 }
 
                 if (unit.Position <= unit.AttackRange)
@@ -406,6 +442,17 @@ namespace Plinko.Scripts.ECS.Systems
             while (attacker.AttackAccumulator >= attackInterval && target.Health > 0)
             {
                 attacker.AttackAccumulator -= attackInterval;
+                _powerLineAttackEventPool.Add(world.NewEntity()) = new PowerLineAttackEvent
+                {
+                    AttackerRuntimeId = attacker.RuntimeId,
+                    AttackerIsEnemy = attacker.IsEnemy,
+                    TargetIsBase = false,
+                    Lane = attacker.Lane,
+                    StartPosition = attacker.Position,
+                    TargetPosition = target.Position,
+                    AttackType = attacker.AttackType,
+                    ProjectileSprite = attacker.ProjectileSprite
+                };
                 target.Health -= attacker.Attack;
                 _powerLineDamageEventPool.Add(world.NewEntity()) = new PowerLineDamageEvent
                 {
@@ -427,6 +474,17 @@ namespace Plinko.Scripts.ECS.Systems
             while (attacker.AttackAccumulator >= attackInterval)
             {
                 attacker.AttackAccumulator -= attackInterval;
+                _powerLineAttackEventPool.Add(world.NewEntity()) = new PowerLineAttackEvent
+                {
+                    AttackerRuntimeId = attacker.RuntimeId,
+                    AttackerIsEnemy = attacker.IsEnemy,
+                    TargetIsBase = true,
+                    Lane = attacker.Lane,
+                    StartPosition = attacker.Position,
+                    TargetPosition = 0f,
+                    AttackType = attacker.AttackType,
+                    ProjectileSprite = attacker.ProjectileSprite
+                };
                 if (_runEntityIndex.TryGetRunEntity(out var runEntity))
                 {
                     ref var playerBase = ref _playerBasePool.Get(runEntity);

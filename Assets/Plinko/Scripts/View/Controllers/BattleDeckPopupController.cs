@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,16 +35,23 @@ namespace Plinko.Scripts.View.Controllers
 
         public void Toggle()
         {
-            root.SetActive(!root.activeSelf);
+            var shouldOpen = !root.activeSelf;
+            root.SetActive(shouldOpen);
+            if (shouldOpen)
+            {
+                AudioManager.Instance?.Play(GameAudioCueType.PopupOpen);
+            }
         }
 
         public void Show()
         {
+            AudioManager.Instance?.Play(GameAudioCueType.PopupOpen);
             root.SetActive(true);
         }
 
         public void Hide()
         {
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
             root.SetActive(false);
         }
 

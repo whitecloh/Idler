@@ -167,6 +167,8 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             {
                 case Enums.PhaseType.PurchasePhase:
                     return "Purchase";
+                case Enums.PhaseType.SignalPurchasePhase:
+                    return "Signal Purchase";
                 case Enums.PhaseType.RetrainingPhase:
                     return "Retraining";
                 case Enums.PhaseType.FieldUpgradePhase:

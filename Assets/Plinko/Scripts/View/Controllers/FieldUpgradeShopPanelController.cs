@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
 using TMPro;
@@ -74,6 +75,7 @@ namespace Plinko.Scripts.View.Controllers
             rerollButton.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(rerollButton.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
                 _fieldUpgradeBridge.RequestRerollShop();
             });
             _listenersBound = true;

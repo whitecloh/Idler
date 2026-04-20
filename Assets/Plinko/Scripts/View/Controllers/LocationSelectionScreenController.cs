@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using UnityEngine;
 using UnityEngine.UI;
@@ -247,6 +248,7 @@ namespace Plinko.Scripts.View.Controllers
             button.onClick.AddListener(() =>
             {
                 UiAnimationManager.Instance.PlaySpringPunch(button.transform as RectTransform);
+                AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
                 callback.Invoke();
             });
         }

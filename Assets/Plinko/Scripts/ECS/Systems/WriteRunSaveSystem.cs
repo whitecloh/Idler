@@ -27,6 +27,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<PlayerBaseHealthComponent> _playerBasePool;
         private EcsPool<EnemyBaseHealthComponent> _enemyBasePool;
         private EcsPool<PurchasePhaseStateComponent> _purchasePool;
+        private EcsPool<SignalPurchasePhaseStateComponent> _signalPurchasePool;
         private EcsPool<FieldUpgradePhaseStateComponent> _fieldUpgradePool;
         private EcsPool<BattleStateComponent> _battlePool;
         private EcsPool<OwnedUnitComponent> _ownedUnitPool;
@@ -78,6 +79,7 @@ namespace Plinko.Scripts.ECS.Systems
             _playerBasePool = world.GetPool<PlayerBaseHealthComponent>();
             _enemyBasePool = world.GetPool<EnemyBaseHealthComponent>();
             _purchasePool = world.GetPool<PurchasePhaseStateComponent>();
+            _signalPurchasePool = world.GetPool<SignalPurchasePhaseStateComponent>();
             _fieldUpgradePool = world.GetPool<FieldUpgradePhaseStateComponent>();
             _battlePool = world.GetPool<BattleStateComponent>();
             _ownedUnitPool = world.GetPool<OwnedUnitComponent>();
@@ -131,6 +133,11 @@ namespace Plinko.Scripts.ECS.Systems
                     BattleDamageToEnemyBaseTotal = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).TotalDamageToEnemyBase : 0,
                     BattleDamageToPlayerBaseTotal = _battlePool.Has(runEntity) ? _battlePool.Get(runEntity).TotalDamageToPlayerBase : 0,
                     PurchaseRerollCount = _purchasePool.Has(runEntity) ? _purchasePool.Get(runEntity).RerollCount : 0,
+                    SignalPurchaseRerollCount = _signalPurchasePool.Has(runEntity) ? _signalPurchasePool.Get(runEntity).RerollCount : 0,
+                    SignalSignalsLaunchedCount = _signalPurchasePool.Has(runEntity) ? _signalPurchasePool.Get(runEntity).SignalsLaunchedCount : 0,
+                    SignalGeneratorBreakAfterSignalCount = _signalPurchasePool.Has(runEntity) ? _signalPurchasePool.Get(runEntity).GeneratorBreakAfterSignalCount : 0,
+                    SignalGeneratorBroken = _signalPurchasePool.Has(runEntity) && _signalPurchasePool.Get(runEntity).IsGeneratorBroken,
+                    SignalGeneratorWillBreakAfterCurrentSignal = _signalPurchasePool.Has(runEntity) && _signalPurchasePool.Get(runEntity).WillBreakAfterCurrentSignal,
                     PinRerollCount = _fieldUpgradePool.Has(runEntity) ? _fieldUpgradePool.Get(runEntity).RerollCount : 0,
                     BattleResult = CloneBattleResult(_battleRuntimeService.CurrentResult),
                     BaseDefensePlayerUnits = new List<BaseDefenseUnitSaveDto>(),

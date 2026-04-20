@@ -1,4 +1,5 @@
 using System;
+using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Data.Visuals;
 using UnityEngine;
 
@@ -16,12 +17,14 @@ namespace Plinko.Scripts.Models.ViewData
         public float MoveSpeed;
         public int AttackRange;
         public float AttackSpeed;
+        public Enums.AttackType AttackType;
         public int BoardIndex;
         public int LaneIndex;
         public int CellIndex;
         public bool IsEnemy;
         public bool IsPreview;
         public Sprite PortraitSprite;
+        public Sprite ProjectileSprite;
         public CharacterAnimationSetData BattleAnimations;
     }
 }

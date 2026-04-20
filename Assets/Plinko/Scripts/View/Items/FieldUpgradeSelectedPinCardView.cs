@@ -20,11 +20,14 @@ namespace Plinko.Scripts.View.Items
         public void Refresh(FieldUpgradeSelectedPinViewData viewData)
         {
             var hasValue = viewData != null;
-            root.SetActive(hasValue);
+            root.SetActive(true);
             emptyStateRoot.SetActive(!hasValue);
 
             if (!hasValue)
             {
+                iconImage.sprite = null;
+                iconImage.enabled = false;
+                nameText.text = string.Empty;
                 ClearModifierLines();
                 return;
             }
