@@ -4,8 +4,10 @@ using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
+using Plinko.Scripts.View.Tooltips;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
@@ -25,6 +27,8 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private TMP_Text manaText;
         [SerializeField] private UiTextHighlightFeedback manaHighlightFeedback;
         [SerializeField] private BattleDeckPopupController deckPopup;
+        [SerializeField] private GameObject selectedEnemyCardRoot;
+        [SerializeField] private UiTooltipUnitCardView selectedEnemyCardView;
         [SerializeField] private float hoverScale = 1.08f;
         [SerializeField] private float hoverDuration = 0.12f;
         [SerializeField] private float dealDuration = 0.22f;
@@ -47,8 +51,8 @@ namespace Plinko.Scripts.View.Controllers
                 return;
             }
 
-            deckButton.onClick.AddListener(HandleDeckClicked);
             rerollButton.onClick.AddListener(HandleRerollClicked);
+            BindDeckHover();
             _listenersBound = true;
         }
 
@@ -60,6 +64,7 @@ namespace Plinko.Scripts.View.Controllers
         public void ResetState()
         {
             SelectedCard = null;
+            SetSelectedEnemy(null);
             deckPopup.HideImmediate();
             ClearViews();
         }
@@ -69,14 +74,14 @@ namespace Plinko.Scripts.View.Controllers
             _viewData = viewData;
             manaText.text = $"{viewData.CurrentMana}/{viewData.MaxMana}";
             rerollCostText.text = $"{viewData.RerollManaCost}";
-            rerollButton.interactable = viewData.CanReroll;
-            deckButton.interactable = viewData.DeckUnits.Count > 0;
+            rerollButton.interactable = viewData.CanReroll && !viewData.IsInteractionLocked;
+            deckButton.interactable = viewData.RemainingDeckCount > 0 && !viewData.IsInteractionLocked;
             if (deckCountText != null)
             {
-                deckCountText.text = viewData.DeckUnits.Count.ToString();
+                deckCountText.text = viewData.RemainingDeckCount.ToString();
             }
             deckPopup.Refresh(viewData.DeckUnits);
-            if (viewData.DeckUnits.Count <= 0)
+            if (viewData.RemainingDeckCount <= 0)
             {
                 deckPopup.HideImmediate();
             }
@@ -114,13 +119,6 @@ namespace Plinko.Scripts.View.Controllers
             _selectedCardChanged?.Invoke(null);
             AnimateCardToDeck(view);
             return true;
-        }
-
-        private void HandleDeckClicked()
-        {
-            UiAnimationManager.Instance.PlaySpringPunch(deckButton.transform as RectTransform);
-            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
-            deckPopup.Toggle();
         }
 
         private void HandleRerollClicked()
@@ -325,6 +323,65 @@ namespace Plinko.Scripts.View.Controllers
 
         private void HandleIgnoredDrag(BattleHandCardView view, UnityEngine.EventSystems.PointerEventData eventData)
         {
+        }
+
+        public void SetSelectedEnemy(PowerLineUnitViewData enemyViewData)
+        {
+            var hasEnemy = selectedEnemyCardRoot != null && selectedEnemyCardView != null && enemyViewData != null;
+            if (selectedEnemyCardRoot != null)
+            {
+                selectedEnemyCardRoot.SetActive(hasEnemy);
+            }
+
+            if (!hasEnemy)
+            {
+                return;
+            }
+
+            selectedEnemyCardView.Refresh(UnitTooltipViewDataFactory.FromPowerLineEnemy(enemyViewData));
+        }
+
+        private void HandleDeckPointerEntered(BaseEventData _)
+        {
+            if (deckButton == null || !deckButton.interactable)
+            {
+                return;
+            }
+
+            deckPopup.Show();
+        }
+
+        private void HandleDeckPointerExited(BaseEventData _)
+        {
+            deckPopup.Hide();
+        }
+
+        private void BindDeckHover()
+        {
+            if (deckButton == null)
+            {
+                return;
+            }
+
+            var trigger = deckButton.GetComponent<EventTrigger>();
+            if (trigger == null)
+            {
+                trigger = deckButton.gameObject.AddComponent<EventTrigger>();
+            }
+
+            trigger.triggers ??= new System.Collections.Generic.List<EventTrigger.Entry>();
+            AddTrigger(trigger, EventTriggerType.PointerEnter, HandleDeckPointerEntered);
+            AddTrigger(trigger, EventTriggerType.PointerExit, HandleDeckPointerExited);
+        }
+
+        private static void AddTrigger(EventTrigger trigger, EventTriggerType eventType, System.Action<BaseEventData> callback)
+        {
+            var entry = new EventTrigger.Entry
+            {
+                eventID = eventType
+            };
+            entry.callback.AddListener(data => callback.Invoke(data));
+            trigger.triggers.Add(entry);
         }
 
         private void ClearViews()

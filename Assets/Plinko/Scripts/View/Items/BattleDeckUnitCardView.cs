@@ -16,6 +16,8 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private TMP_Text manaText;
         [SerializeField] private RectTransform statsRoot;
         [SerializeField] private UnitStatEntryView statEntryPrefab;
+        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private GameObject usedStateRoot;
         [SerializeField] private RectTransform tooltipAnchor;
 
         private readonly List<UnitStatEntryView> _statViews = new();
@@ -31,15 +33,20 @@ namespace Plinko.Scripts.View.Items
             {
                 manaText.text = viewData.ManaCost.ToString();
             }
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = viewData.IsUsed ? 0.55f : 1f;
+            }
+            if (usedStateRoot != null)
+            {
+                usedStateRoot.SetActive(viewData.IsUsed);
+            }
             UnitStatSyncUtility.Sync(statsRoot, statEntryPrefab, _statViews, viewData.Stats);
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            UiTooltipManager.Instance?.ShowUnitCard(
-                this,
-                tooltipAnchor != null ? tooltipAnchor : root,
-                UnitTooltipViewDataFactory.FromBattleDeck(_viewData));
+            UiTooltipManager.Instance?.ShowUnitCard(this, UnitTooltipViewDataFactory.FromBattleDeck(_viewData));
         }
 
         public void OnPointerExit(PointerEventData eventData)

@@ -1,21 +1,22 @@
+using DG.Tweening;
 using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
-using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
 {
     public sealed class BattleDeckPopupController : MonoBehaviour
     {
         [SerializeField] private GameObject root;
+        [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private RectTransform contentRoot;
         [SerializeField] private BattleDeckUnitCardView cardPrefab;
-        [SerializeField] private Button closeButton;
+        [SerializeField] private float fadeDuration = 0.12f;
 
         private readonly List<BattleDeckUnitCardView> _views = new();
         private bool _listenersBound;
+        private Tween _fadeTween;
 
         public void Init()
         {
@@ -23,8 +24,7 @@ namespace Plinko.Scripts.View.Controllers
             {
                 return;
             }
-
-            closeButton.onClick.AddListener(Hide);
+            
             _listenersBound = true;
         }
 
@@ -36,28 +36,54 @@ namespace Plinko.Scripts.View.Controllers
         public void Toggle()
         {
             var shouldOpen = !root.activeSelf;
-            root.SetActive(shouldOpen);
             if (shouldOpen)
             {
-                AudioManager.Instance?.Play(GameAudioCueType.PopupOpen);
+                Show();
+                return;
             }
+
+            Hide();
         }
 
         public void Show()
         {
-            AudioManager.Instance?.Play(GameAudioCueType.PopupOpen);
+            _fadeTween?.Kill();
             root.SetActive(true);
+            if (canvasGroup != null)
+            {
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+                _fadeTween = canvasGroup.DOFade(1f, fadeDuration).SetEase(Ease.OutQuad);
+            }
         }
 
         public void Hide()
         {
-            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
-            root.SetActive(false);
+            _fadeTween?.Kill();
+            if (canvasGroup == null)
+            {
+                root.SetActive(false);
+                return;
+            }
+
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+            _fadeTween = canvasGroup
+                .DOFade(0f, fadeDuration)
+                .SetEase(Ease.OutQuad)
+                .OnComplete(() => root.SetActive(false));
         }
 
         public void HideImmediate()
         {
+            _fadeTween?.Kill();
             root.SetActive(false);
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
         }
 
         private void Rebuild(IReadOnlyList<BattleDeckUnitViewData> units)

@@ -86,10 +86,7 @@ namespace Plinko.Scripts.View.Items
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            UiTooltipManager.Instance?.ShowUnitCard(
-                this,
-                tooltipAnchor != null ? tooltipAnchor : root,
-                UnitTooltipViewDataFactory.FromHandCard(ViewData));
+            UiTooltipManager.Instance?.ShowUnitCard(this, UnitTooltipViewDataFactory.FromHandCard(ViewData));
             _pointerEntered?.Invoke(this);
         }
 

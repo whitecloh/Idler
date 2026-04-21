@@ -1,4 +1,3 @@
-using System;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Audio;
@@ -9,16 +8,12 @@ using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
 {
-    public sealed class BattleResultScreenController : MonoBehaviour, Plinko.Scripts.View.IUiWindow
+    public sealed class BattleResultScreenController : MonoBehaviour, IUiWindow
     {
         [SerializeField] private GameObject root;
         [SerializeField] private UiCanvasGroupVisibility visibility;
         [SerializeField] private TMP_Text titleText;
-        [SerializeField] private TMP_Text descriptionText;
-        [SerializeField] private TMP_Text playerBaseHealthText;
-        [SerializeField] private TMP_Text enemyBaseHealthText;
         [SerializeField] private TMP_Text rewardText;
-        [SerializeField] private TMP_Text rewardBreakdownText;
         [SerializeField] private Button primaryActionButton;
         [SerializeField] private TMP_Text primaryActionButtonText;
 
@@ -120,12 +115,12 @@ namespace Plinko.Scripts.View.Controllers
 
             if (_viewData.CanAdvance)
             {
-                return "Next Level";
+                return "Next";
             }
 
             if (_viewData.CanReturnToMenu)
             {
-                return "Return to Menu";
+                return "Menu";
             }
 
             return "Close";
@@ -145,17 +140,9 @@ namespace Plinko.Scripts.View.Controllers
         private void ApplyViewData()
         {
             titleText.text = string.IsNullOrWhiteSpace(_viewData.Title) ? "Battle Result" : _viewData.Title;
-            descriptionText.text = _viewData.Description ?? string.Empty;
-            descriptionText.gameObject.SetActive(!string.IsNullOrWhiteSpace(_viewData.Description));
-
-            playerBaseHealthText.text = _viewData.PlayerBaseHealthAfter.ToString();
-            enemyBaseHealthText.text = _viewData.EnemyBaseHealthAfter.ToString();
 
             rewardText.text = _viewData.RewardText ?? string.Empty;
             rewardText.gameObject.SetActive(!string.IsNullOrWhiteSpace(_viewData.RewardText));
-
-            rewardBreakdownText.text = _viewData.RewardBreakdownText ?? string.Empty;
-            rewardBreakdownText.gameObject.SetActive(!string.IsNullOrWhiteSpace(_viewData.RewardBreakdownText));
 
             primaryActionButtonText.text = GetPrimaryActionLabel();
             primaryActionButton.interactable = _viewData.CanAdvance || _viewData.CanReturnToMenu;

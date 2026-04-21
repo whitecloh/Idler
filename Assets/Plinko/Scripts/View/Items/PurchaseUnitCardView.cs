@@ -51,10 +51,7 @@ namespace Plinko.Scripts.View.Items
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            UiTooltipManager.Instance?.ShowUnitCard(
-                this,
-                tooltipAnchor != null ? tooltipAnchor : root,
-                _tooltipViewData);
+            UiTooltipManager.Instance?.ShowUnitCard(this, _tooltipViewData);
         }
 
         public void OnPointerExit(PointerEventData eventData)

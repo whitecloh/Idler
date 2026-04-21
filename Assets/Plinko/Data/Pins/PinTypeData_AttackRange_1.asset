@@ -15,16 +15,11 @@ MonoBehaviour:
   id: pin_attackrange_1
   displayName: Attack Range Pin
   rarity: common
-  fieldSprite: {fileID: 219573697, guid: f5930521b2770bf4082a86d9c868733c, type: 3}
+  fieldSprite: {fileID: 703941702, guid: 0815038ae5999cb4fa82f5a961626623, type: 3}
   shopPrice: 10
   generationWeight: 4
+  manaModifier: 0
   modifiers:
   - statType: {fileID: 11400000, guid: 3ae053399b021a94ab6b348a0176d5e9, type: 2}
     value: 1
-  attackModifier: 0
-  healthModifier: 0
-  manaModifier: 0
-  moveSpeedModifier: 0
-  attackRangeModifier: 1
-  attackSpeedModifier: 0
   unlockCondition: {fileID: 0}

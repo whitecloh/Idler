@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
+using Plinko.Scripts.View.Layouts;
 using UnityEngine;
 
 namespace Plinko.Scripts.View.Controllers
@@ -63,7 +64,7 @@ namespace Plinko.Scripts.View.Controllers
             {
                 var basket = viewData.Baskets[index];
                 var basketView = Instantiate(basketPrefab, basketsRoot);
-                basketView.RectTransform.anchoredPosition = BuildBasketPosition(basket.BasketIndex, viewData.Baskets.Count);
+                basketView.RectTransform.anchoredPosition = BuildBasketPosition(basket.BasketIndex, viewData.Baskets.Count, rowCounts);
                 _basketViews.Add(basketView);
             }
 
@@ -90,31 +91,29 @@ namespace Plinko.Scripts.View.Controllers
 
         private Vector2 BuildPinPosition(int rowIndex, int columnIndex, IReadOnlyDictionary<int, int> rowCounts)
         {
-            var rowCount = rowCounts.TryGetValue(rowIndex, out var count) ? count : 1;
-            var x = (columnIndex - (rowCount - 1) * 0.5f) * _horizontalSpacing * pixelsPerFieldUnit;
-            var y = -rowIndex * _verticalSpacing * pixelsPerFieldUnit;
-            return new Vector2(x, y);
+            return PlinkoFieldLayoutUtility.BuildPinPosition(
+                rowIndex,
+                columnIndex,
+                rowCounts,
+                _horizontalSpacing,
+                _verticalSpacing,
+                pixelsPerFieldUnit);
         }
 
-        private Vector2 BuildBasketPosition(int basketIndex, int totalBasketCount)
+        private Vector2 BuildBasketPosition(int basketIndex, int totalBasketCount, IReadOnlyDictionary<int, int> rowCounts)
         {
-            var x = (basketIndex - (totalBasketCount - 1) * 0.5f) * _horizontalSpacing * pixelsPerFieldUnit;
-            return new Vector2(x, 0f);
+            return PlinkoFieldLayoutUtility.BuildBasketPosition(
+                basketIndex,
+                totalBasketCount,
+                rowCounts,
+                _horizontalSpacing,
+                _verticalSpacing,
+                pixelsPerFieldUnit);
         }
 
         private static Dictionary<int, int> BuildRowCounts(IReadOnlyList<BoardSlotViewData> slots)
         {
-            var result = new Dictionary<int, int>();
-            for (var index = 0; index < slots.Count; index++)
-            {
-                var slot = slots[index];
-                if (!result.TryGetValue(slot.RowIndex, out var rowCount) || rowCount < slot.ColumnIndex + 1)
-                {
-                    result[slot.RowIndex] = slot.ColumnIndex + 1;
-                }
-            }
-
-            return result;
+            return PlinkoFieldLayoutUtility.BuildRowCounts(slots);
         }
 
         private void ClearFieldViews()

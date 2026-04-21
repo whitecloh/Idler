@@ -39,8 +39,6 @@ namespace Plinko.Scripts.View.Controllers
             unlockText.text = _viewData.UnlockDescription;
             unlockText.gameObject.SetActive(!_viewData.IsUnlocked && !string.IsNullOrWhiteSpace(_viewData.UnlockDescription));
             artImage.sprite = _viewData.Art;
-            artImage.enabled = _viewData.Art != null;
-            artImage.preserveAspect = true;
             selectedStateRoot.SetActive(isSelected);
             lockedStateRoot.SetActive(!_viewData.IsUnlocked);
             completeStateRoot.SetActive(_viewData.IsCompleted);

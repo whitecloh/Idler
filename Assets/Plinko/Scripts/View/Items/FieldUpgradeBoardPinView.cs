@@ -1,11 +1,13 @@
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
+using Plinko.Scripts.View.Tooltips;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Items
 {
-    public sealed class FieldUpgradeBoardPinView : MonoBehaviour
+    public sealed class FieldUpgradeBoardPinView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private RectTransform root;
         [SerializeField] private Button selectButton;
@@ -18,6 +20,7 @@ namespace Plinko.Scripts.View.Items
         private int _slotIndex;
         private bool _isAvailableLoopPlaying;
         private Vector2 _availableBasePosition;
+        private BoardSlotViewData _viewData = new();
 
         public RectTransform RectTransform => root;
         public int SlotIndex => _slotIndex;
@@ -35,6 +38,7 @@ namespace Plinko.Scripts.View.Items
 
         public void Refresh(BoardSlotViewData viewData)
         {
+            _viewData = viewData;
             _slotIndex = viewData.SlotIndex;
             iconImage.sprite = viewData.Sprite;
             iconImage.enabled = viewData.Sprite != null;
@@ -58,9 +62,26 @@ namespace Plinko.Scripts.View.Items
             }
         }
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            UiTooltipManager.Instance?.ShowPin(this, _viewData.TooltipText, new FieldUpgradeSelectedPinViewData
+            {
+                PinTypeId = _viewData.PinTypeId,
+                DisplayName = _viewData.DisplayName,
+                Sprite = _viewData.Sprite,
+                ModifierLines = _viewData.ModifierLines
+            });
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            UiTooltipManager.Instance?.Hide(this);
+        }
+
         private void OnDisable()
         {
             StopAvailableLoop();
+            UiTooltipManager.Instance?.Hide(this);
         }
 
         private void PlayAvailableLoop()

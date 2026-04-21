@@ -34,6 +34,11 @@ namespace Plinko.Scripts.View.Tooltips
             return Build(viewData != null ? viewData.DisplayName : string.Empty, viewData != null ? viewData.PortraitSprite : null, viewData != null ? viewData.ManaCost : 0, viewData != null ? viewData.Stats : null);
         }
 
+        public static UnitTooltipViewData FromPowerLineEnemy(PowerLineUnitViewData viewData)
+        {
+            return Build(viewData != null ? viewData.DisplayName : string.Empty, viewData != null ? viewData.PortraitSprite : null, viewData != null ? viewData.ManaCost : 0, BuildPowerLineStats(viewData));
+        }
+
         private static UnitTooltipViewData Build(
             string displayName,
             UnityEngine.Sprite portraitSprite,
@@ -68,6 +73,32 @@ namespace Plinko.Scripts.View.Tooltips
             }
 
             return result;
+        }
+
+        private static System.Collections.Generic.IReadOnlyList<StatDisplayViewData> BuildPowerLineStats(PowerLineUnitViewData viewData)
+        {
+            if (viewData == null)
+            {
+                return null;
+            }
+
+            var stats = new System.Collections.Generic.List<StatDisplayViewData>();
+            AppendStat(stats, "attack", "Attack", viewData.Attack.ToString());
+            AppendStat(stats, "health", "Health", $"{viewData.Health}/{viewData.MaxHealth}");
+            AppendStat(stats, "move_speed", "Move Speed", viewData.MoveSpeed.ToString("0.##"));
+            AppendStat(stats, "attack_range", "Range", viewData.AttackRange.ToString());
+            AppendStat(stats, "attack_speed", "Attack Speed", viewData.AttackSpeed.ToString("0.##"));
+            return stats;
+        }
+
+        private static void AppendStat(System.Collections.Generic.ICollection<StatDisplayViewData> stats, string statTypeId, string displayName, string valueText)
+        {
+            stats.Add(new StatDisplayViewData
+            {
+                StatTypeId = statTypeId,
+                DisplayName = displayName,
+                ValueText = valueText
+            });
         }
     }
 }

@@ -74,6 +74,7 @@ namespace Plinko.Scripts.ECS.Requests
         public bool ClearExisting;
     }
     public struct RerollPowerLineHandRequest { }
+    public struct FinalizePowerLineBattleResultRequest { }
     public struct DeployCardRequest
     {
         public int HandCardRuntimeId;

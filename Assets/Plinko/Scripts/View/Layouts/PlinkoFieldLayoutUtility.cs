@@ -72,6 +72,21 @@ namespace Plinko.Scripts.View.Layouts
             return result;
         }
 
+        public static Dictionary<int, int> BuildRowCounts(IReadOnlyList<BoardSlotViewData> slots)
+        {
+            var result = new Dictionary<int, int>();
+            for (var index = 0; index < slots.Count; index++)
+            {
+                var slot = slots[index];
+                if (!result.TryGetValue(slot.RowIndex, out var rowCount) || rowCount < slot.ColumnIndex + 1)
+                {
+                    result[slot.RowIndex] = slot.ColumnIndex + 1;
+                }
+            }
+
+            return result;
+        }
+
         public static Dictionary<int, int> BuildRowCounts(PlinkoFieldSettingsData fieldSettings)
         {
             var result = new Dictionary<int, int>();

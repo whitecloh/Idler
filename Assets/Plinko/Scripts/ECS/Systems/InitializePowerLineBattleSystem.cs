@@ -96,11 +96,16 @@ namespace Plinko.Scripts.ECS.Systems
                 _battleRuntimeService.CurrentEnemyWave = null;
                 _battleRuntimeService.CurrentBaseDefenseState = null;
                 state.DeckOwnedUnitRuntimeIds.Clear();
+                state.InitialDeckOwnedUnitRuntimeIds.Clear();
                 foreach (var ownedUnitEntity in _ownedUnitFilter)
                 {
-                    state.DeckOwnedUnitRuntimeIds.Add(_ownedUnitPool.Get(ownedUnitEntity).RuntimeId);
+                    var runtimeId = _ownedUnitPool.Get(ownedUnitEntity).RuntimeId;
+                    state.DeckOwnedUnitRuntimeIds.Add(runtimeId);
+                    state.InitialDeckOwnedUnitRuntimeIds.Add(runtimeId);
                 }
                 state.DeckOwnedUnitRuntimeIds.Sort();
+                state.InitialDeckOwnedUnitRuntimeIds.Sort();
+                state.IsPendingVictorySequence = false;
                 _battleRuntimeService.CurrentPowerLineState = state;
                 _battleRuntimeService.CurrentResult = null;
 

@@ -19,6 +19,8 @@ namespace Plinko.Scripts.ECS.Systems
         private readonly BattleRuntimeService _battleRuntimeService;
         private readonly RunEntityIndex _runEntityIndex;
 
+        private EcsFilter _finalizeRequestFilter;
+        private EcsPool<FinalizePowerLineBattleResultRequest> _finalizeResultRequestPool;
         private EcsPool<CurrentLevelTypeComponent> _levelTypePool;
         private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<CurrentLocationComponent> _locationPool;
@@ -28,6 +30,7 @@ namespace Plinko.Scripts.ECS.Systems
         private EcsPool<CurrentGoldComponent> _goldPool;
         private EcsPool<RunStatusComponent> _statusPool;
         private EcsPool<BattleStateComponent> _battlePool;
+        private EcsPool<HandStateComponent> _handStatePool;
         private EcsPool<ManaChangedEvent> _manaChangedEventPool;
         private EcsPool<GoldChangedEvent> _goldChangedEventPool;
         private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
@@ -59,6 +62,8 @@ namespace Plinko.Scripts.ECS.Systems
         public void Init(IEcsSystems systems)
         {
             var world = systems.GetWorld();
+            _finalizeRequestFilter = world.Filter<FinalizePowerLineBattleResultRequest>().End();
+            _finalizeResultRequestPool = world.GetPool<FinalizePowerLineBattleResultRequest>();
             _levelTypePool = world.GetPool<CurrentLevelTypeComponent>();
             _phasePool = world.GetPool<CurrentPhaseComponent>();
             _locationPool = world.GetPool<CurrentLocationComponent>();
@@ -68,6 +73,7 @@ namespace Plinko.Scripts.ECS.Systems
             _goldPool = world.GetPool<CurrentGoldComponent>();
             _statusPool = world.GetPool<RunStatusComponent>();
             _battlePool = world.GetPool<BattleStateComponent>();
+            _handStatePool = world.GetPool<HandStateComponent>();
             _manaChangedEventPool = world.GetPool<ManaChangedEvent>();
             _goldChangedEventPool = world.GetPool<GoldChangedEvent>();
             _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
@@ -86,6 +92,7 @@ namespace Plinko.Scripts.ECS.Systems
         public void Run(IEcsSystems systems)
         {
             var world = systems.GetWorld();
+            ProcessFinalizeRequests(world);
             if (!_runEntityIndex.TryGetRunEntity(out var runEntity) ||
                 !_levelTypePool.Has(runEntity) ||
                 _levelTypePool.Get(runEntity).Value != Enums.LevelType.PowerLineBattle ||
@@ -96,18 +103,18 @@ namespace Plinko.Scripts.ECS.Systems
             }
 
             var state = _battleRuntimeService.CurrentPowerLineState;
-            if (state == null)
+            if (state == null || state.IsPendingVictorySequence)
             {
                 return;
             }
 
             var tickDuration = Mathf.Max(0.01f, _gameSettingsService.GetBattleTickDuration());
-            state.TickAccumulator += Time.deltaTime;
+            state.TickAccumulator += Time.deltaTime * GetSimulationSpeedMultiplier(state);
             while (state.TickAccumulator >= tickDuration)
             {
                 state.TickAccumulator -= tickDuration;
                 SimulateTick(world, runEntity, state, tickDuration);
-                if (_phasePool.Get(runEntity).Value != Enums.PhaseType.Battle)
+                if (_phasePool.Get(runEntity).Value != Enums.PhaseType.Battle || state.IsPendingVictorySequence)
                 {
                     break;
                 }
@@ -135,6 +142,15 @@ namespace Plinko.Scripts.ECS.Systems
             ResolveDeathsAndDroppedPlugs(world, runEntity, state);
 
             if (_playerBasePool.Get(runEntity).Value <= 0)
+            {
+                FinishLevel(world, runEntity, state, false);
+                return;
+            }
+
+            if (HasUnconnectedLanes(state) &&
+                _handStatePool.Has(runEntity) &&
+                _handStatePool.Get(runEntity).CardCount <= 0 &&
+                state.PlayerUnits.Count <= 0)
             {
                 FinishLevel(world, runEntity, state, false);
                 return;
@@ -617,32 +633,59 @@ namespace Plinko.Scripts.ECS.Systems
 
             if (isVictory)
             {
-                if (reward > 0)
-                {
-                    _goldPool.Get(runEntity).Value += reward;
-                    _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
-                }
-
-                _levelCompletedEventPool.Add(world.NewEntity());
-                if (HasNextLevel(runEntity))
-                {
-                    _statusPool.Get(runEntity).Value = Enums.RunStatus.InProgress;
-                }
-                else
-                {
-                    _statusPool.Get(runEntity).Value = Enums.RunStatus.Victory;
-                    _runCompletedEventPool.Add(world.NewEntity());
-                }
-            }
-            else
-            {
-                _statusPool.Get(runEntity).Value = Enums.RunStatus.Defeat;
-                _runFailedEventPool.Add(world.NewEntity());
+                state.IsPendingVictorySequence = true;
+                _saveRunRequestPool.Add(world.NewEntity());
+                return;
             }
 
+            _statusPool.Get(runEntity).Value = Enums.RunStatus.Defeat;
+            _runFailedEventPool.Add(world.NewEntity());
             _phasePool.Get(runEntity).Value = Enums.PhaseType.Result;
             _phaseChangedEventPool.Add(world.NewEntity()).Value = Enums.PhaseType.Result;
             _saveRunRequestPool.Add(world.NewEntity());
+        }
+
+        private void ProcessFinalizeRequests(EcsWorld world)
+        {
+            foreach (var requestEntity in _finalizeRequestFilter)
+            {
+                _finalizeResultRequestPool.Get(requestEntity);
+                if (_runEntityIndex.TryGetRunEntity(out var runEntity) &&
+                    _levelTypePool.Has(runEntity) &&
+                    _levelTypePool.Get(runEntity).Value == Enums.LevelType.PowerLineBattle &&
+                    _phasePool.Has(runEntity) &&
+                    _phasePool.Get(runEntity).Value == Enums.PhaseType.Battle)
+                {
+                    var state = _battleRuntimeService.CurrentPowerLineState;
+                    var result = _battleRuntimeService.CurrentResult;
+                    if (state != null && state.IsPendingVictorySequence && result != null && result.IsVictory && !result.IsDefeat)
+                    {
+                        state.IsPendingVictorySequence = false;
+                        if (result.RewardGranted > 0)
+                        {
+                            _goldPool.Get(runEntity).Value += result.RewardGranted;
+                            _goldChangedEventPool.Add(world.NewEntity()).Value = _goldPool.Get(runEntity).Value;
+                        }
+
+                        _levelCompletedEventPool.Add(world.NewEntity());
+                        if (HasNextLevel(runEntity))
+                        {
+                            _statusPool.Get(runEntity).Value = Enums.RunStatus.InProgress;
+                        }
+                        else
+                        {
+                            _statusPool.Get(runEntity).Value = Enums.RunStatus.Victory;
+                            _runCompletedEventPool.Add(world.NewEntity());
+                        }
+
+                        _phasePool.Get(runEntity).Value = Enums.PhaseType.Result;
+                        _phaseChangedEventPool.Add(world.NewEntity()).Value = Enums.PhaseType.Result;
+                        _saveRunRequestPool.Add(world.NewEntity());
+                    }
+                }
+
+                world.DelEntity(requestEntity);
+            }
         }
 
         private bool HasNextLevel(int runEntity)
@@ -651,6 +694,35 @@ namespace Plinko.Scripts.ECS.Systems
             return location != null &&
                    location.Levels != null &&
                    _levelPool.Get(runEntity).LevelIndex + 1 < location.Levels.Count;
+        }
+
+        private static bool HasUnconnectedLanes(PowerLineBattleStateModel state)
+        {
+            return state != null && PowerLineBattleUtility.GetConnectedLaneCount(state) < state.Lanes.Count;
+        }
+
+        private float GetSimulationSpeedMultiplier(PowerLineBattleStateModel state)
+        {
+            if (state == null)
+            {
+                return 1f;
+            }
+
+            var allEnemyWavesResolved = state.EnemyUnits.Count <= 0 && state.PendingSpawns.Count <= 0;
+            if (allEnemyWavesResolved)
+            {
+                return 2f;
+            }
+
+            if (_runEntityIndex.TryGetRunEntity(out var runEntity) &&
+                _handStatePool.Has(runEntity) &&
+                _handStatePool.Get(runEntity).CardCount <= 0 &&
+                state.DeckOwnedUnitRuntimeIds.Count <= 0)
+            {
+                return 2f;
+            }
+
+            return 1f;
         }
     }
 }

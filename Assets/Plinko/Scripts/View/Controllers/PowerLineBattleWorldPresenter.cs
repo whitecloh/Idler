@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using DG.Tweening;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Models.ViewData;
@@ -6,6 +7,7 @@ using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Plinko.Scripts.View.Controllers
 {
@@ -30,6 +32,9 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private float exitDistance = 0.35f;
         [SerializeField] private float exitDuration = 0.22f;
         [SerializeField] private float projectileDuration = 0.12f;
+        [SerializeField] private float victoryMergeDuration = 0.65f;
+        [SerializeField] private float victoryPostMergeDelay = 0.7f;
+        [SerializeField] private float victoryMergeContactPadding = 0f;
 
         private readonly Dictionary<int, PowerLineUnitWorldView> _playerViews = new();
         private readonly Dictionary<int, PowerLineUnitWorldView> _enemyViews = new();
@@ -39,6 +44,18 @@ namespace Plinko.Scripts.View.Controllers
         private PowerLineBattleHudViewData _viewData = new();
         private HandCardViewData _selectedCard;
         private int _currentMana;
+        private int _selectedEnemyRuntimeId = -1;
+        private Vector3 _playerBaseInitialPosition;
+        private Vector3 _enemyBaseInitialPosition;
+        private Vector3 _playerBaseInitialScale = Vector3.one;
+        private Vector3 _enemyBaseInitialScale = Vector3.one;
+        private Vector2 _playerBaseInitialRendererSize = Vector2.one;
+        private Vector2 _enemyBaseInitialRendererSize = Vector2.one;
+        private SpriteDrawMode _playerBaseInitialDrawMode = SpriteDrawMode.Simple;
+        private SpriteDrawMode _enemyBaseInitialDrawMode = SpriteDrawMode.Simple;
+        private bool _baseTransformsCaptured;
+        private RectTransform _viewportRect;
+        private Action<PowerLineUnitViewData> _enemySelectionChanged;
 
         public Camera WorldCamera => worldCamera;
 
@@ -60,6 +77,8 @@ namespace Plinko.Scripts.View.Controllers
 
                 _laneViewsByType[laneView.Lane] = laneView;
             }
+
+            CaptureBaseTransforms();
         }
 
         public void SetVisible(bool isVisible)
@@ -77,21 +96,32 @@ namespace Plinko.Scripts.View.Controllers
 
         public void BindViewport(RectTransform viewportRect)
         {
+            _viewportRect = viewportRect;
             if (UiFloatingTextManager.Instance != null)
             {
                 UiFloatingTextManager.Instance.ConfigureWorldViewport(viewportRect, worldCamera);
             }
         }
 
+        public void SetEnemySelectionHandler(Action<PowerLineUnitViewData> enemySelectionChanged)
+        {
+            _enemySelectionChanged = enemySelectionChanged;
+            RefreshSelectedEnemy();
+        }
+
         public void ResetState()
         {
             _selectedCard = null;
             _currentMana = 0;
+            _selectedEnemyRuntimeId = -1;
+            StopBaseTweens();
+            RestoreBaseTransforms();
             ClearUnitViews(_playerViews);
             ClearUnitViews(_enemyViews);
             ClearProjectiles();
             ClearPlugViews();
             RefreshLaneStates();
+            _enemySelectionChanged?.Invoke(null);
         }
 
         public void Refresh(PowerLineBattleHudViewData viewData)
@@ -103,6 +133,7 @@ namespace Plinko.Scripts.View.Controllers
             SyncUnitViews(_viewData.EnemyUnits, _enemyViews, enemyUnitPrefab, enemyUnitsRoot, true);
             SyncPlugViews();
             RefreshLaneStates();
+            RefreshSelectedEnemy();
             ApplyTransientEvents();
         }
 
@@ -123,6 +154,101 @@ namespace Plinko.Scripts.View.Controllers
 
             worldPosition = Vector3.zero;
             return false;
+        }
+
+        public bool TrySelectEnemyAtScreenPoint(Vector2 screenPosition)
+        {
+            if (_viewportRect == null || worldCamera == null)
+            {
+                return false;
+            }
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_viewportRect, screenPosition, null, out var localPoint))
+            {
+                return false;
+            }
+
+            var rect = _viewportRect.rect;
+            var viewportX = Mathf.InverseLerp(rect.xMin, rect.xMax, localPoint.x);
+            var viewportY = Mathf.InverseLerp(rect.yMin, rect.yMax, localPoint.y);
+            if (viewportX < 0f || viewportX > 1f || viewportY < 0f || viewportY > 1f)
+            {
+                return false;
+            }
+
+            var worldPoint = worldCamera.ViewportToWorldPoint(new Vector3(
+                viewportX,
+                viewportY,
+                Mathf.Abs(worldCamera.transform.position.z)));
+            worldPoint.z = 0f;
+
+            if (!TryFindEnemyAtWorldPoint(worldPoint, out var enemyViewData))
+            {
+                return false;
+            }
+
+            _selectedEnemyRuntimeId = enemyViewData.RuntimeId;
+            _enemySelectionChanged?.Invoke(enemyViewData);
+            return true;
+        }
+
+        public void PlayVictorySequence(Action onMerge, Action onComplete)
+        {
+            CaptureBaseTransforms();
+            if (playerBaseView == null || enemyBaseView == null)
+            {
+                onMerge?.Invoke();
+                onComplete?.Invoke();
+                return;
+            }
+
+            var playerTransform = playerBaseView.RootTransform;
+            var enemyTransform = enemyBaseView.RootTransform;
+            StopBaseTweens();
+            playerTransform.position = _playerBaseInitialPosition;
+            playerTransform.localScale = _playerBaseInitialScale;
+            enemyTransform.position = _enemyBaseInitialPosition;
+            enemyTransform.localScale = _enemyBaseInitialScale;
+            RestoreBaseRendererState();
+            var contactX = (_playerBaseInitialPosition.x + _enemyBaseInitialPosition.x) * 0.5f;
+            var playerHalfWidth = GetBaseHalfWidth(playerBaseView);
+            var enemyHalfWidth = GetBaseHalfWidth(enemyBaseView);
+            var playerTargetPosition = new Vector3(
+                contactX - playerHalfWidth - victoryMergeContactPadding,
+                playerTransform.position.y,
+                playerTransform.position.z);
+            var enemyTargetPosition = new Vector3(
+                contactX + enemyHalfWidth + victoryMergeContactPadding,
+                enemyTransform.position.y,
+                enemyTransform.position.z);
+            var completedMoves = 0;
+
+            void HandleBaseMerged()
+            {
+                completedMoves++;
+                if (completedMoves != 2)
+                {
+                    return;
+                }
+
+                onMerge?.Invoke();
+                DOVirtual.DelayedCall(victoryPostMergeDelay, () => onComplete?.Invoke(), false);
+            }
+
+            UiAnimationManager.Instance.PlayWorldMove(
+                playerTransform,
+                "power-line-victory-player-base",
+                playerTargetPosition,
+                victoryMergeDuration,
+                Ease.InQuad,
+                HandleBaseMerged);
+            UiAnimationManager.Instance.PlayWorldMove(
+                enemyTransform,
+                "power-line-victory-enemy-base",
+                enemyTargetPosition,
+                victoryMergeDuration,
+                Ease.InQuad,
+                HandleBaseMerged);
         }
 
         private void RefreshLaneStates()
@@ -333,7 +459,7 @@ namespace Plinko.Scripts.View.Controllers
 
                 if (evt.TargetIsBase)
                 {
-                    UiAnimationManager.Instance.PlayTransformPunch(playerBaseView.RootTransform);
+                    UiAnimationManager.Instance.PlayTransformShake(playerBaseView.RootTransform, 0.2f);
                     if (UiFloatingTextManager.Instance != null)
                     {
                         UiFloatingTextManager.Instance.SpawnAtWorldPosition($"-{evt.Amount}", new Color(1f, 0.35f, 0.35f), playerBaseView.RootTransform.position);
@@ -382,7 +508,7 @@ namespace Plinko.Scripts.View.Controllers
                     UiAnimationManager.Instance.PlayTransformPunch(laneView.RootTransform);
                 }
 
-                UiAnimationManager.Instance.PlayTransformPunch(enemyBaseView.RootTransform);
+                UiAnimationManager.Instance.PlayTransformShake(enemyBaseView.RootTransform, 0.2f);
             }
         }
 
@@ -553,6 +679,173 @@ namespace Plinko.Scripts.View.Controllers
             {
                 Destroy(projectilesRoot.GetChild(index).gameObject);
             }
+        }
+
+        private void CaptureBaseTransforms()
+        {
+            if (_baseTransformsCaptured)
+            {
+                return;
+            }
+
+            if (playerBaseView != null)
+            {
+                _playerBaseInitialPosition = playerBaseView.RootTransform.position;
+                _playerBaseInitialScale = playerBaseView.RootTransform.localScale;
+                if (playerBaseView.SpriteRenderer != null)
+                {
+                    _playerBaseInitialDrawMode = playerBaseView.SpriteRenderer.drawMode;
+                    _playerBaseInitialRendererSize = playerBaseView.SpriteRenderer.size;
+                }
+            }
+
+            if (enemyBaseView != null)
+            {
+                _enemyBaseInitialPosition = enemyBaseView.RootTransform.position;
+                _enemyBaseInitialScale = enemyBaseView.RootTransform.localScale;
+                if (enemyBaseView.SpriteRenderer != null)
+                {
+                    _enemyBaseInitialDrawMode = enemyBaseView.SpriteRenderer.drawMode;
+                    _enemyBaseInitialRendererSize = enemyBaseView.SpriteRenderer.size;
+                }
+            }
+
+            _baseTransformsCaptured = true;
+        }
+
+        private void RestoreBaseTransforms()
+        {
+            CaptureBaseTransforms();
+            if (playerBaseView != null)
+            {
+                playerBaseView.RootTransform.position = _playerBaseInitialPosition;
+                playerBaseView.RootTransform.localScale = _playerBaseInitialScale;
+            }
+
+            if (enemyBaseView != null)
+            {
+                enemyBaseView.RootTransform.position = _enemyBaseInitialPosition;
+                enemyBaseView.RootTransform.localScale = _enemyBaseInitialScale;
+            }
+
+            RestoreBaseRendererState();
+        }
+
+        private void StopBaseTweens()
+        {
+            if (UiAnimationManager.Instance == null)
+            {
+                return;
+            }
+
+            if (playerBaseView != null)
+            {
+                UiAnimationManager.Instance.StopFeedback(playerBaseView.RootTransform);
+                UiAnimationManager.Instance.Stop(playerBaseView.RootTransform, "power-line-victory-player-base");
+            }
+
+            if (enemyBaseView != null)
+            {
+                UiAnimationManager.Instance.StopFeedback(enemyBaseView.RootTransform);
+                UiAnimationManager.Instance.Stop(enemyBaseView.RootTransform, "power-line-victory-enemy-base");
+            }
+        }
+
+        private void RestoreBaseRendererState()
+        {
+            if (playerBaseView != null && playerBaseView.SpriteRenderer != null)
+            {
+                playerBaseView.SpriteRenderer.drawMode = _playerBaseInitialDrawMode;
+                playerBaseView.SpriteRenderer.size = _playerBaseInitialRendererSize;
+            }
+
+            if (enemyBaseView != null && enemyBaseView.SpriteRenderer != null)
+            {
+                enemyBaseView.SpriteRenderer.drawMode = _enemyBaseInitialDrawMode;
+                enemyBaseView.SpriteRenderer.size = _enemyBaseInitialRendererSize;
+            }
+        }
+
+        private static float GetBaseHalfWidth(PowerLinePlayerBaseWorldView baseView)
+        {
+            if (baseView == null || baseView.SpriteRenderer == null)
+            {
+                return 0f;
+            }
+
+            return baseView.SpriteRenderer.bounds.extents.x;
+        }
+
+        private static float GetBaseHalfWidth(PowerLineEnemyBaseWorldView baseView)
+        {
+            if (baseView == null || baseView.SpriteRenderer == null)
+            {
+                return 0f;
+            }
+
+            return baseView.SpriteRenderer.bounds.extents.x;
+        }
+
+        private bool TryFindEnemyAtWorldPoint(Vector3 worldPoint, out PowerLineUnitViewData enemyViewData)
+        {
+            var bestDistance = float.MaxValue;
+            enemyViewData = null;
+
+            for (var index = 0; index < _viewData.EnemyUnits.Count; index++)
+            {
+                var candidate = _viewData.EnemyUnits[index];
+                if (!_enemyViews.TryGetValue(candidate.RuntimeId, out var enemyView) || enemyView.PrimaryRenderer == null)
+                {
+                    continue;
+                }
+
+                var bounds = enemyView.PrimaryRenderer.bounds;
+                bounds.Expand(new Vector3(0.3f, 0.3f, 0f));
+                if (!bounds.Contains(worldPoint))
+                {
+                    continue;
+                }
+
+                var distance = (enemyView.RootTransform.position - worldPoint).sqrMagnitude;
+                if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                enemyViewData = candidate;
+            }
+
+            return enemyViewData != null;
+        }
+
+        private void RefreshSelectedEnemy()
+        {
+            if (_enemySelectionChanged == null)
+            {
+                return;
+            }
+
+            if (_selectedEnemyRuntimeId < 0)
+            {
+                _enemySelectionChanged.Invoke(null);
+                return;
+            }
+
+            for (var index = 0; index < _viewData.EnemyUnits.Count; index++)
+            {
+                var enemy = _viewData.EnemyUnits[index];
+                if (enemy.RuntimeId != _selectedEnemyRuntimeId)
+                {
+                    continue;
+                }
+
+                _enemySelectionChanged.Invoke(enemy);
+                return;
+            }
+
+            _selectedEnemyRuntimeId = -1;
+            _enemySelectionChanged.Invoke(null);
         }
     }
 }

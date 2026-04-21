@@ -9,6 +9,7 @@ using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
@@ -51,8 +52,8 @@ namespace Plinko.Scripts.View.Controllers
                 return;
             }
 
-            deckButton.onClick.AddListener(HandleDeckClicked);
             autoBattleButton.onClick.AddListener(HandleAutoBattleClicked);
+            BindDeckHover();
             _listenersBound = true;
         }
 
@@ -148,11 +149,19 @@ namespace Plinko.Scripts.View.Controllers
             return true;
         }
 
-        private void HandleDeckClicked()
+        private void HandleDeckPointerEntered(BaseEventData _)
         {
-            UiAnimationManager.Instance.PlaySpringPunch(deckButton.transform as RectTransform);
-            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
-            deckPopup.Toggle();
+            if (deckButton == null || !deckButton.interactable)
+            {
+                return;
+            }
+
+            deckPopup.Show();
+        }
+
+        private void HandleDeckPointerExited(BaseEventData _)
+        {
+            deckPopup.Hide();
         }
 
         private void HandleAutoBattleClicked()
@@ -405,6 +414,34 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             _viewsByRuntimeId.Clear();
+        }
+
+        private void BindDeckHover()
+        {
+            if (deckButton == null)
+            {
+                return;
+            }
+
+            var trigger = deckButton.GetComponent<EventTrigger>();
+            if (trigger == null)
+            {
+                trigger = deckButton.gameObject.AddComponent<EventTrigger>();
+            }
+
+            trigger.triggers ??= new List<EventTrigger.Entry>();
+            AddTrigger(trigger, EventTriggerType.PointerEnter, HandleDeckPointerEntered);
+            AddTrigger(trigger, EventTriggerType.PointerExit, HandleDeckPointerExited);
+        }
+
+        private static void AddTrigger(EventTrigger trigger, EventTriggerType eventType, Action<BaseEventData> callback)
+        {
+            var entry = new EventTrigger.Entry
+            {
+                eventID = eventType
+            };
+            entry.callback.AddListener(data => callback.Invoke(data));
+            trigger.triggers.Add(entry);
         }
     }
 }

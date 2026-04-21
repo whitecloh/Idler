@@ -56,7 +56,9 @@ namespace Plinko.Scripts.Models.ViewData
         public int ColumnIndex;
         public string PinTypeId;
         public string DisplayName;
+        public string TooltipText;
         public Sprite Sprite;
+        public List<StatDisplayViewData> ModifierLines = new();
     }
 
     [Serializable]
@@ -66,6 +68,7 @@ namespace Plinko.Scripts.Models.ViewData
         public int BasketIndex;
         public string DisplayName;
         public int ManaValue;
+        public string TooltipText;
         public Sprite Sprite;
     }
 

@@ -12,6 +12,8 @@ namespace Plinko.Scripts.Data.Pins
         [SerializeField] private string id = string.Empty;
         [SerializeField] private string displayName = string.Empty;
         [SerializeField] private string rarity = string.Empty;
+        [TextArea]
+        [SerializeField] private string tooltipText = string.Empty;
         [SerializeField] private Sprite fieldSprite;
         [SerializeField] private int shopPrice;
         [SerializeField] private int generationWeight = 1;
@@ -22,6 +24,7 @@ namespace Plinko.Scripts.Data.Pins
         public string Id => id;
         public string DisplayName => displayName;
         public string Rarity => rarity;
+        public string TooltipText => tooltipText;
         public Sprite FieldSprite => fieldSprite;
         public int ShopPrice => shopPrice;
         public int GenerationWeight => generationWeight;

@@ -273,7 +273,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                         ColumnIndex = columnIndex,
                         PinTypeId = pin != null ? pin.Id : string.Empty,
                         DisplayName = pin != null ? pin.DisplayName : string.Empty,
-                        Sprite = pin != null ? pin.FieldSprite : null
+                        TooltipText = pin != null ? pin.TooltipText : string.Empty,
+                        Sprite = pin != null ? pin.FieldSprite : null,
+                        ModifierLines = pin != null
+                            ? StatViewDataFactory.BuildPinModifierStats(_statTypeConfigService, pin)
+                            : new List<StatDisplayViewData>()
                     });
                     slotIndex++;
                 }
@@ -304,6 +308,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     BasketIndex = index,
                     DisplayName = basket.DisplayName,
                     ManaValue = basket.ManaValue,
+                    TooltipText = BuildBasketTooltipText(basket.DisplayName, basket.ManaValue),
                     Sprite = basket.FieldSprite
                 });
             }
@@ -570,6 +575,16 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             return levelType == Enums.LevelType.StandardBattle ||
                    levelType == Enums.LevelType.DefenceBattle ||
                    levelType == Enums.LevelType.PowerLineBattle;
+        }
+
+        private static string BuildBasketTooltipText(string displayName, int manaValue)
+        {
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                return $"Adds {manaValue} mana cost to the trained card.";
+            }
+
+            return $"{displayName}\nAdds {manaValue} mana cost to the trained card.";
         }
 
         private sealed class StagedSnapshot

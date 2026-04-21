@@ -14,13 +14,18 @@ namespace Plinko.Scripts.View.Controllers
 
         private PowerLineBattleHudViewData _viewData = new();
         private bool _isVisible;
+        private bool _isVictorySequencePlaying;
+        private string _playedVictorySequenceLevelKey = string.Empty;
+        private BattleBridge _battleBridge;
 
         public void Init(BattleBridge battleBridge)
         {
+            _battleBridge = battleBridge;
             turnPanel.Init(battleBridge);
             boardPanel.Init(HandleLaneClicked);
             boardPanel.BindWorldPresenter(worldPresenter);
             turnPanel.SetLaneSelectionHandler(HandleSelectedCardChanged);
+            worldPresenter.SetEnemySelectionHandler(turnPanel.SetSelectedEnemy);
         }
 
         public void Show(bool isVisible)
@@ -64,6 +69,8 @@ namespace Plinko.Scripts.View.Controllers
 
         public void ResetState()
         {
+            _isVictorySequencePlaying = false;
+            _playedVictorySequenceLevelKey = string.Empty;
             levelTrackPanel.ResetState();
             boardPanel.ResetState();
             worldPresenter.ResetState();
@@ -78,6 +85,7 @@ namespace Plinko.Scripts.View.Controllers
             turnPanel.Refresh(_viewData);
             boardPanel.SetSelectedCard(turnPanel.SelectedCard, _viewData.CurrentMana);
             worldPresenter.SetSelectedCard(turnPanel.SelectedCard, _viewData.CurrentMana);
+            TryStartVictorySequence();
         }
 
         private void HandleSelectedCardChanged(HandCardViewData selectedCard)
@@ -95,6 +103,26 @@ namespace Plinko.Scripts.View.Controllers
 
             boardPanel.SetSelectedCard(null, _viewData.CurrentMana);
             worldPresenter.SetSelectedCard(null, _viewData.CurrentMana);
+        }
+
+        private void TryStartVictorySequence()
+        {
+            if (!_viewData.IsVictorySequencePending ||
+                _isVictorySequencePlaying ||
+                _playedVictorySequenceLevelKey == _viewData.LevelKey)
+            {
+                return;
+            }
+
+            _isVictorySequencePlaying = true;
+            _playedVictorySequenceLevelKey = _viewData.LevelKey;
+            worldPresenter.PlayVictorySequence(
+                boardPanel.PlayVictoryBanner,
+                () =>
+                {
+                    _isVictorySequencePlaying = false;
+                    _battleBridge?.RequestFinalizePowerLineBattleResult();
+                });
         }
     }
 }

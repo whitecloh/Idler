@@ -28,21 +28,21 @@ MonoBehaviour:
   boardX: 0
   boardY: 0
   attackType: 0
-  projectileSprite: {fileID: 0}
+  projectileSprite: {fileID: 21300000, guid: 48029b3739f501649bba7b06bd25d9da, type: 3}
   canAttackOtherLines: 0
   canMoveBetweenLines: 0
-  portraitSprite: {fileID: 21300000, guid: 2738ed824bfa25e409e90681a53faba7, type: 3}
+  portraitSprite: {fileID: 438366600, guid: ebe081c87c088b844908007f29e24db4, type: 3}
   battleAnimations:
     idleFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 438366600, guid: ebe081c87c088b844908007f29e24db4, type: 3}
     runFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 611712646, guid: ebe081c87c088b844908007f29e24db4, type: 3}
     attackFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 639308786, guid: ebe081c87c088b844908007f29e24db4, type: 3}
     hitFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 1794687492, guid: ebe081c87c088b844908007f29e24db4, type: 3}
     castFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+    - {fileID: 1794687492, guid: ebe081c87c088b844908007f29e24db4, type: 3}
     deathFrames:
-    - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  trainingFieldSprite: {fileID: 21300000, guid: 2738ed824bfa25e409e90681a53faba7, type: 3}
+    - {fileID: 1706173151, guid: ebe081c87c088b844908007f29e24db4, type: 3}
+  trainingFieldSprite: {fileID: 438366600, guid: ebe081c87c088b844908007f29e24db4, type: 3}

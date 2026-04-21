@@ -16,9 +16,11 @@ namespace Plinko.Scripts.Models.ViewData
         public Enums.PhaseType Phase;
         public int CurrentMana;
         public int MaxMana;
+        public int RemainingDeckCount;
         public int RerollManaCost;
         public bool CanReroll;
         public bool IsInteractionLocked;
+        public bool IsVictorySequencePending;
         public Sprite BackgroundSprite;
         public BattleBaseViewData PlayerBase = new();
         public Sprite EnemyBaseSprite;

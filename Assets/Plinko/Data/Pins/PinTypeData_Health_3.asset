@@ -15,16 +15,11 @@ MonoBehaviour:
   id: pin_health_3
   displayName: Health Pin
   rarity: rare
-  fieldSprite: {fileID: 1068715964, guid: f5930521b2770bf4082a86d9c868733c, type: 3}
+  fieldSprite: {fileID: -453686396, guid: 0815038ae5999cb4fa82f5a961626623, type: 3}
   shopPrice: 30
   generationWeight: 2
+  manaModifier: 0
   modifiers:
   - statType: {fileID: 11400000, guid: 39ef71fdce57816499299e23fe658bc8, type: 2}
     value: 30
-  attackModifier: 0
-  healthModifier: 30
-  manaModifier: 0
-  moveSpeedModifier: 0
-  attackRangeModifier: 0
-  attackSpeedModifier: 0
   unlockCondition: {fileID: 0}

@@ -205,6 +205,18 @@ namespace Plinko.Scripts.View.Animations
             KillTween(target, channel);
         }
 
+        public void Stop(Transform target, string channel)
+        {
+            KillTween(target, channel);
+        }
+
+        public void StopFeedback(Transform target)
+        {
+            KillTween(target, FeedbackScaleChannel);
+            KillTween(target, FeedbackRotationChannel);
+            KillTween(target, FeedbackPositionChannel);
+        }
+
         public void PlayMoveAndScale(
             RectTransform target,
             string channel,
@@ -239,6 +251,22 @@ namespace Plinko.Scripts.View.Animations
                 .OnComplete(() => onComplete?.Invoke());
 
             ReplaceTween(target, channel, sequence);
+        }
+
+        public void PlayWorldMove(
+            Transform target,
+            string channel,
+            Vector3 endPosition,
+            float duration,
+            Ease moveEase,
+            Action onComplete = null)
+        {
+            var tween = target
+                .DOMove(endPosition, duration)
+                .SetEase(moveEase)
+                .OnComplete(() => onComplete?.Invoke());
+
+            ReplaceTween(target, channel, tween);
         }
 
         public void PlayScaleTo(

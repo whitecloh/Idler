@@ -212,7 +212,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     DisplayName = pinType != null && !string.IsNullOrWhiteSpace(pinType.DisplayName)
                         ? pinType.DisplayName
                         : installedPin.PinTypeId,
+                    TooltipText = pinType != null ? pinType.TooltipText : string.Empty,
                     Sprite = pinType != null ? pinType.FieldSprite : null,
+                    ModifierLines = pinType != null
+                        ? BuildModifierLines(pinType)
+                        : new List<StatDisplayViewData>(),
                     IsSelected = isSelected,
                     IsPlacementHighlighted = hasPendingPin && isSelected,
                     IsAvailableForReplacement = hasPendingPin && selectedSlotIndex < 0,
@@ -247,6 +251,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     BasketIndex = index,
                     DisplayName = basket.DisplayName,
                     ManaValue = basket.ManaValue,
+                    TooltipText = BuildBasketTooltipText(basket.DisplayName, basket.ManaValue),
                     Sprite = basket.FieldSprite
                 });
             }
@@ -454,6 +459,16 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
             return levelType == Enums.LevelType.StandardBattle ||
                    levelType == Enums.LevelType.DefenceBattle ||
                    levelType == Enums.LevelType.PowerLineBattle;
+        }
+
+        private static string BuildBasketTooltipText(string displayName, int manaValue)
+        {
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                return $"Set {manaValue} mana cost to the trained card.";
+            }
+
+            return $"{displayName}\nSet {manaValue} mana cost to the trained card.";
         }
     }
 }

@@ -144,9 +144,11 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 Phase = phase,
                 CurrentMana = _manaPool.Get(runEntity).Value,
                 MaxMana = state.MaxMana,
+                RemainingDeckCount = state.DeckOwnedUnitRuntimeIds != null ? state.DeckOwnedUnitRuntimeIds.Count : 0,
                 RerollManaCost = state.RerollManaCost,
                 CanReroll = _manaPool.Get(runEntity).Value >= state.RerollManaCost,
-                IsInteractionLocked = false,
+                IsInteractionLocked = state.IsPendingVictorySequence,
+                IsVictorySequencePending = state.IsPendingVictorySequence,
                 BackgroundSprite = levelData != null ? levelData.BackgroundSprite : null,
                 PlayerBase = new BattleBaseViewData
                 {
@@ -221,16 +223,21 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
         {
             var units = new List<BattleDeckUnitViewData>();
             var state = _battleRuntimeService.CurrentPowerLineState;
-            if (state == null || state.DeckOwnedUnitRuntimeIds == null || state.DeckOwnedUnitRuntimeIds.Count <= 0)
+            if (state == null || state.InitialDeckOwnedUnitRuntimeIds == null || state.InitialDeckOwnedUnitRuntimeIds.Count <= 0)
             {
                 return units;
             }
 
-            var deckOwnedRuntimeIds = new HashSet<int>(state.DeckOwnedUnitRuntimeIds);
-            foreach (var ownedEntity in _ownedFilter)
+            var handOwnedRuntimeIds = new HashSet<int>();
+            foreach (var handEntity in _handFilter)
             {
-                var runtimeId = _ownedUnitPool.Get(ownedEntity).RuntimeId;
-                if (!deckOwnedRuntimeIds.Contains(runtimeId))
+                handOwnedRuntimeIds.Add(_handCardOwnerPool.Get(handEntity).OwnedUnitRuntimeId);
+            }
+
+            var deckOwnedRuntimeIds = new HashSet<int>(state.DeckOwnedUnitRuntimeIds);
+            foreach (var runtimeId in state.InitialDeckOwnedUnitRuntimeIds)
+            {
+                if (!TryFindOwnedEntity(runtimeId, out var ownedEntity))
                 {
                     continue;
                 }
@@ -247,6 +254,7 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                     MoveSpeed = _unitCombatStatsPool.Get(ownedEntity).MoveSpeed,
                     AttackRange = _unitCombatStatsPool.Get(ownedEntity).AttackRange,
                     AttackSpeed = _unitCombatStatsPool.Get(ownedEntity).AttackSpeed,
+                    IsUsed = !deckOwnedRuntimeIds.Contains(runtimeId) && !handOwnedRuntimeIds.Contains(runtimeId),
                     PortraitSprite = unitType != null ? unitType.PortraitSprite : null,
                     BattleAnimations = unitType != null ? unitType.BattleAnimations : null,
                     Stats = StatViewDataFactory.BuildUnitStats(
@@ -261,7 +269,6 @@ namespace Plinko.Scripts.ECS.Systems.UISystems
                 });
             }
 
-            units.Sort((left, right) => left.RuntimeId.CompareTo(right.RuntimeId));
             return units;
         }
 

@@ -17,6 +17,7 @@ namespace Plinko.Scripts.Models.ViewData
         public float MoveSpeed;
         public int AttackRange;
         public float AttackSpeed;
+        public bool IsUsed;
         public Sprite PortraitSprite;
         public CharacterAnimationSetData BattleAnimations;
         public List<StatDisplayViewData> Stats = new();

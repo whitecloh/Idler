@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Audio;
-using Plinko.Scripts.View.Tooltips;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Items
 {
-    public sealed class PurchaseShopOfferCardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public sealed class PurchaseShopOfferCardView : MonoBehaviour
     {
         [SerializeField] private RectTransform root;
         [SerializeField] private Image portraitImage;
@@ -21,7 +19,6 @@ namespace Plinko.Scripts.View.Items
         [SerializeField] private UnitStatEntryView statEntryPrefab;
         [SerializeField] private TMP_Text priceText;
         [SerializeField] private Button buyButton;
-        [SerializeField] private RectTransform tooltipAnchor;
 
         private int _offerId;
         private readonly List<UnitStatEntryView> _statViews = new();
@@ -114,24 +111,6 @@ namespace Plinko.Scripts.View.Items
         public void SetInteractable(bool isInteractable)
         {
             buyButton.interactable = isInteractable;
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            UiTooltipManager.Instance?.ShowUnitCard(
-                this,
-                tooltipAnchor != null ? tooltipAnchor : root,
-                UnitTooltipViewDataFactory.FromShopOffer(_viewData));
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            UiTooltipManager.Instance?.Hide(this);
-        }
-
-        private void OnDisable()
-        {
-            UiTooltipManager.Instance?.Hide(this);
         }
 
         public sealed class OfferVisualSnapshot

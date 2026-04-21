@@ -4,6 +4,7 @@ using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
@@ -27,6 +28,7 @@ namespace Plinko.Scripts.View.Controllers
         private int _currentMana;
         private string _presentedLevelKey = string.Empty;
         private PowerLineBattleWorldPresenter _worldPresenter;
+        private bool _viewportClickBound;
 
         public void Init(Action<int> laneClicked)
         {
@@ -44,6 +46,8 @@ namespace Plinko.Scripts.View.Controllers
             {
                 _worldPresenter.BindViewport(boardViewport.rectTransform);
             }
+
+            BindViewportClick();
         }
 
         public void ResetState()
@@ -87,6 +91,11 @@ namespace Plinko.Scripts.View.Controllers
             _selectedCard = selectedCard;
             _currentMana = currentMana;
             RefreshLaneStates();
+        }
+
+        public void PlayVictoryBanner()
+        {
+            titleBannerView.ShowText("SVYAZ!");
         }
 
         private void HandleLaneClicked(PowerLineLaneView laneView)
@@ -172,6 +181,8 @@ namespace Plinko.Scripts.View.Controllers
             {
                 _worldPresenter.BindViewport(boardViewport.rectTransform);
             }
+
+            BindViewportClick();
         }
 
         private void ApplyBoardFeedback()
@@ -189,6 +200,34 @@ namespace Plinko.Scripts.View.Controllers
                     break;
                 }
             }
+        }
+
+        private void BindViewportClick()
+        {
+            if (_viewportClickBound || boardViewport == null)
+            {
+                return;
+            }
+
+            var trigger = boardViewport.GetComponent<EventTrigger>();
+            if (trigger == null)
+            {
+                trigger = boardViewport.gameObject.AddComponent<EventTrigger>();
+            }
+
+            trigger.triggers ??= new System.Collections.Generic.List<EventTrigger.Entry>();
+            var entry = new EventTrigger.Entry
+            {
+                eventID = EventTriggerType.PointerClick
+            };
+            entry.callback.AddListener(data => HandleViewportClicked((PointerEventData)data));
+            trigger.triggers.Add(entry);
+            _viewportClickBound = true;
+        }
+
+        private void HandleViewportClicked(PointerEventData eventData)
+        {
+            _worldPresenter?.TrySelectEnemyAtScreenPoint(eventData.position);
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Plinko.Scripts.View.Items
         {
             if (primaryRenderer != null)
             {
-                primaryRenderer.flipX = !isFacingRight;
+                primaryRenderer.flipX = isFacingRight;
             }
         }
 
