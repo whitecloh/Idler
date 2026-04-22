@@ -27,6 +27,7 @@ namespace Plinko.Scripts.View.Controllers
             _retrainingPhaseBridge = retrainingPhaseBridge;
             _locationBridge = locationBridge;
 
+            levelTrackPanel.Init(_locationBridge.RequestReturnToMenu);
             nextLevelPanel.Init(_locationBridge);
             shopPanel.Init(_retrainingPhaseBridge);
         }

@@ -15,7 +15,8 @@ MonoBehaviour:
   id: pin_attack_3
   displayName: Attack Pin
   rarity: rare
-  fieldSprite: {fileID: 940977894, guid: 0815038ae5999cb4fa82f5a961626623, type: 3}
+  tooltipText: 
+  fieldSprite: {fileID: -1466452845, guid: 5d24371e879245643aa0ef8e216a3866, type: 3}
   shopPrice: 30
   generationWeight: 2
   manaModifier: 0

@@ -2,6 +2,7 @@ using Leopotam.EcsLite;
 using Plinko.Scripts.Bootstrap;
 using Plinko.Scripts.Data.Common;
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.Services;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Controllers;
 using UnityEngine;
@@ -89,6 +90,15 @@ namespace Plinko.Scripts.View
 
         public void Configure(GameServicesContext services)
         {
+            if (services == null)
+            {
+                return;
+            }
+
+            if (powerLineBattleScreenController != null)
+            {
+                powerLineBattleScreenController.Configure(services.StatTypeConfigService);
+            }
         }
 
         public void Init(EcsWorld world)

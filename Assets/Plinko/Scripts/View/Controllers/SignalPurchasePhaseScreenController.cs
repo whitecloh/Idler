@@ -28,6 +28,7 @@ namespace Plinko.Scripts.View.Controllers
         {
             _signalPurchaseBridge = signalPurchaseBridge;
             _locationBridge = locationBridge;
+            levelTrackPanel.Init(_locationBridge.RequestReturnToMenu);
             shopPanel.Init(_signalPurchaseBridge);
             newUnitsPanel.Init(_signalPurchaseBridge);
             nextLevelPanel.Init(_locationBridge);

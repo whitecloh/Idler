@@ -5,6 +5,7 @@ using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Bridges;
 using Plinko.Scripts.View.Items;
 using Plinko.Scripts.View.Tooltips;
+using Plinko.Scripts.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -39,6 +40,7 @@ namespace Plinko.Scripts.View.Controllers
         private PowerLineBattleHudViewData _viewData = new();
         private System.Action<HandCardViewData> _selectedCardChanged;
         private bool _listenersBound;
+        private StatTypeConfigService _statTypeConfigService;
 
         public HandCardViewData SelectedCard { get; private set; }
 
@@ -54,6 +56,11 @@ namespace Plinko.Scripts.View.Controllers
             rerollButton.onClick.AddListener(HandleRerollClicked);
             BindDeckHover();
             _listenersBound = true;
+        }
+
+        public void Configure(StatTypeConfigService statTypeConfigService)
+        {
+            _statTypeConfigService = statTypeConfigService;
         }
 
         public void SetLaneSelectionHandler(System.Action<HandCardViewData> selectedCardChanged)
@@ -338,7 +345,7 @@ namespace Plinko.Scripts.View.Controllers
                 return;
             }
 
-            selectedEnemyCardView.Refresh(UnitTooltipViewDataFactory.FromPowerLineEnemy(enemyViewData));
+            selectedEnemyCardView.Refresh(UnitTooltipViewDataFactory.FromPowerLineEnemy(enemyViewData, _statTypeConfigService));
         }
 
         private void HandleDeckPointerEntered(BaseEventData _)

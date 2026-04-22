@@ -4,7 +4,6 @@ using Plinko.Scripts.Models.ViewData;
 using Plinko.Scripts.View.Animations;
 using Plinko.Scripts.View.Items;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Plinko.Scripts.View.Controllers
@@ -28,7 +27,6 @@ namespace Plinko.Scripts.View.Controllers
         private int _currentMana;
         private string _presentedLevelKey = string.Empty;
         private PowerLineBattleWorldPresenter _worldPresenter;
-        private bool _viewportClickBound;
 
         public void Init(Action<int> laneClicked)
         {
@@ -46,8 +44,6 @@ namespace Plinko.Scripts.View.Controllers
             {
                 _worldPresenter.BindViewport(boardViewport.rectTransform);
             }
-
-            BindViewportClick();
         }
 
         public void ResetState()
@@ -55,6 +51,7 @@ namespace Plinko.Scripts.View.Controllers
             _selectedCard = null;
             _currentMana = 0;
             _presentedLevelKey = string.Empty;
+            SetFieldUiVisible(true);
             titleBannerView.HideImmediate();
             RefreshLaneStates();
         }
@@ -96,6 +93,11 @@ namespace Plinko.Scripts.View.Controllers
         public void PlayVictoryBanner()
         {
             titleBannerView.ShowText("SVYAZ!");
+        }
+
+        public void PrepareVictorySequence()
+        {
+            SetFieldUiVisible(false);
         }
 
         private void HandleLaneClicked(PowerLineLaneView laneView)
@@ -181,8 +183,35 @@ namespace Plinko.Scripts.View.Controllers
             {
                 _worldPresenter.BindViewport(boardViewport.rectTransform);
             }
+        }
 
-            BindViewportClick();
+        private void SetFieldUiVisible(bool isVisible)
+        {
+            if (playerBaseView != null)
+            {
+                playerBaseView.gameObject.SetActive(isVisible);
+            }
+
+            if (enemyBaseView != null)
+            {
+                enemyBaseView.gameObject.SetActive(isVisible);
+            }
+
+            if (laneViews == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < laneViews.Length; index++)
+            {
+                var laneView = laneViews[index];
+                if (laneView == null || laneView.Root == null)
+                {
+                    continue;
+                }
+
+                laneView.Root.gameObject.SetActive(isVisible);
+            }
         }
 
         private void ApplyBoardFeedback()
@@ -202,32 +231,43 @@ namespace Plinko.Scripts.View.Controllers
             }
         }
 
-        private void BindViewportClick()
+        private void Update()
         {
-            if (_viewportClickBound || boardViewport == null)
+            if (_selectedCard != null || _viewData.IsInteractionLocked || boardViewport == null)
             {
                 return;
             }
 
-            var trigger = boardViewport.GetComponent<EventTrigger>();
-            if (trigger == null)
+            if (Input.GetMouseButtonDown(0))
             {
-                trigger = boardViewport.gameObject.AddComponent<EventTrigger>();
+                HandleScreenClick(Input.mousePosition);
             }
 
-            trigger.triggers ??= new System.Collections.Generic.List<EventTrigger.Entry>();
-            var entry = new EventTrigger.Entry
+            if (Input.touchCount <= 0)
             {
-                eventID = EventTriggerType.PointerClick
-            };
-            entry.callback.AddListener(data => HandleViewportClicked((PointerEventData)data));
-            trigger.triggers.Add(entry);
-            _viewportClickBound = true;
+                return;
+            }
+
+            var touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                HandleScreenClick(touch.position);
+            }
         }
 
-        private void HandleViewportClicked(PointerEventData eventData)
+        private void HandleScreenClick(Vector2 screenPosition)
         {
-            _worldPresenter?.TrySelectEnemyAtScreenPoint(eventData.position);
+            if (_worldPresenter == null || boardViewport == null)
+            {
+                return;
+            }
+
+            if (!RectTransformUtility.RectangleContainsScreenPoint(boardViewport.rectTransform, screenPosition, null))
+            {
+                return;
+            }
+
+            _worldPresenter.TrySelectEnemyAtScreenPoint(screenPosition);
         }
     }
 }

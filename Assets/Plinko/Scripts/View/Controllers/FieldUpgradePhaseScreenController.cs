@@ -29,6 +29,7 @@ namespace Plinko.Scripts.View.Controllers
             _overlayStateInitialized = false;
             _isOverlayVisible = false;
 
+            levelTrackPanel.Init(_locationBridge.RequestReturnToMenu);
             plinkoFieldPanel.Init(_fieldUpgradeBridge);
             shopPanel.Init(_fieldUpgradeBridge);
             nextLevelPanel.Init(_locationBridge);

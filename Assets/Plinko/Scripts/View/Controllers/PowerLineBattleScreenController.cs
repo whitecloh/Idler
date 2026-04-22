@@ -1,4 +1,5 @@
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.Services;
 using Plinko.Scripts.View.Bridges;
 using UnityEngine;
 
@@ -18,9 +19,15 @@ namespace Plinko.Scripts.View.Controllers
         private string _playedVictorySequenceLevelKey = string.Empty;
         private BattleBridge _battleBridge;
 
+        public void Configure(StatTypeConfigService statTypeConfigService)
+        {
+            turnPanel.Configure(statTypeConfigService);
+        }
+
         public void Init(BattleBridge battleBridge)
         {
             _battleBridge = battleBridge;
+            levelTrackPanel.Init(_battleBridge.RequestReturnToMenu);
             turnPanel.Init(battleBridge);
             boardPanel.Init(HandleLaneClicked);
             boardPanel.BindWorldPresenter(worldPresenter);
@@ -116,6 +123,7 @@ namespace Plinko.Scripts.View.Controllers
 
             _isVictorySequencePlaying = true;
             _playedVictorySequenceLevelKey = _viewData.LevelKey;
+            boardPanel.PrepareVictorySequence();
             worldPresenter.PlayVictorySequence(
                 boardPanel.PlayVictoryBanner,
                 () =>

@@ -15,7 +15,8 @@ MonoBehaviour:
   id: pin_attackrange_1
   displayName: Attack Range Pin
   rarity: common
-  fieldSprite: {fileID: 703941702, guid: 0815038ae5999cb4fa82f5a961626623, type: 3}
+  tooltipText: 
+  fieldSprite: {fileID: 172041769, guid: 5d24371e879245643aa0ef8e216a3866, type: 3}
   shopPrice: 10
   generationWeight: 4
   manaModifier: 0

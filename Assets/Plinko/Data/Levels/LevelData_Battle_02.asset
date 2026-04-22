@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: LevelData_Battle_02
   m_EditorClassIdentifier: 
   id: level_battle_01
-  displayName: Power Line Test
+  displayName: BATTLE
   levelType: 6
   progressSprite: {fileID: 21300000, guid: 4c588c227276940a8b0c19ef7c51e5f7, type: 3}
   gridSprite: {fileID: 0}
-  playerBaseSprite: {fileID: -898944051, guid: be9002f04fe1d7341ad3eb90ceb5f604, type: 3}
-  enemyBaseSprite: {fileID: 610772559, guid: be9002f04fe1d7341ad3eb90ceb5f604, type: 3}
+  playerBaseSprite: {fileID: 820781800, guid: 46008b2cf439fb64698b9dfe7daa4dfc, type: 3}
+  enemyBaseSprite: {fileID: 820781800, guid: 46008b2cf439fb64698b9dfe7daa4dfc, type: 3}
   backgroundSprite: {fileID: 0}
   preBattlePhase: {fileID: 0}
   enemyBaseMaxHealth: 28

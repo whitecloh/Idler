@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 3983878535611852911}
   - component: {fileID: 5909413316001954645}
   - component: {fileID: 23435653238268719}
+  - component: {fileID: 9152330442575128610}
   m_Layer: 5
   m_Name: Background_Image (2)
   m_TagString: Untagged
@@ -150,6 +151,24 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &9152330442575128610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301499679735741552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bea67320036a1b846a321b318baa7c4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetImage: {fileID: 23435653238268719}
+  minColor: {r: 0.35686275, g: 0.35686275, b: 0.35686275, a: 1}
+  maxColor: {r: 0.754717, g: 0.754717, b: 0.754717, a: 1}
+  halfCycleDuration: 10
+  useUnscaledTime: 1
+  resetToMinOnEnable: 1
 --- !u!1 &737703444133295954
 GameObject:
   m_ObjectHideFlags: 0
@@ -1288,11 +1307,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 7740048891688408764}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -847.17065, y: -198.218}
-  m_SizeDelta: {x: -1848.873, y: -777.179}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 77.266174, y: -198.21802}
+  m_SizeDelta: {x: 676.7689, y: 302.821}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &2975939086721887495
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2402,6 +2421,7 @@ GameObject:
   - component: {fileID: 2355189457819686628}
   - component: {fileID: 408710973572353858}
   - component: {fileID: 5900379193951487539}
+  - component: {fileID: 8357985491963909717}
   m_Layer: 5
   m_Name: Background_Image (3)
   m_TagString: Untagged
@@ -2466,3 +2486,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8357985491963909717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9156883572822515872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bea67320036a1b846a321b318baa7c4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetImage: {fileID: 5900379193951487539}
+  minColor: {r: 0.35686275, g: 0.35686275, b: 0.35686275, a: 1}
+  maxColor: {r: 1, g: 1, b: 1, a: 1}
+  halfCycleDuration: 3
+  useUnscaledTime: 1
+  resetToMinOnEnable: 1

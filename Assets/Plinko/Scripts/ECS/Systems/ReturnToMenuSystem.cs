@@ -10,7 +10,6 @@ namespace Plinko.Scripts.ECS.Systems
 {
     public sealed class ReturnToMenuSystem : IEcsInitSystem, IEcsRunSystem
     {
-        private readonly RunSaveService _runSaveService;
         private readonly PlinkoRuntimeService _plinkoRuntimeService;
         private readonly BattleRuntimeService _battleRuntimeService;
         private readonly RunEntityIndex _runEntityIndex;
@@ -21,11 +20,9 @@ namespace Plinko.Scripts.ECS.Systems
 
         private EcsFilter _requestFilter;
         private EcsPool<ReturnToMenuRequest> _requestPool;
-        private EcsPool<CurrentPhaseComponent> _phasePool;
         private EcsPool<PhaseChangedEvent> _phaseChangedEventPool;
 
         public ReturnToMenuSystem(
-            RunSaveService runSaveService,
             PlinkoRuntimeService plinkoRuntimeService,
             BattleRuntimeService battleRuntimeService,
             RunEntityIndex runEntityIndex,
@@ -34,7 +31,6 @@ namespace Plinko.Scripts.ECS.Systems
             PinShopOfferIndex pinShopOfferIndex,
             InstalledPinIndex installedPinIndex)
         {
-            _runSaveService = runSaveService;
             _plinkoRuntimeService = plinkoRuntimeService;
             _battleRuntimeService = battleRuntimeService;
             _runEntityIndex = runEntityIndex;
@@ -49,7 +45,6 @@ namespace Plinko.Scripts.ECS.Systems
             var world = systems.GetWorld();
             _requestFilter = world.Filter<ReturnToMenuRequest>().End();
             _requestPool = world.GetPool<ReturnToMenuRequest>();
-            _phasePool = world.GetPool<CurrentPhaseComponent>();
             _phaseChangedEventPool = world.GetPool<PhaseChangedEvent>();
         }
 
@@ -59,13 +54,6 @@ namespace Plinko.Scripts.ECS.Systems
             foreach (var requestEntity in _requestFilter)
             {
                 _requestPool.Get(requestEntity);
-
-                if (_runEntityIndex.TryGetRunEntity(out var runEntity) &&
-                    _phasePool.Get(runEntity).Value != Enums.PhaseType.Result)
-                {
-                    world.DelEntity(requestEntity);
-                    continue;
-                }
 
                 RuntimeEntityCleanup.ClearForNewRun(
                     world,
@@ -77,7 +65,6 @@ namespace Plinko.Scripts.ECS.Systems
 
                 _plinkoRuntimeService.Clear();
                 _battleRuntimeService.Clear();
-                _runSaveService.Clear();
                 _phaseChangedEventPool.Add(world.NewEntity()).Value = Enums.PhaseType.MainMenu;
                 world.DelEntity(requestEntity);
             }

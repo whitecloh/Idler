@@ -23,6 +23,7 @@ namespace Plinko.Scripts.View.Controllers
             _purchasePhaseBridge = purchasePhaseBridge;
             _locationBridge = locationBridge;
 
+            levelTrackPanel.Init(_locationBridge.RequestReturnToMenu);
             shopPanel.Init(_purchasePhaseBridge);
             nextLevelPanel.Init(_locationBridge);
         }

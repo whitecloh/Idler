@@ -18,6 +18,7 @@ namespace Plinko.Scripts.View.Controllers
         public void Init(BattleBridge battleBridge)
         {
             _battleBridge = battleBridge;
+            levelTrackPanel.Init(_battleBridge.RequestReturnToMenu);
             turnPanel.Init(_battleBridge, boardPanel);
         }
 

@@ -13,7 +13,6 @@ namespace Plinko.Scripts.View.Controllers
     public sealed class PurchaseNextLevelPanelController : MonoBehaviour
     {
         [SerializeField] private Image backgroundImage;
-        [SerializeField] private Image playerBaseImage;
         [SerializeField] private TMP_Text playerBaseHealthText;
         [SerializeField] private Button nextLevelButton;
         [SerializeField] private RectTransform armyUnitsRoot;
@@ -47,8 +46,6 @@ namespace Plinko.Scripts.View.Controllers
         {
             backgroundImage.sprite = viewData.NextBattleBackgroundSprite;
             backgroundImage.enabled = viewData.NextBattleBackgroundSprite != null;
-            playerBaseImage.sprite = viewData.PlayerBaseSprite;
-            playerBaseImage.enabled = viewData.PlayerBaseSprite != null;
             playerBaseHealthText.text = $"{viewData.PlayerBaseHealth}/{viewData.PlayerBaseMaxHealth}";
             nextLevelButton.interactable = viewData.CanAdvance;
 
@@ -59,8 +56,6 @@ namespace Plinko.Scripts.View.Controllers
         {
             backgroundImage.sprite = viewData.NextBattleBackgroundSprite;
             backgroundImage.enabled = viewData.NextBattleBackgroundSprite != null;
-            playerBaseImage.sprite = viewData.PlayerBaseSprite;
-            playerBaseImage.enabled = viewData.PlayerBaseSprite != null;
             playerBaseHealthText.text = $"{viewData.PlayerBaseHealth}/{viewData.PlayerBaseMaxHealth}";
             nextLevelButton.interactable = viewData.CanAdvance;
             
@@ -76,8 +71,6 @@ namespace Plinko.Scripts.View.Controllers
         {
             backgroundImage.sprite = viewData.NextBattleBackgroundSprite;
             backgroundImage.enabled = viewData.NextBattleBackgroundSprite != null;
-            playerBaseImage.sprite = viewData.PlayerBaseSprite;
-            playerBaseImage.enabled = viewData.PlayerBaseSprite != null;
             playerBaseHealthText.text = $"{viewData.PlayerBaseHealth}/{viewData.PlayerBaseMaxHealth}";
             nextLevelButton.interactable = viewData.CanAdvance;
 

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: basket_4
   displayName: Mana 4
-  fieldSprite: {fileID: 21300000, guid: 400525df6cc27e64987329e6e6565c46, type: 3}
+  fieldSprite: {fileID: 587451419, guid: 5d24371e879245643aa0ef8e216a3866, type: 3}
   manaValue: 4
   generationWeight: 4

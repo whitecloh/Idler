@@ -243,8 +243,11 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.UnlocksService,
                     _services.MetaSaveService,
                     _services.RunEntityIndex))
-                .Add(new ReturnToMenuSystem(
+                .Add(new WriteRunSaveSystem(
                     _services.RunSaveService,
+                    _services.BattleRuntimeService,
+                    _services.RunEntityIndex))
+                .Add(new ReturnToMenuSystem(
                     _services.PlinkoRuntimeService,
                     _services.BattleRuntimeService,
                     _services.RunEntityIndex,
@@ -254,10 +257,6 @@ namespace Plinko.Scripts.ECS.Installers
                     _services.InstalledPinIndex))
                 .Add(new RegisterOwnedUnitSystem(_services.OwnedUnitIndex))
                 .Add(new ReplaceOwnedUnitSystem(_services.OwnedUnitIndex))
-                .Add(new WriteRunSaveSystem(
-                    _services.RunSaveService,
-                    _services.BattleRuntimeService,
-                    _services.RunEntityIndex))
                 .Add(new RefreshMenuLocationUiSystem(
                     _services.RunSaveService,
                     _services.LocationConfigService,

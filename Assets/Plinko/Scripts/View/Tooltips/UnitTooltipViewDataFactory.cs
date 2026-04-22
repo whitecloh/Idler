@@ -1,4 +1,5 @@
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.Services;
 
 namespace Plinko.Scripts.View.Tooltips
 {
@@ -34,9 +35,13 @@ namespace Plinko.Scripts.View.Tooltips
             return Build(viewData != null ? viewData.DisplayName : string.Empty, viewData != null ? viewData.PortraitSprite : null, viewData != null ? viewData.ManaCost : 0, viewData != null ? viewData.Stats : null);
         }
 
-        public static UnitTooltipViewData FromPowerLineEnemy(PowerLineUnitViewData viewData)
+        public static UnitTooltipViewData FromPowerLineEnemy(PowerLineUnitViewData viewData, StatTypeConfigService statTypeConfigService)
         {
-            return Build(viewData != null ? viewData.DisplayName : string.Empty, viewData != null ? viewData.PortraitSprite : null, viewData != null ? viewData.ManaCost : 0, BuildPowerLineStats(viewData));
+            return Build(
+                viewData != null ? viewData.DisplayName : string.Empty,
+                viewData != null ? viewData.PortraitSprite : null,
+                viewData != null ? viewData.ManaCost : 0,
+                BuildPowerLineStats(viewData, statTypeConfigService));
         }
 
         private static UnitTooltipViewData Build(
@@ -75,30 +80,53 @@ namespace Plinko.Scripts.View.Tooltips
             return result;
         }
 
-        private static System.Collections.Generic.IReadOnlyList<StatDisplayViewData> BuildPowerLineStats(PowerLineUnitViewData viewData)
+        private static System.Collections.Generic.IReadOnlyList<StatDisplayViewData> BuildPowerLineStats(
+            PowerLineUnitViewData viewData,
+            StatTypeConfigService statTypeConfigService)
         {
             if (viewData == null)
             {
                 return null;
             }
 
-            var stats = new System.Collections.Generic.List<StatDisplayViewData>();
-            AppendStat(stats, "attack", "Attack", viewData.Attack.ToString());
-            AppendStat(stats, "health", "Health", $"{viewData.Health}/{viewData.MaxHealth}");
-            AppendStat(stats, "move_speed", "Move Speed", viewData.MoveSpeed.ToString("0.##"));
-            AppendStat(stats, "attack_range", "Range", viewData.AttackRange.ToString());
-            AppendStat(stats, "attack_speed", "Attack Speed", viewData.AttackSpeed.ToString("0.##"));
-            return stats;
-        }
-
-        private static void AppendStat(System.Collections.Generic.ICollection<StatDisplayViewData> stats, string statTypeId, string displayName, string valueText)
-        {
-            stats.Add(new StatDisplayViewData
+            return new System.Collections.Generic.List<StatDisplayViewData>
             {
-                StatTypeId = statTypeId,
-                DisplayName = displayName,
-                ValueText = valueText
-            });
+                new()
+                {
+                    StatTypeId = Data.Common.StatTypeIds.Attack,
+                    DisplayName = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.Attack)?.DisplayName ?? "ATK",
+                    Icon = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.Attack)?.Icon,
+                    ValueText = viewData.Attack.ToString()
+                },
+                new()
+                {
+                    StatTypeId = Data.Common.StatTypeIds.Health,
+                    DisplayName = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.Health)?.DisplayName ?? "HP",
+                    Icon = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.Health)?.Icon,
+                    ValueText = viewData.Health.ToString()
+                },
+                new()
+                {
+                    StatTypeId = Data.Common.StatTypeIds.MoveSpeed,
+                    DisplayName = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.MoveSpeed)?.DisplayName ?? "Move",
+                    Icon = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.MoveSpeed)?.Icon,
+                    ValueText = viewData.MoveSpeed.ToString("0.##")
+                },
+                new()
+                {
+                    StatTypeId = Data.Common.StatTypeIds.AttackRange,
+                    DisplayName = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.AttackRange)?.DisplayName ?? "Range",
+                    Icon = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.AttackRange)?.Icon,
+                    ValueText = viewData.AttackRange.ToString()
+                },
+                new()
+                {
+                    StatTypeId = Data.Common.StatTypeIds.AttackSpeed,
+                    DisplayName = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.AttackSpeed)?.DisplayName ?? "ASPD",
+                    Icon = statTypeConfigService?.GetStat(Data.Common.StatTypeIds.AttackSpeed)?.Icon,
+                    ValueText = viewData.AttackSpeed.ToString("0.##")
+                }
+            };
         }
     }
 }

@@ -15,7 +15,8 @@ MonoBehaviour:
   id: pin_moovespeed_1
   displayName: Moove Speed Pin
   rarity: common
-  fieldSprite: {fileID: 429520716, guid: 0815038ae5999cb4fa82f5a961626623, type: 3}
+  tooltipText: 
+  fieldSprite: {fileID: -1393573386, guid: 5d24371e879245643aa0ef8e216a3866, type: 3}
   shopPrice: 10
   generationWeight: 4
   manaModifier: 0

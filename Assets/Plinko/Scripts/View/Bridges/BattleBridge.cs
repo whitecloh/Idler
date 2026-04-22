@@ -29,6 +29,10 @@ namespace Plinko.Scripts.View.Bridges
         public void RequestRerollPowerLineHand() => _world.GetPool<RerollPowerLineHandRequest>().Add(_world.NewEntity());
         public void RequestFinalizePowerLineBattleResult() => _world.GetPool<FinalizePowerLineBattleResultRequest>().Add(_world.NewEntity());
         public void RequestStartBattle() => _world.GetPool<StartBattleRequest>().Add(_world.NewEntity());
-        public void RequestReturnToMenu() => _world.GetPool<ReturnToMenuRequest>().Add(_world.NewEntity());
+        public void RequestReturnToMenu()
+        {
+            _world.GetPool<SaveRunRequest>().Add(_world.NewEntity());
+            _world.GetPool<ReturnToMenuRequest>().Add(_world.NewEntity());
+        }
     }
 }

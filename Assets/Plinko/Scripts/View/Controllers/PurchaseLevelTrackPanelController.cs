@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Plinko.Scripts.Models.ViewData;
+using Plinko.Scripts.View.Audio;
 using Plinko.Scripts.View.Items;
 using TMPro;
 using UnityEngine;
@@ -13,12 +15,24 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private RectTransform contentRoot;
         [SerializeField] private PurchaseLevelProgressItemView itemPrefab;
+        [SerializeField] private Button exitToMenuButton;
+        [SerializeField] private Button pauseButton;
 
         private readonly List<PurchaseLevelProgressItemView> _items = new();
         private string _levelKey = string.Empty;
+        private Action _returnToMenuAction;
+        private bool _listenersBound;
+        private bool _isPaused;
+
+        public void Init(Action returnToMenuAction)
+        {
+            _returnToMenuAction = returnToMenuAction;
+            BindListeners();
+        }
 
         public void ResetState()
         {
+            SetPaused(false);
             _levelKey = string.Empty;
             for (var index = 0; index < _items.Count; index++)
             {
@@ -26,6 +40,16 @@ namespace Plinko.Scripts.View.Controllers
             }
 
             _items.Clear();
+        }
+
+        private void OnDisable()
+        {
+            SetPaused(false);
+        }
+
+        private void OnDestroy()
+        {
+            SetPaused(false);
         }
 
         public void Refresh(PurchasePhaseViewData viewData)
@@ -176,6 +200,45 @@ namespace Plinko.Scripts.View.Controllers
             scrollRect.horizontalNormalizedPosition = contentWidth <= viewportWidth
                 ? 0f
                 : Mathf.Clamp01(targetOffset / (contentWidth - viewportWidth));
+        }
+
+        private void BindListeners()
+        {
+            if (_listenersBound)
+            {
+                return;
+            }
+
+            if (exitToMenuButton != null)
+            {
+                exitToMenuButton.onClick.AddListener(HandleExitToMenuClicked);
+            }
+
+            if (pauseButton != null)
+            {
+                pauseButton.onClick.AddListener(HandlePauseClicked);
+            }
+
+            _listenersBound = true;
+        }
+
+        private void HandleExitToMenuClicked()
+        {
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
+            SetPaused(false);
+            _returnToMenuAction?.Invoke();
+        }
+
+        private void HandlePauseClicked()
+        {
+            AudioManager.Instance?.Play(GameAudioCueType.ButtonClick);
+            SetPaused(!_isPaused);
+        }
+
+        private void SetPaused(bool isPaused)
+        {
+            _isPaused = isPaused;
+            Time.timeScale = isPaused ? 0f : 1f;
         }
     }
 }

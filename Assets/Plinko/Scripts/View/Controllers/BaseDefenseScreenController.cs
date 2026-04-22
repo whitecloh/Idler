@@ -17,6 +17,7 @@ namespace Plinko.Scripts.View.Controllers
 
         public void Init(BattleBridge battleBridge)
         {
+            levelTrackPanel.Init(battleBridge.RequestReturnToMenu);
             turnPanel.Init(battleBridge);
             boardPanel.Init(HandleBoardCellClicked);
             turnPanel.SetBoardSelectionHandler(HandleSelectedCardChanged);

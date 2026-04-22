@@ -35,6 +35,7 @@ namespace Plinko.Scripts.View.Controllers
         [SerializeField] private float victoryMergeDuration = 0.65f;
         [SerializeField] private float victoryPostMergeDelay = 0.7f;
         [SerializeField] private float victoryMergeContactPadding = 0f;
+        [SerializeField] private float enemySelectionPadding = 0.5f;
 
         private readonly Dictionary<int, PowerLineUnitWorldView> _playerViews = new();
         private readonly Dictionary<int, PowerLineUnitWorldView> _enemyViews = new();
@@ -182,7 +183,8 @@ namespace Plinko.Scripts.View.Controllers
                 Mathf.Abs(worldCamera.transform.position.z)));
             worldPoint.z = 0f;
 
-            if (!TryFindEnemyAtWorldPoint(worldPoint, out var enemyViewData))
+            if (!TryFindEnemyAtWorldPoint(worldPoint, out var enemyViewData) &&
+                !TryFindNearestEnemyAtWorldPoint(worldPoint, out enemyViewData))
             {
                 return false;
             }
@@ -800,7 +802,7 @@ namespace Plinko.Scripts.View.Controllers
                 }
 
                 var bounds = enemyView.PrimaryRenderer.bounds;
-                bounds.Expand(new Vector3(0.3f, 0.3f, 0f));
+                bounds.Expand(new Vector3(enemySelectionPadding, enemySelectionPadding, 0f));
                 if (!bounds.Contains(worldPoint))
                 {
                     continue;
@@ -808,6 +810,35 @@ namespace Plinko.Scripts.View.Controllers
 
                 var distance = (enemyView.RootTransform.position - worldPoint).sqrMagnitude;
                 if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                enemyViewData = candidate;
+            }
+
+            return enemyViewData != null;
+        }
+
+        private bool TryFindNearestEnemyAtWorldPoint(Vector3 worldPoint, out PowerLineUnitViewData enemyViewData)
+        {
+            var bestDistance = float.MaxValue;
+            enemyViewData = null;
+
+            for (var index = 0; index < _viewData.EnemyUnits.Count; index++)
+            {
+                var candidate = _viewData.EnemyUnits[index];
+                if (!_enemyViews.TryGetValue(candidate.RuntimeId, out var enemyView) || enemyView.PrimaryRenderer == null)
+                {
+                    continue;
+                }
+
+                var bounds = enemyView.PrimaryRenderer.bounds;
+                bounds.Expand(new Vector3(enemySelectionPadding, enemySelectionPadding, 0f));
+                var closestPoint = bounds.ClosestPoint(worldPoint);
+                var distance = (closestPoint - worldPoint).sqrMagnitude;
+                if (distance > enemySelectionPadding * enemySelectionPadding || distance >= bestDistance)
                 {
                     continue;
                 }
